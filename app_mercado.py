@@ -20,21 +20,111 @@ except ImportError:
     streamlit_geolocation = None
 
 st.set_page_config(
-    page_title="Listaí — Preços e Compras",
+    page_title="Listaí — Preços e Compras da Região",
     page_icon="🛒",
     layout="wide",
 )
 
-# --- Estilo visual mais moderno ---
+# --- Tema Visual Listaí (CSS Customizado) ---
 st.markdown(
     """
     <style>
-        .block-container { padding-top: 1.5rem; padding-bottom: 2rem; }
-        div[data-testid="stMetric"] {
-            background-color: rgba(128, 128, 128, 0.08);
-            border: 1px solid rgba(128, 128, 128, 0.18);
-            padding: 12px 16px;
+        .block-container {
+            padding-top: 1.2rem;
+            padding-bottom: 2.5rem;
+        }
+        /* Banner principal (Hero) */
+        .listai-hero {
+            background: linear-gradient(135deg, #14532D 0%, #16A34A 60%, #22C55E 100%);
+            padding: 1.4rem 1.8rem;
+            border-radius: 16px;
+            color: #FFFFFF;
+            margin-bottom: 1rem;
+            box-shadow: 0 6px 18px rgba(22, 163, 74, 0.18);
+        }
+        .listai-hero h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: -0.5px;
+        }
+        .listai-hero p {
+            margin: 0.35rem 0 0 0;
+            font-size: 1rem;
+            color: #DCFCE7;
+        }
+        .listai-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: #FFFFFF;
+            padding: 0.2rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        /* Aviso de fase de testes */
+        .listai-beta-aviso {
+            background-color: #FEF3C7;
+            border: 1px solid #F59E0B;
+            border-left: 5px solid #D97706;
+            color: #78350F;
+            padding: 0.75rem 1rem;
             border-radius: 10px;
+            font-size: 0.92rem;
+            margin-bottom: 1rem;
+        }
+        /* Cartões de destaque na tela de login */
+        .listai-feature-card {
+            background: #FFFFFF;
+            border: 1px solid #DCFCE7;
+            border-top: 4px solid #16A34A;
+            border-radius: 12px;
+            padding: 0.9rem;
+            text-align: center;
+            color: #14221B;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            margin-bottom: 0.8rem;
+        }
+        .listai-feature-card strong {
+            display: block;
+            font-size: 0.95rem;
+            margin-top: 0.2rem;
+            color: #14532D;
+        }
+        .listai-feature-card span {
+            font-size: 0.82rem;
+            color: #4B5563;
+        }
+        /* Métricas estilizadas */
+        div[data-testid="stMetric"] {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-left: 5px solid #16A34A;
+            padding: 14px 18px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
+        /* Botões e abas mais arredondados */
+        .stButton > button, .stLinkButton > a, .stFormSubmitButton > button {
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+        }
+        button[data-baseweb="tab"] {
+            font-weight: 600 !important;
+            padding: 0.6rem 1rem !important;
+        }
+        /* Encarte de oferta / anúncio */
+        .listai-oferta-tag {
+            display: inline-block;
+            background: #FEF3C7;
+            color: #B45309;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.15rem 0.55rem;
+            border-radius: 6px;
+            margin-bottom: 0.3rem;
         }
     </style>
     """,
@@ -124,7 +214,7 @@ TRADUCAO_LOJA = {
 }
 
 
-# --- Sessão HTTP reutilizável (mais rápida) ---
+# --- Sessão HTTP reutilizável ---
 @st.cache_resource
 def obter_http_session():
     sess = requests.Session()
@@ -203,81 +293,112 @@ def registrar_usuario_google_se_novo():
 
 
 def exibir_tela_login():
-    st.title("🛒 Listaí — Controle e Preços da Região")
-    st.subheader("🔐 Acesse ou crie sua conta")
+    st.markdown(
+        """
+        <div class="listai-hero">
+            <span class="listai-badge">🛒 ECONOMIA INTELIGENTE NO MERCADO</span>
+            <h1>Listaí</h1>
+            <p>Anote suas compras por voz, acompanhe gastos mensais e descubra o supermercado mais barato da sua região.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    f1, f2, f3 = st.columns(3)
+    with f1:
+        st.markdown(
+            '<div class="listai-feature-card">📍<strong>Supermercados por GPS</strong>'
+            '<span>Encontra os mercados perto de você na hora</span></div>',
+            unsafe_allow_html=True,
+        )
+    with f2:
+        st.markdown(
+            '<div class="listai-feature-card">🎤<strong>Cadastro por Voz + IA</strong>'
+            '<span>Fale o produto e o app categoriza sozinho</span></div>',
+            unsafe_allow_html=True,
+        )
+    with f3:
+        st.markdown(
+            '<div class="listai-feature-card">🏆<strong>Preços da Região</strong>'
+            '<span>Compare valores e compartilhe no WhatsApp</span></div>',
+            unsafe_allow_html=True,
+        )
 
     _, col_centro, _ = st.columns([1, 2, 1])
     with col_centro:
-        if google_auth_configurado():
-            st.button(
-                "🔵 Entrar ou criar conta com Google (Gmail)",
-                on_click=st.login,
-                type="primary",
-                use_container_width=True,
-            )
-        else:
-            st.info(
-                "💡 Para ativar o botão **Entrar com Gmail**, configure `[auth]` "
-                "no arquivo `.streamlit/secrets.toml`."
-            )
+        with st.container(border=True):
+            st.subheader("🔐 Acesse ou crie sua conta")
 
-        st.divider()
-        aba_entrar, aba_cadastrar = st.tabs(["Entrar com senha", "Criar conta com senha"])
-        usuarios = carregar_usuarios()
+            if google_auth_configurado():
+                st.button(
+                    "🔵 Entrar ou criar conta com Google (Gmail)",
+                    on_click=st.login,
+                    type="primary",
+                    use_container_width=True,
+                )
+            else:
+                st.info(
+                    "💡 Para ativar o botão **Entrar com Gmail**, configure `[auth]` "
+                    "nos **Secrets** do Streamlit."
+                )
 
-        with aba_entrar:
-            with st.form("form_login"):
-                usuario = st.text_input("Usuário", placeholder="Digite seu usuário")
-                senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
-                if st.form_submit_button("Entrar", use_container_width=True):
-                    user_limpo = usuario.strip().lower()
-                    registro = usuarios.get(user_limpo)
+            st.divider()
+            aba_entrar, aba_cadastrar = st.tabs(["Entrar com senha", "Criar conta com senha"])
+            usuarios = carregar_usuarios()
 
-                    if registro is None:
-                        st.error("Usuário ou senha incorretos.")
-                    elif isinstance(registro, dict) and registro.get("tipo") == "google":
-                        st.warning("Conta vinculada ao Gmail. Use o botão azul acima.")
-                    else:
-                        hash_salvo = registro["hash"] if isinstance(registro, dict) else registro
-                        if verificar_senha(senha, hash_salvo):
-                            st.session_state["autenticado"] = True
-                            st.session_state["usuario_logado"] = user_limpo
-                            st.session_state["nome_usuario"] = (
-                                registro.get("nome", user_limpo)
-                                if isinstance(registro, dict)
-                                else user_limpo
-                            )
-                            st.rerun()
-                        else:
+            with aba_entrar:
+                with st.form("form_login"):
+                    usuario = st.text_input("Usuário", placeholder="Digite seu usuário")
+                    senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
+                    if st.form_submit_button("Entrar", type="primary", use_container_width=True):
+                        user_limpo = usuario.strip().lower()
+                        registro = usuarios.get(user_limpo)
+
+                        if registro is None:
                             st.error("Usuário ou senha incorretos.")
+                        elif isinstance(registro, dict) and registro.get("tipo") == "google":
+                            st.warning("Conta vinculada ao Gmail. Use o botão azul acima.")
+                        else:
+                            hash_salvo = registro["hash"] if isinstance(registro, dict) else registro
+                            if verificar_senha(senha, hash_salvo):
+                                st.session_state["autenticado"] = True
+                                st.session_state["usuario_logado"] = user_limpo
+                                st.session_state["nome_usuario"] = (
+                                    registro.get("nome", user_limpo)
+                                    if isinstance(registro, dict)
+                                    else user_limpo
+                                )
+                                st.rerun()
+                            else:
+                                st.error("Usuário ou senha incorretos.")
 
-            st.caption("Conta padrão para teste — Usuário: `teste` | Senha: `1234`")
+                st.caption("Conta padrão para teste — Usuário: `teste` | Senha: `1234`")
 
-        with aba_cadastrar:
-            with st.form("form_cadastro"):
-                novo_user = st.text_input("Novo Usuário", placeholder="Ex: maria")
-                nova_senha = st.text_input("Nova Senha", type="password", placeholder="Mínimo 4 caracteres")
-                conf_senha = st.text_input("Confirmar Senha", type="password")
-                if st.form_submit_button("Criar conta", use_container_width=True):
-                    novo_limpo = novo_user.strip().lower()
-                    if not novo_limpo:
-                        st.warning("Digite um nome de usuário.")
-                    elif novo_limpo in usuarios:
-                        st.error("Esse usuário já existe. Escolha outro.")
-                    elif len(nova_senha) < 4:
-                        st.warning("A senha deve ter pelo menos 4 caracteres.")
-                    elif nova_senha != conf_senha:
-                        st.error("As senhas não coincidem.")
-                    else:
-                        usuarios_edit = usuarios.copy()
-                        usuarios_edit[novo_limpo] = {
-                            "tipo": "senha",
-                            "hash": gerar_hash_senha(nova_senha),
-                            "nome": novo_limpo,
-                            "criado_em": date.today().isoformat(),
-                        }
-                        salvar_usuarios(usuarios_edit)
-                        st.success("Conta criada! Vá para a aba **Entrar com senha**.")
+            with aba_cadastrar:
+                with st.form("form_cadastro"):
+                    novo_user = st.text_input("Novo Usuário", placeholder="Ex: maria")
+                    nova_senha = st.text_input("Nova Senha", type="password", placeholder="Mínimo 4 caracteres")
+                    conf_senha = st.text_input("Confirmar Senha", type="password")
+                    if st.form_submit_button("Criar conta", type="primary", use_container_width=True):
+                        novo_limpo = novo_user.strip().lower()
+                        if not novo_limpo:
+                            st.warning("Digite um nome de usuário.")
+                        elif novo_limpo in usuarios:
+                            st.error("Esse usuário já existe. Escolha outro.")
+                        elif len(nova_senha) < 4:
+                            st.warning("A senha deve ter pelo menos 4 caracteres.")
+                        elif nova_senha != conf_senha:
+                            st.error("As senhas não coincidem.")
+                        else:
+                            usuarios_edit = usuarios.copy()
+                            usuarios_edit[novo_limpo] = {
+                                "tipo": "senha",
+                                "hash": gerar_hash_senha(nova_senha),
+                                "nome": novo_limpo,
+                                "criado_em": date.today().isoformat(),
+                            }
+                            salvar_usuarios(usuarios_edit)
+                            st.success("Conta criada! Vá para a aba **Entrar com senha**.")
 
 
 # --- Bloqueio antes do Login ---
@@ -486,7 +607,7 @@ def exibir_banner_anuncio():
     with st.container(border=True):
         c1, c2 = st.columns([4, 1])
         with c1:
-            st.caption("📢 Publicidade • Parceiro Listaí")
+            st.markdown('<span class="listai-oferta-tag">OFERTA PARCEIRA</span>', unsafe_allow_html=True)
             st.markdown(f"**{anuncio['titulo']}** — {anuncio['descricao']}")
         with c2:
             st.write("")
@@ -628,7 +749,7 @@ def reconhecer_produto_por_voz(audio_bytes, api_key):
     }
 
 
-# --- Persistência em Cache (leitura instantânea) ---
+# --- Persistência em Cache ---
 def _ler_csv_seguro(caminho, colunas, cols_num):
     if not (os.path.exists(caminho) and os.path.getsize(caminho) > 0):
         return pd.DataFrame(columns=colunas)
@@ -662,7 +783,7 @@ def salvar_linha_csv(caminho, novo_df, loader_fn):
     loader_fn.clear()
 
 
-# --- Barra Lateral (Conta, API Key e Painel Admin) ---
+# --- Barra Lateral ---
 def renderizar_sidebar():
     chave = os.getenv("GEMINI_API_KEY")
     if not chave:
@@ -672,6 +793,7 @@ def renderizar_sidebar():
             chave = None
 
     with st.sidebar:
+        st.markdown("### 🛒 Listaí")
         st.markdown(f"👤 Olá, **{nome_usuario}**!")
         if logado_google:
             st.caption(f"Gmail: {usuario_atual}")
@@ -688,9 +810,9 @@ def renderizar_sidebar():
                 st.rerun()
 
         st.divider()
-        st.header("⚙️ Chave da API")
+        st.subheader("⚙️ Inteligência Artificial")
         if chave:
-            st.success("API Gemini configurada.")
+            st.success("API Gemini conectada.")
         else:
             chave = st.text_input(
                 "Chave da API Gemini",
@@ -716,21 +838,29 @@ def renderizar_sidebar():
     return chave
 
 
-# --- Inicialização Segura de Estado ---
+# --- Estado Inicial ---
 st.session_state.setdefault("form_versao", 0)
 st.session_state.setdefault("valor_produto", "")
 st.session_state.setdefault("valor_quantidade", 1)
 st.session_state.setdefault("valor_preco", 1.00)
 st.session_state.setdefault("valor_supermercado", "")
 
-# --- Cabeçalho ---
-st.title("🛒 Listaí")
-st.caption("Controle de compras inteligente, reconhecimento por voz e preços da sua região.")
+# --- Cabeçalho Principal ---
 api_key = renderizar_sidebar()
 
-st.info(
-    "🚧 **Fase de testes:** Aproveite o aplicativo gratuitamente! "
-    "Em breve poderemos implementar planos e cobranças pelo uso do app."
+st.markdown(
+    """
+    <div class="listai-hero">
+        <span class="listai-badge">🛒 VERSÃO BETA • TESTE GRATUITO</span>
+        <h1>Listaí</h1>
+        <p>Economize nas compras do mês • Voz inteligente • Preços reais dos mercados da sua região</p>
+    </div>
+    <div class="listai-beta-aviso">
+        🚧 <strong>Aviso:</strong> Estamos em <strong>fase de testes</strong>! No momento o aplicativo é gratuito,
+        mas logo mais para frente poderemos implementar planos e cobranças pelo uso do app.
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 if msg := st.session_state.pop("msg_sucesso", None):
@@ -740,8 +870,8 @@ if msg := st.session_state.pop("msg_sucesso", None):
 with st.container(border=True):
     col_gps_txt, col_gps_btn = st.columns([4, 1])
     with col_gps_txt:
-        st.markdown("**📍 Localização GPS**")
-        st.caption("Clique ao lado para usar sua região e cadastrar os supermercados próximos automaticamente.")
+        st.markdown("**📍 Localização GPS do Supermercado**")
+        st.caption("Toque no ícone ao lado para detectar sua região e os mercados perto de você agora.")
     with col_gps_btn:
         if streamlit_geolocation is not None:
             localizacao = streamlit_geolocation()
@@ -778,7 +908,7 @@ with st.container(border=True):
         if gps_mercados:
             mais_perto, dist_m = gps_mercados[0]
             st.success(
-                f"📡 **{gps_regiao}** • Mais próximo: **{mais_perto} ({dist_m} m)** "
+                f"📡 **{gps_regiao}** • Você está perto de: **{mais_perto} ({dist_m} m)** "
                 f"• {len(gps_mercados)} mercados disponíveis"
             )
         else:
@@ -787,15 +917,17 @@ with st.container(border=True):
 # --- Abas Principais ---
 aba_compras, aba_comunidade, aba_mapa = st.tabs([
     "🛒 Compras & Gráfico",
-    "🏪 Preços & WhatsApp",
-    "🗺️ Supermercados",
+    "🏆 Menor Preço & WhatsApp",
+    "🗺️ Supermercados da Região",
 ])
 
 # ==============================================================================
 # ABA 1: COMPRAS & GRÁFICO
 # ==============================================================================
 with aba_compras:
-    audio_gravado = st.audio_input("🎤 Ditar produto (ex: '2 sabões Omo de 18 reais no Atacadão')")
+    with st.container(border=True):
+        st.markdown("**🎤 Cadastro Rápido por Voz**")
+        audio_gravado = st.audio_input("Fale o que comprou (ex: '2 sabões Omo de 18 reais no Atacadão')")
 
     if audio_gravado is not None:
         audio_bytes = audio_gravado.getvalue()
@@ -882,7 +1014,7 @@ with aba_compras:
             produto = st.text_input(
                 "Produto",
                 value=st.session_state["valor_produto"],
-                placeholder="Ex: Sabão Omo, Picanha...",
+                placeholder="Ex: Sabão Omo, Picanha, Café...",
                 key=f"input_produto_{versao}",
             )
         with c3:
@@ -897,7 +1029,7 @@ with aba_compras:
             )
 
         compartilhar = st.checkbox("📢 Compartilhar preço com a comunidade da região", value=True)
-        if st.form_submit_button("Enviar", type="primary", use_container_width=True):
+        if st.form_submit_button("✅ Adicionar à Lista", type="primary", use_container_width=True):
             produto = produto.strip()
             if not produto:
                 st.warning("Digite ou fale o nome do produto.")
@@ -953,8 +1085,8 @@ with aba_compras:
 
         m1, m2, m3 = st.columns(3)
         m1.metric("💰 Total Geral", f"R$ {df['Total'].sum():.2f}")
-        m2.metric("📅 Mês Atual", f"R$ {gasto_mes:.2f}")
-        m3.metric("🛍️ Itens", len(df))
+        m2.metric("📅 Gasto no Mês Atual", f"R$ {gasto_mes:.2f}")
+        m3.metric("🛍️ Itens Comprados", len(df))
 
         st.subheader("📊 Gráficos de Gastos")
         if not df_validos.empty:
@@ -971,7 +1103,7 @@ with aba_compras:
                     st.bar_chart(g, x="Mês", y="Total", color="Mercado")
                 else:
                     g = df_validos.groupby("Mês", as_index=False)["Total"].sum().sort_values("Mês")
-                    st.bar_chart(g, x="Mês", y="Total")
+                    st.bar_chart(g, x="Mês", y="Total", color="#16A34A")
 
             with col_c:
                 res_cat = (
@@ -986,7 +1118,7 @@ with aba_compras:
                     column_config={"Total": st.column_config.NumberColumn("Por Categoria", format="R$ %.2f")},
                 )
 
-        st.subheader("📋 Itens na Planilha")
+        st.subheader("🧾 Minhas Compras")
         df_exib = df.copy()
         if not df_validos.empty:
             meses = ["Todos"] + sorted(df_validos["Mês"].unique().tolist(), reverse=True)
@@ -1026,13 +1158,13 @@ with aba_compras:
                 carregar_dados.clear()
                 st.rerun()
     else:
-        st.info("Nenhum item cadastrado ainda. Use o GPS ou preencha acima!")
+        st.info("Nenhum item cadastrado ainda. Use o GPS, fale no microfone ou preencha acima!")
 
 # ==============================================================================
-# ABA 2: PREÇOS DA REGIÃO & WHATSAPP
+# ABA 2: MENOR PREÇO DA REGIÃO & WHATSAPP
 # ==============================================================================
 with aba_comunidade:
-    st.subheader("🏪 Comparador de Preços da Região")
+    st.subheader("🏆 Comparador de Preços da Região")
     df_com = carregar_comunidade().copy()
 
     if df_com.empty:
@@ -1076,7 +1208,7 @@ with aba_comunidade:
                 },
             )
 
-            st.subheader("📲 Compartilhar no WhatsApp")
+            st.subheader("📲 Compartilhar Ofertas no WhatsApp")
             linhas_zap = ["🛒 *Melhores preços no Listaí:*", ""] + [
                 f"• *{r['Produto']}*: R$ {r['Preço Unitário']:.2f} ({r['Supermercado']} - {r['Região']})"
                 for _, r in df_ord.head(5).iterrows()
@@ -1107,7 +1239,7 @@ with aba_mapa:
 
     if gps_coords:
         lat_g, lon_g = gps_coords
-        if st.button("🔄 Buscar e cadastrar neste raio", use_container_width=True):
+        if st.button("🔄 Buscar e cadastrar neste raio", type="primary", use_container_width=True):
             with st.spinner(f"Buscando em {raio_km} km..."):
                 try:
                     nova = consultar_overpass_mercados(lat_g, lon_g, raio_km * 1000)
