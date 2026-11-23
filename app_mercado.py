@@ -12,6 +12,7 @@ import altair as alt
 import pandas as pd
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 from google import genai
 from google.genai import types
 
@@ -24,56 +25,60 @@ st.set_page_config(
     page_title="Listaí — Preços e Compras",
     page_icon="🛒",
     layout="wide",
-    initial_sidebar_state="auto",
+    initial_sidebar_state="collapsed",
 )
 
-# --- Tema Visual Listaí (Azul da Logo + Verde) ---
+# --- Tema Fixo Verde Listaí (Cores e Letras Nítidas) ---
 st.markdown(
 """<style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-html, body, [class*="css"] { font-family: 'Plus Jakarta Sans', sans-serif; color: #0F2942; }
-.block-container { padding-top: 1.1rem; padding-bottom: 2.2rem; max-width: 1120px; }
-section[data-testid="stSidebar"] { background: linear-gradient(180deg, #EFF6FF 0%, #ECFDF5 100%); border-right: 1px solid #CBE7E3; }
-.listai-user-box { background: #FFFFFF; border: 1px solid #BFDBFE; border-left: 5px solid #0077E6; border-radius: 12px; padding: 0.7rem 0.9rem; margin-bottom: 0.75rem; box-shadow: 0 2px 6px rgba(0, 74, 153, 0.06); }
-.listai-user-box strong { color: #004A99; font-size: 0.98rem; }
-.listai-user-box small { color: #475569; display: block; margin-top: 2px; }
-.listai-header { background: linear-gradient(135deg, #004A99 0%, #0077E6 38%, #00B8B0 72%, #16A34A 100%); padding: 1.15rem 1.5rem; border-radius: 16px; color: #FFFFFF; margin-bottom: 0.65rem; box-shadow: 0 8px 24px rgba(0, 119, 230, 0.22); }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+html, body, .stApp { background-color: #F3F8F5 !important; color: #132A1E !important; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important; }
+.block-container { padding-top: 1.1rem; padding-bottom: 2.2rem; max-width: 1100px; }
+h1, h2, h3, h4 { color: #064E3B !important; font-weight: 800 !important; letter-spacing: -0.3px; }
+label, .stMarkdown p, .stCheckbox p, .stRadio p { color: #132A1E !important; }
+[data-testid="stCaptionContainer"] p, small { color: #475569 !important; font-size: 0.84rem !important; }
+section[data-testid="stSidebar"] { background-color: #EAF4EE !important; border-right: 1px solid #C6E6D3 !important; }
+.listai-user-box { background: #FFFFFF; border: 1px solid #BBF7D0; border-left: 5px solid #16A34A; border-radius: 12px; padding: 0.75rem 0.9rem; margin-bottom: 0.8rem; box-shadow: 0 2px 6px rgba(6, 78, 59, 0.06); }
+.listai-user-box strong { color: #064E3B; font-size: 1rem; display: block; }
+.listai-user-box small { color: #475569 !important; display: block; margin-top: 2px; }
+.listai-header { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%); padding: 1.15rem 1.5rem; border-radius: 16px; color: #FFFFFF !important; margin-bottom: 0.65rem; box-shadow: 0 8px 22px rgba(21, 128, 61, 0.22); }
 .listai-header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; }
 .listai-brand { display: flex; align-items: center; gap: 0.75rem; }
-.listai-logo-badge { background: #FFFFFF; width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14); flex-shrink: 0; }
-.listai-header h1 { margin: 0; font-size: 1.75rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.5px; }
-.listai-header p { margin: 0.35rem 0 0 0; font-size: 0.92rem; color: #E0F2FE; }
+.listai-logo-badge { background: #FFFFFF; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14); flex-shrink: 0; }
+.listai-header h1 { margin: 0 !important; font-size: 1.75rem !important; font-weight: 800 !important; color: #FFFFFF !important; letter-spacing: -0.5px; }
+.listai-header p { margin: 0.3rem 0 0 0 !important; font-size: 0.92rem !important; color: #DCFCE7 !important; font-weight: 500; }
 .listai-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-.listai-pill { background: rgba(255, 255, 255, 0.2); color: #FFFFFF; padding: 0.22rem 0.75rem; border-radius: 999px; font-size: 0.76rem; font-weight: 700; border: 1px solid rgba(255, 255, 255, 0.3); }
-.listai-beta-strip { background: #FEFCE8; border: 1px solid #FDE047; border-left: 4px solid #CA8A04; color: #713F12; padding: 0.5rem 0.95rem; border-radius: 10px; font-size: 0.84rem; margin-bottom: 1rem; }
-.listai-winner-card { background: linear-gradient(135deg, #EFF6FF 0%, #ECFDF5 100%); border: 1px solid #93C5FD; border-left: 6px solid #16A34A; border-radius: 14px; padding: 1rem 1.25rem; color: #0F2942; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(0, 119, 230, 0.08); }
-.listai-winner-card h3 { margin: 0 0 0.25rem 0; font-size: 1.15rem; color: #004A99; }
-.listai-mini-card { background: #FFFFFF; border: 1px solid #DBEAFE; border-top: 4px solid #0077E6; border-radius: 14px; padding: 0.85rem; text-align: center; color: #0F2942; margin-bottom: 0.8rem; box-shadow: 0 3px 10px rgba(0, 74, 153, 0.05); }
-.listai-mini-card strong { display: block; font-size: 0.92rem; color: #004A99; margin-top: 0.2rem; }
+.listai-pill { background: rgba(255, 255, 255, 0.2); color: #FFFFFF !important; padding: 0.22rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(255, 255, 255, 0.3); }
+.listai-beta-strip { background: #FEFCE8; border: 1px solid #FDE047; border-left: 4px solid #CA8A04; color: #713F12 !important; padding: 0.55rem 0.95rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; margin-bottom: 1rem; }
+.listai-winner-card { background: #ECFDF5; border: 1px solid #86EFAC; border-left: 6px solid #16A34A; border-radius: 14px; padding: 1rem 1.25rem; color: #064E3B; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1); }
+.listai-winner-card h3 { margin: 0 0 0.25rem 0 !important; font-size: 1.15rem !important; color: #064E3B !important; }
+.listai-mini-card { background: #FFFFFF; border: 1px solid #BBF7D0; border-top: 4px solid #16A34A; border-radius: 14px; padding: 0.85rem; text-align: center; margin-bottom: 0.8rem; box-shadow: 0 3px 10px rgba(6, 78, 59, 0.05); }
+.listai-mini-card strong { display: block; font-size: 0.94rem; color: #064E3B; margin-top: 0.2rem; }
 .listai-mini-card span { font-size: 0.8rem; color: #475569; }
-div[data-testid="stMetric"] { background-color: #FFFFFF; border: 1px solid #DBEAFE; border-left: 5px solid #16A34A; padding: 14px 18px; border-radius: 14px; box-shadow: 0 3px 10px rgba(0, 74, 153, 0.05); }
-div[data-testid="stMetricValue"] { color: #004A99 !important; }
-div[data-testid="stVerticalBlockBorderWrapper"] > div { border-radius: 14px !important; }
-.stButton > button, .stLinkButton > a, .stFormSubmitButton > button { border-radius: 10px !important; font-weight: 600 !important; transition: all 0.15s ease; }
-.stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primary"] { background: linear-gradient(135deg, #0077E6 0%, #00B8B0 55%, #16A34A 100%) !important; border: none !important; color: #FFFFFF !important; }
-.stButton > button[kind="primary"]:hover, .stFormSubmitButton > button[kind="primary"]:hover { filter: brightness(1.06); box-shadow: 0 4px 12px rgba(0, 119, 230, 0.25); }
-.stButton > button[kind="secondary"] { background-color: #FFFFFF !important; border: 1px solid #BFDBFE !important; color: #004A99 !important; }
-.stButton > button[kind="secondary"]:hover { border-color: #16A34A !important; background: linear-gradient(135deg, #EFF6FF 0%, #ECFDF5 100%) !important; color: #004A99 !important; }
-div[data-testid="stProgress"] > div > div > div > div { background: linear-gradient(90deg, #0077E6 0%, #00B8B0 50%, #16A34A 100%) !important; }
-.listai-ad-badge { display: inline-block; background: linear-gradient(90deg, #DBEAFE, #DCFCE7); color: #004A99; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 6px; margin-bottom: 0.25rem; }
+div[data-testid="stMetric"] { background-color: #FFFFFF !important; border: 1px solid #D1FAE5 !important; border-left: 5px solid #16A34A !important; padding: 14px 18px; border-radius: 14px; box-shadow: 0 2px 8px rgba(6, 78, 59, 0.05); }
+div[data-testid="stMetricLabel"] p { color: #334155 !important; font-weight: 600 !important; font-size: 0.88rem !important; }
+div[data-testid="stMetricValue"] { color: #064E3B !important; font-weight: 800 !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] > div { border-radius: 14px !important; background-color: #FFFFFF; }
+.stButton > button, .stLinkButton > a, .stFormSubmitButton > button { border-radius: 10px !important; font-weight: 600 !important; font-size: 0.92rem !important; transition: all 0.15s ease; }
+.stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primary"] { background-color: #16A34A !important; border: none !important; color: #FFFFFF !important; }
+.stButton > button[kind="primary"]:hover, .stFormSubmitButton > button[kind="primary"]:hover { background-color: #15803D !important; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28); }
+.stButton > button[kind="secondary"] { background-color: #FFFFFF !important; border: 1px solid #BBF7D0 !important; color: #064E3B !important; }
+.stButton > button[kind="secondary"]:hover { border-color: #16A34A !important; background-color: #ECFDF5 !important; color: #064E3B !important; }
+div[data-testid="stProgress"] > div > div > div > div { background-color: #16A34A !important; }
+.listai-ad-badge { display: inline-block; background: #DCFCE7; color: #166534; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 6px; margin-bottom: 0.25rem; }
 </style>""",
 unsafe_allow_html=True,
 )
 
 LOGO_SVG = (
     '<div class="listai-logo-badge">'
-    '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'
+    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'
     '<defs><linearGradient id="lg" x1="0" y1="12" x2="24" y2="4" gradientUnits="userSpaceOnUse">'
     '<stop offset="0%" stop-color="#0077E6"/><stop offset="55%" stop-color="#00B8B0"/><stop offset="100%" stop-color="#16A34A"/>'
     '</linearGradient></defs>'
     '<path d="M2 4H5L7.4 14.5C7.6 15.4 8.4 16 9.3 16H17.5C18.4 16 19.2 15.4 19.4 14.5L21 7H6" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
     '<path d="M9.5 10.2L12 12.6L19.5 4.8" stroke="url(#lg)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>'
-    '<circle cx="9.5" cy="19.5" r="1.6" fill="#0077E6"/><circle cx="17" cy="19.5" r="1.6" fill="#00B8B0"/>'
+    '<circle cx="9.5" cy="19.5" r="1.6" fill="#0077E6"/><circle cx="17" cy="19.5" r="1.6" fill="#16A34A"/>'
     '</svg></div>'
 )
 
@@ -138,6 +143,28 @@ TRADUCAO_LOJA = {
     "convenience": "Mercearia / Minimercado",
     "greengrocer": "Hortifruti / Sacolão",
 }
+
+
+def fechar_barra_lateral():
+    """Fecha a barra lateral automaticamente via DOM após selecionar uma página."""
+    components.html(
+        """<script>
+        setTimeout(function() {
+            const doc = window.parent.document;
+            const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+            if (sidebar && sidebar.getAttribute('aria-expanded') === 'true') {
+                const btn =
+                    sidebar.querySelector('button[kind="headerNoPadding"]') ||
+                    sidebar.querySelector('button[data-testid="baseButton-headerNoPadding"]') ||
+                    doc.querySelector('[data-testid="stSidebarCollapseButton"] button') ||
+                    doc.querySelector('[data-testid="stSidebarHeader"] button') ||
+                    sidebar.querySelector('button[aria-label*="Close"]');
+                if (btn) { btn.click(); }
+            }
+        }, 60);
+        </script>""",
+        height=0,
+    )
 
 
 # --- Clientes em Cache ---
@@ -467,14 +494,14 @@ def exibir_tabela_e_mapa_regiao(lista_mercados, msg_sucesso):
         st.map(df_m, latitude="lat", longitude="lon")
 
 
-# --- Gráficos Profissionais ---
+# --- Gráficos em Tema Fixo Verde ---
 def renderizar_graficos_compras(df, df_validos):
     if df_validos.empty:
         st.info("Adicione compras com data para visualizar os gráficos.")
         return
 
     visao = st.radio("Agrupar evolução mensal por:", ["Total do Mês", "Por Categoria", "Por Supermercado"], horizontal=True)
-    paleta = ["#004A99", "#0077E6", "#00B8B0", "#16A34A", "#22C55E", "#38BDF8", "#0D9488", "#15803D"]
+    paleta_verde = ["#064E3B", "#15803D", "#16A34A", "#22C55E", "#10B981", "#0D9488", "#4ADE80", "#86EFAC"]
     col_g, col_c = st.columns([3, 2])
 
     with col_g:
@@ -494,9 +521,9 @@ def renderizar_graficos_compras(df, df_validos):
                 alt.Chart(g)
                 .mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5)
                 .encode(
-                    x=alt.X("Mês_Label:N", sort=ord_lbls, title=None, axis=alt.Axis(labelAngle=0)),
-                    y=alt.Y("Total:Q", title="Gasto (R$)"),
-                    color=alt.Color(f"{col_cor}:N", scale=alt.Scale(range=paleta), legend=alt.Legend(orient="bottom", columns=3, title=None)),
+                    x=alt.X("Mês_Label:N", sort=ord_lbls, title=None, axis=alt.Axis(labelAngle=0, labelColor="#132A1E")),
+                    y=alt.Y("Total:Q", title="Gasto (R$)", axis=alt.Axis(labelColor="#132A1E", titleColor="#064E3B")),
+                    color=alt.Color(f"{col_cor}:N", scale=alt.Scale(range=paleta_verde), legend=alt.Legend(orient="bottom", columns=3, title=None, labelColor="#132A1E")),
                     tooltip=[alt.Tooltip("Mês_Label:N", title="Mês"), alt.Tooltip(f"{col_cor}:N", title=col_cor), alt.Tooltip("Valor_fmt:N", title="Total")],
                 )
                 .properties(height=320, title=f"Gastos Mensais ({visao})")
@@ -508,20 +535,20 @@ def renderizar_graficos_compras(df, df_validos):
                 alt.Chart(g)
                 .mark_bar(cornerRadiusTopLeft=7, cornerRadiusTopRight=7, color="#16A34A", size=38)
                 .encode(
-                    x=alt.X("Mês_Label:N", sort=ord_lbls, title=None, axis=alt.Axis(labelAngle=0)),
-                    y=alt.Y("Total:Q", title="Gasto (R$)", scale=alt.Scale(domain=[0, max(g["Total"].max() * 1.18, 10)])),
+                    x=alt.X("Mês_Label:N", sort=ord_lbls, title=None, axis=alt.Axis(labelAngle=0, labelColor="#132A1E")),
+                    y=alt.Y("Total:Q", title="Gasto (R$)", scale=alt.Scale(domain=[0, max(g["Total"].max() * 1.18, 10)]), axis=alt.Axis(labelColor="#132A1E", titleColor="#064E3B")),
                     tooltip=[alt.Tooltip("Mês_Label:N", title="Mês"), alt.Tooltip("Valor_fmt:N", title="Total Gasto")],
                 )
             )
-            rotulos = barras.mark_text(align="center", baseline="bottom", dy=-5, fontWeight="bold", color="#004A99").encode(text="Valor_fmt:N")
+            rotulos = barras.mark_text(align="center", baseline="bottom", dy=-5, fontWeight="bold", color="#064E3B").encode(text="Valor_fmt:N")
             if len(g) >= 2:
                 media = g["Total"].mean()
-                linha = alt.Chart(pd.DataFrame({"Media": [media]})).mark_rule(strokeDash=[5, 4], color="#0077E6", size=2).encode(y="Media:Q")
+                linha = alt.Chart(pd.DataFrame({"Media": [media]})).mark_rule(strokeDash=[5, 4], color="#064E3B", size=2).encode(y="Media:Q")
                 chart_mensal = (barras + rotulos + linha).properties(height=320, title=f"Evolução Mensal (média: {formatar_reais(media)})")
             else:
                 chart_mensal = (barras + rotulos).properties(height=320, title="Evolução Mensal")
 
-        st.altair_chart(chart_mensal, use_container_width=True)
+        st.altair_chart(chart_mensal.configure(background="#FFFFFF"), use_container_width=True)
 
     with col_c:
         res_cat = df.groupby("Categoria", as_index=False)["Total"].sum().sort_values("Total", ascending=False)
@@ -531,14 +558,14 @@ def renderizar_graficos_compras(df, df_validos):
             alt.Chart(res_cat)
             .mark_bar(cornerRadiusTopRight=6, cornerRadiusBottomRight=6)
             .encode(
-                y=alt.Y("Categoria:N", sort="-x", title=None),
-                x=alt.X("Total:Q", title=None, axis=None, scale=alt.Scale(domain=[0, res_cat["Total"].max() * 1.45])),
-                color=alt.Color("Total:Q", scale=alt.Scale(range=["#0077E6", "#00B8B0", "#16A34A"]), legend=None),
+                y=alt.Y("Categoria:N", sort="-x", title=None, axis=alt.Axis(labelColor="#132A1E")),
+                x=alt.X("Total:Q", title=None, axis=None, scale=alt.Scale(domain=[0, res_cat["Total"].max() * 1.48])),
+                color=alt.Color("Total:Q", scale=alt.Scale(range=["#4ADE80", "#16A34A", "#064E3B"]), legend=None),
                 tooltip=[alt.Tooltip("Categoria:N", title="Categoria"), alt.Tooltip("Label:N", title="Gasto")],
             )
         )
-        txt_cat = barras_cat.mark_text(align="left", baseline="middle", dx=6, fontSize=12, fontWeight="bold", color="#004A99").encode(text="Label:N")
-        st.altair_chart((barras_cat + txt_cat).properties(height=320, title="Onde você gastou mais"), use_container_width=True)
+        txt_cat = barras_cat.mark_text(align="left", baseline="middle", dx=6, fontSize=12, fontWeight="bold", color="#064E3B").encode(text="Label:N")
+        st.altair_chart((barras_cat + txt_cat).properties(height=320, title="Onde você gastou mais").configure(background="#FFFFFF"), use_container_width=True)
 
 
 # --- Supermercados Salvos ---
@@ -727,7 +754,7 @@ def obter_compras_com_datas():
     return df, df_validos
 
 
-# --- Carrega automaticamente a última região salva ao entrar ---
+# --- Carrega última região salva ao entrar ---
 if "gps_coords" not in st.session_state:
     prefs = carregar_preferencias_gps()
     if prefs.get("lat") is not None and prefs.get("lon") is not None:
@@ -741,7 +768,7 @@ if "gps_coords" not in st.session_state:
         })
 
 
-# --- Barra Lateral ---
+# --- Barra Lateral (Fecha automaticamente ao escolher um tópico) ---
 def renderizar_sidebar():
     chave = os.getenv("GEMINI_API_KEY")
     if not chave:
@@ -758,11 +785,11 @@ def renderizar_sidebar():
         for idx, pag in enumerate(PAGINAS):
             if st.button(pag, key=f"side_nav_{idx}", type="primary" if st.session_state["pagina_atual"] == pag else "secondary", use_container_width=True):
                 st.session_state["pagina_atual"] = pag
+                st.session_state["fechar_sidebar"] = True
                 st.rerun()
 
         st.divider()
 
-        # GPS na barra lateral em largura total (sem colunas apertadas para não travar o clique)
         with st.expander("📍 Localização GPS", expanded=False):
             with st.container(border=True):
                 st.markdown("**🎯 Atualizar minha posição agora**")
@@ -799,7 +826,7 @@ def renderizar_sidebar():
                 elif reg_atual:
                     st.info(f"📌 Região ativa: **{reg_atual}**")
 
-            st.caption("Se não abrir o pedido de permissão, verifique o cadeado 🔒 na barra de endereço do navegador e libere a Localização.")
+            st.caption("Se não abrir o pedido de permissão, confira o cadeado 🔒 na barra do navegador e libere a Localização.")
 
         with st.expander("⚙️ Inteligência Artificial", expanded=not bool(chave)):
             if chave:
@@ -834,6 +861,9 @@ def renderizar_sidebar():
             for k in ["aviso_voz", "ultimo_audio_hash", "msg_sucesso", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_novos_salvos"]:
                 st.session_state.pop(k, None)
             st.rerun()
+
+        if st.session_state.pop("fechar_sidebar", False):
+            fechar_barra_lateral()
 
     return chave
 
