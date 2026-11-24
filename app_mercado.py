@@ -26,26 +26,59 @@ st.set_page_config(page_title="Listaí — Preços e Compras", page_icon="🛒",
 # --- Tema Verde Listaí + Layout Mobile Compacto ---
 st.markdown(
 """<style>
-html, body, .stApp { background-color: #F3F8F5 !important; color: #132A1E !important; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important; overflow-x: hidden !important; }
-.block-container { padding: 0.9rem 1rem 5.8rem 1rem !important; max-width: 1080px; }
+html, body, .stApp { background-color: #F3F8F5 !important; color: #132A1E !important; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important; overflow-x: clip !important; }
+.block-container { padding: 0.9rem 1rem 3rem 1rem !important; max-width: 1080px; }
 h1, h2, h3, h4 { color: #064E3B !important; font-weight: 800 !important; letter-spacing: -0.3px; }
 label, .stMarkdown p, .stCheckbox p, .stRadio p { color: #132A1E !important; }
 [data-testid="stCaptionContainer"] p, small { color: #475569 !important; font-size: 0.82rem !important; }
 section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] { display: none !important; }
 
-/* Topo Estilo Nubank */
-.st-key-topo_nubank { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%) !important; border-radius: 16px !important; padding: 0.85rem 1.1rem !important; margin-bottom: 0.75rem !important; box-shadow: 0 6px 20px rgba(21, 128, 61, 0.22) !important; }
+/* Topo Estilo Nubank (CSS Grid para nunca quebrar no celular) */
+.st-key-topo_nubank { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%) !important; border-radius: 16px !important; padding: 0.85rem 1rem !important; margin-bottom: 0.6rem !important; box-shadow: 0 6px 20px rgba(21, 128, 61, 0.22) !important; }
 .st-key-topo_nubank [data-testid="stVerticalBlock"] { background: transparent !important; gap: 0 !important; }
-.st-key-topo_nubank [data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; flex-wrap: nowrap !important; gap: 0.5rem !important; }
-.st-key-topo_nubank [data-testid="stColumn"]:first-child { flex: 1 1 auto !important; min-width: 0 !important; width: auto !important; }
-.st-key-topo_nubank [data-testid="stColumn"]:last-child { flex: 0 0 auto !important; width: auto !important; }
-.listai-nu-user { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
-.listai-nu-texts { min-width: 0; }
-.listai-nu-brand { font-size: 0.70rem; font-weight: 700; color: #BBF7D0; text-transform: uppercase; letter-spacing: 0.7px; }
-.listai-nu-hello { font-size: 1.25rem; font-weight: 800; color: #FFFFFF; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.listai-nu-sub { font-size: 0.78rem; color: #DCFCE7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.st-key-topo_nubank .stButton > button { background: #FFFFFF !important; border: 2px solid #DCFCE7 !important; color: #064E3B !important; border-radius: 999px !important; padding: 0.38rem 0.9rem !important; font-size: 0.82rem !important; font-weight: 800 !important; white-space: nowrap !important; }
-.st-key-topo_nubank .stButton > button p { color: #064E3B !important; font-weight: 800 !important; }
+.st-key-topo_nubank [data-testid="stHorizontalBlock"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+}
+.st-key-topo_nubank [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
+.st-key-topo_nubank [data-testid="stColumn"]:last-child { width: auto !important; justify-self: end !important; }
+.st-key-topo_nubank [data-testid="stColumn"]:first-child [data-testid="stElementContainer"],
+.st-key-topo_nubank [data-testid="stColumn"]:first-child [data-testid="stMarkdown"] { width: 100% !important; min-width: 0 !important; }
+.st-key-topo_nubank [data-testid="stColumn"]:last-child [data-testid="stElementContainer"] { width: auto !important; }
+
+.listai-nu-user { display: flex; align-items: center; gap: 0.7rem; width: 100%; min-width: 0; }
+.listai-nu-texts { flex: 1 1 auto; min-width: 0; }
+.listai-nu-brand { font-size: 0.68rem; font-weight: 700; color: #BBF7D0; text-transform: uppercase; letter-spacing: 0.7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.listai-nu-hello { font-size: 1.2rem; font-weight: 800; color: #FFFFFF; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.listai-nu-sub { font-size: 0.76rem; color: #DCFCE7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-key-topo_nubank .stButton > button { background: #FFFFFF !important; border: 2px solid #DCFCE7 !important; color: #064E3B !important; border-radius: 999px !important; padding: 0.36rem 0.85rem !important; font-size: 0.80rem !important; font-weight: 800 !important; white-space: nowrap !important; width: auto !important; }
+.st-key-topo_nubank .stButton > button p { color: #064E3B !important; font-weight: 800 !important; white-space: nowrap !important; }
+
+/* Barra de Navegação Superior (logo abaixo do topo, sem colidir com ícones do Streamlit) */
+.st-key-barra_navegacao {
+    position: sticky !important;
+    top: 0.35rem !important;
+    z-index: 999 !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid #86EFAC !important;
+    border-radius: 14px !important;
+    padding: 0.28rem 0.32rem !important;
+    margin-bottom: 0.7rem !important;
+    box-shadow: 0 4px 14px rgba(6, 78, 59, 0.12) !important;
+}
+.st-key-barra_navegacao [data-testid="stVerticalBlock"] { gap: 0 !important; }
+.st-key-barra_navegacao [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 0.18rem !important; width: 100% !important; }
+.st-key-barra_navegacao [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
+.st-key-barra_navegacao .stButton > button { border-radius: 10px !important; padding: 0.32rem 0.06rem !important; min-height: 2.6rem !important; line-height: 1.1 !important; box-shadow: none !important; width: 100% !important; }
+.st-key-barra_navegacao .stButton > button p { font-size: 0.72rem !important; font-weight: 700 !important; line-height: 1.12 !important; margin: 0 !important; white-space: pre-line !important; }
+.st-key-barra_navegacao .stButton > button[kind="secondary"] { background: transparent !important; border: none !important; color: #334155 !important; }
+.st-key-barra_navegacao .stButton > button[kind="primary"] { background: linear-gradient(135deg, #15803D, #16A34A) !important; color: #FFFFFF !important; }
+.st-key-barra_navegacao .stButton > button[kind="primary"] p { color: #FFFFFF !important; }
 
 /* Grids Fixos para Mobile e Desktop */
 .st-key-kpi_2cols [data-testid="stHorizontalBlock"],
@@ -53,7 +86,7 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-acao_add_voz [data-testid="stHorizontalBlock"],
 .st-key-add_lista_row [data-testid="stHorizontalBlock"],
 .st-key-lista_chk_box [data-testid="stHorizontalBlock"],
-.st-key-recentes_box [data-testid="stHorizontalBlock"],
+[class*="st-key-hist_ini_cat_"] [data-testid="stHorizontalBlock"],
 [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"],
 [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] {
     display: grid !important; gap: 0.45rem !important; align-items: center !important; width: 100% !important;
@@ -64,9 +97,9 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-acao_add_voz [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 48px !important; }
 .st-key-add_lista_row [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 64px !important; align-items: end !important; }
 .st-key-lista_chk_box [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 40px 40px !important; gap: 0.25rem !important; }
-.st-key-recentes_box [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
+[class*="st-key-hist_ini_cat_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
 [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-.st-key-kpi_4cols [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.5rem !important; }
+.st-key-kpi_4cols [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.5rem !important; width: 100% !important; }
 
 .st-key-kpi_2cols [data-testid="stColumn"],
 .st-key-kpi_4cols [data-testid="stColumn"],
@@ -74,9 +107,9 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-acao_add_voz [data-testid="stColumn"],
 .st-key-add_lista_row [data-testid="stColumn"],
 .st-key-lista_chk_box [data-testid="stColumn"],
-.st-key-recentes_box [data-testid="stColumn"],
+[class*="st-key-hist_ini_cat_"] [data-testid="stColumn"],
 [class*="st-key-edit_qp_"] [data-testid="stColumn"],
-[class*="st-key-edit_btns_"] [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; }
+[class*="st-key-edit_btns_"] [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 
 /* Botão de Áudio Compacto (Somente o Botão) ao lado de Adicionar */
 @keyframes listai-pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
@@ -102,9 +135,9 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
     position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; opacity: 0 !important; pointer-events: none !important;
 }
 
-/* Botões compactos da lista e recentes */
+/* Botões compactos da lista e histórico inicial */
 .st-key-lista_chk_box .stButton > button,
-.st-key-recentes_box .stButton > button { padding: 0.25rem 0.2rem !important; min-height: 2.1rem !important; font-size: 0.85rem !important; }
+[class*="st-key-hist_ini_cat_"] .stButton > button { padding: 0.25rem 0.2rem !important; min-height: 2.1rem !important; font-size: 0.85rem !important; }
 .st-key-lista_chk_box .stCheckbox { margin: 0 !important; }
 .st-key-lista_chk_box .stCheckbox label p { font-size: 0.88rem !important; line-height: 1.25 !important; word-break: break-word !important; }
 .listai-rec-row { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 0.45rem 0.65rem; min-width: 0; }
@@ -115,9 +148,14 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .listai-avatar { border-radius: 50%; background: rgba(255, 255, 255, 0.22); border: 2px solid rgba(255, 255, 255, 0.88); color: #FFFFFF; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .listai-avatar-solid { border-radius: 50%; background: linear-gradient(135deg, #064E3B, #16A34A); border: 2px solid #86EFAC; color: #FFFFFF; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .listai-avatar-img { border-radius: 50%; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.92); flex-shrink: 0; display: block; }
-.st-key-perfil_hero_top [data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 0.85rem !important; flex-wrap: nowrap !important; }
-.st-key-perfil_hero_top [data-testid="stColumn"]:first-child { flex: 0 0 78px !important; width: 78px !important; min-width: 78px !important; }
-.st-key-perfil_hero_top [data-testid="stColumn"]:last-child { flex: 1 1 auto !important; min-width: 0 !important; }
+.st-key-perfil_hero_top [data-testid="stHorizontalBlock"] {
+    display: grid !important;
+    grid-template-columns: 78px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 0.85rem !important;
+    width: 100% !important;
+}
+.st-key-perfil_hero_top [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 .st-key-avatar_clicavel { position: relative !important; width: 78px !important; height: 78px !important; border-radius: 50% !important; cursor: pointer !important; }
 .st-key-avatar_clicavel [data-testid="stVerticalBlock"] { position: relative !important; width: 78px !important; height: 78px !important; gap: 0 !important; }
 .listai-avatar-wrap { position: relative; width: 78px; height: 78px; }
@@ -182,28 +220,18 @@ div[data-testid="stMetricValue"] { color: #064E3B !important; font-weight: 800 !
 .stButton > button[kind="secondary"] { background-color: #FFFFFF !important; border: 1px solid #BBF7D0 !important; color: #064E3B !important; }
 div[data-testid="stProgress"] > div > div > div > div { background-color: #16A34A !important; }
 
-/* Barra Inferior Fixa (6 Abas = Cabe em 1 linha no celular!) */
-.st-key-barra_inferior { position: fixed !important; bottom: 8px !important; left: 50% !important; transform: translateX(-50%) !important; width: min(1060px, calc(100vw - 14px)) !important; z-index: 99999 !important; background: rgba(255, 255, 255, 0.96) !important; backdrop-filter: blur(10px) !important; -webkit-backdrop-filter: blur(10px) !important; border: 1px solid #86EFAC !important; border-radius: 16px !important; padding: 0.25rem 0.3rem !important; box-shadow: 0 6px 24px rgba(6, 78, 59, 0.20) !important; }
-.st-key-barra_inferior [data-testid="stVerticalBlock"] { gap: 0 !important; }
-.st-key-barra_inferior [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 0.16rem !important; width: 100% !important; }
-.st-key-barra_inferior [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; }
-.st-key-barra_inferior .stButton > button { border-radius: 11px !important; padding: 0.30rem 0.05rem !important; min-height: 2.60rem !important; line-height: 1.1 !important; box-shadow: none !important; }
-.st-key-barra_inferior .stButton > button p { font-size: 0.72rem !important; font-weight: 700 !important; line-height: 1.12 !important; margin: 0 !important; white-space: pre-line !important; }
-.st-key-barra_inferior .stButton > button[kind="secondary"] { background: transparent !important; border: none !important; color: #334155 !important; }
-.st-key-barra_inferior .stButton > button[kind="primary"] { background: linear-gradient(135deg, #15803D, #16A34A) !important; color: #FFFFFF !important; }
-.st-key-barra_inferior .stButton > button[kind="primary"] p { color: #FFFFFF !important; }
-
 @media (max-width: 680px) {
-    .block-container { padding: 0.55rem 0.65rem 5.1rem 0.65rem !important; }
-    .st-key-topo_nubank { padding: 0.7rem 0.85rem !important; margin-bottom: 0.6rem !important; }
-    .listai-nu-hello { font-size: 1.1rem !important; }
+    .block-container { padding: 0.5rem 0.65rem 4rem 0.65rem !important; }
+    .st-key-topo_nubank { padding: 0.68rem 0.8rem !important; margin-bottom: 0.45rem !important; }
+    .listai-nu-hello { font-size: 1.05rem !important; }
+    .st-key-topo_nubank .stButton > button { padding: 0.3rem 0.7rem !important; font-size: 0.76rem !important; }
     div[data-testid="stMetric"] { padding: 8px 11px !important; }
     div[data-testid="stMetricValue"] { font-size: 1.15rem !important; }
     .st-key-kpi_4cols [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-    .st-key-barra_inferior { padding: 0.22rem 0.22rem !important; }
-    .st-key-barra_inferior [data-testid="stHorizontalBlock"] { gap: 0.1rem !important; }
-    .st-key-barra_inferior .stButton > button { min-height: 2.35rem !important; padding: 0.2rem 0.02rem !important; }
-    .st-key-barra_inferior .stButton > button p { font-size: 0.60rem !important; }
+    .st-key-barra_navegacao { padding: 0.22rem 0.22rem !important; margin-bottom: 0.55rem !important; }
+    .st-key-barra_navegacao [data-testid="stHorizontalBlock"] { gap: 0.1rem !important; }
+    .st-key-barra_navegacao .stButton > button { min-height: 2.38rem !important; padding: 0.2rem 0.02rem !important; }
+    .st-key-barra_navegacao .stButton > button p { font-size: 0.59rem !important; }
 }
 </style>""",
 unsafe_allow_html=True,
@@ -223,6 +251,14 @@ PASTA_DADOS_USUARIOS, ARQUIVO_COMUNIDADE, ARQUIVO_MERCADOS, ARQUIVO_USUARIOS = "
 NAV_ITENS = [("🛒", "Compra"), ("📝", "Lista"), ("📊", "Gráficos"), ("🧾", "Histórico"), ("🏆", "Preços"), ("🗺️", "Mercados")]
 PAGINAS = [f"{ico} {txt}" for ico, txt in NAV_ITENS]
 PAGINA_PERFIL = "👤 Perfil"
+
+PERGUNTAS_SEGURANCA = [
+    "Qual o nome do seu primeiro pet?",
+    "Qual sua cidade natal?",
+    "Qual o nome da sua mãe?",
+    "Qual sua comida favorita?",
+    "Qual o nome da sua escola de infância?",
+]
 
 COLUNAS = ["Data", "Região", "Supermercado", "Produto", "Categoria", "Quantidade", "Preço Unitário", "Total"]
 COLUNAS_PRE_LISTA = ["ID", "Produto", "Quantidade", "Categoria", "Comprado"]
@@ -262,6 +298,7 @@ def _norm_basico(texto):
     return "".join(c for c in unicodedata.normalize("NFD", str(texto).lower().strip()) if unicodedata.category(c) != "Mn")
 
 
+# Pré-compilado em ordem decrescente de tamanho para evitar colisões (ex: "molho de tomate" antes de "tomate")
 _REGRAS_CATEGORIA = sorted(
     [(re.compile(rf"\b{re.escape(_norm_basico(p))}\b"), cat, len(_norm_basico(p))) for cat, ps in CATEGORIAS_FALLBACK.items() for p in ps],
     key=lambda x: x[2],
@@ -310,6 +347,20 @@ def obter_iniciais(nome):
     return "US" if not p else (p[0][:2].upper() if len(p) == 1 else (p[0][0] + p[-1][0]).upper())
 
 
+def mascarar_email(email):
+    e = str(email or "").strip()
+    if "@" not in e:
+        return "***"
+    local, dom = e.split("@", 1)
+    vis = local[:2] if len(local) > 2 else local[:1]
+    return f"{vis}***@{dom}"
+
+
+def mascarar_telefone(tel):
+    dig = re.sub(r"\D", "", str(tel or ""))
+    return f"***-{dig[-4:]}" if len(dig) >= 4 else "***"
+
+
 def rolar_para_topo():
     components.html("<script>setTimeout(()=>{const d=window.parent.document,m=d.querySelector('[data-testid=\"stMain\"]')||d.querySelector('section.main');if(m)m.scrollTo({top:0,behavior:'smooth'});window.parent.scrollTo({top:0,behavior:'smooth'});},40);</script>", height=0)
 
@@ -342,10 +393,10 @@ def obter_api_key_gemini():
 
 
 def limpar_estado_usuario(incluir_auth=False):
-    chaves = {"aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "msg_sucesso", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria", "home_hist_periodo", "lista_versao", "sel_aj_lista", "recuperar_usuario", "login_msg_sucesso"}
+    chaves = {"aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "msg_sucesso", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria", "ultima_cat_adicionada"}
     if incluir_auth:
         st.session_state.update({"autenticado": False, "usuario_logado": ""})
-        chaves.update({"modo_login", "gemini_api_key_usuario", "pagina_atual", "pagina_anterior"})
+        chaves.update({"modo_login", "rec_usuario", "msg_login_ok", "gemini_api_key_usuario", "pagina_atual", "pagina_anterior"})
     for k in list(st.session_state.keys()):
         if k.startswith(("num_lim_", "chk_bloq_", "up_foto_", "audio_zap_")) or k in chaves:
             st.session_state.pop(k, None)
@@ -410,7 +461,7 @@ def obter_gemini_client(api_key):
     return genai.Client(api_key=api_key)
 
 
-# --- Autenticação e Recuperação de Senha ---
+# --- Autenticação ---
 def gerar_hash_senha(senha, salt=None):
     salt = salt or secrets.token_hex(16)
     return f"{salt}${hashlib.sha256((salt + senha).encode()).hexdigest()}"
@@ -427,7 +478,7 @@ def verificar_senha(digitada, salva):
 def carregar_usuarios():
     if dados := ler_json(ARQUIVO_USUARIOS, dict):
         return dados
-    iniciais = {"teste": {"tipo": "senha", "hash": gerar_hash_senha("1234"), "nome": "Conta Teste", "dica_senha": "São 4 números em sequência (1234)", "criado_em": date.today().isoformat()}}
+    iniciais = {"teste": {"tipo": "senha", "hash": gerar_hash_senha("1234"), "nome": "Conta Teste", "lembrete": "Sequência numérica de 1 a 4", "criado_em": date.today().isoformat()}}
     salvar_json(ARQUIVO_USUARIOS, iniciais)
     return iniciais
 
@@ -435,18 +486,6 @@ def carregar_usuarios():
 def salvar_usuarios(usuarios):
     salvar_json(ARQUIVO_USUARIOS, usuarios)
     carregar_usuarios.clear()
-
-
-def encontrar_usuario_por_identificador(identificador, usuarios):
-    ident = identificador.strip().lower()
-    if not ident:
-        return None
-    if ident in usuarios:
-        return ident
-    for k, v in usuarios.items():
-        if isinstance(v, dict) and v.get("email", "").strip().lower() == ident:
-            return k
-    return None
 
 
 def exibir_tela_login():
@@ -457,11 +496,12 @@ def exibir_tela_login():
         usuarios = carregar_usuarios()
 
         with st.container(border=True):
-            if msg_l := st.session_state.pop("login_msg_sucesso", None):
-                st.success(msg_l)
+            modo = st.session_state["modo_login"]
 
-            if st.session_state["modo_login"] == "entrar":
+            if modo == "entrar":
                 st.subheader("🔐 Entrar")
+                if msg_ok := st.session_state.pop("msg_login_ok", None):
+                    st.success(msg_ok)
                 with st.form("form_login", border=False):
                     u_in = st.text_input("Usuário", placeholder="Seu usuário")
                     s_in = st.text_input("Senha", type="password", placeholder="Sua senha")
@@ -476,94 +516,100 @@ def exibir_tela_login():
                         else:
                             st.error("Usuário ou senha incorretos.")
 
-                if st.button("🔑 Esqueci minha senha", use_container_width=True):
-                    st.session_state.pop("recuperar_usuario", None)
-                    st.session_state["modo_login"] = "recuperar"
-                    st.rerun()
+                with st.container(key="kpi_2cols"):
+                    c_esq, c_cad = st.columns(2)
+                    if c_esq.button("🔑 Esqueci a senha", use_container_width=True):
+                        st.session_state.pop("rec_usuario", None)
+                        st.session_state["modo_login"] = "recuperar"
+                        st.rerun()
+                    if c_cad.button("📝 Criar conta", use_container_width=True):
+                        st.session_state["modo_login"] = "cadastro"
+                        st.rerun()
 
-                st.divider()
-                if st.button("📝 Criar nova conta", use_container_width=True):
-                    st.session_state["modo_login"] = "cadastro"
-                    st.rerun()
-
-            elif st.session_state["modo_login"] == "recuperar":
-                st.subheader("🔑 Lembrar / Redefinir Senha")
-                st.caption("Digite seu usuário ou e-mail para ver sua dica de senha ou redefinir o acesso.")
-                with st.form("form_buscar_conta", border=False):
-                    ident_in = st.text_input("Usuário ou E-mail", placeholder="Ex: maria ou maria@email.com")
-                    if st.form_submit_button("🔍 Localizar conta", type="primary", use_container_width=True):
-                        u_enc = encontrar_usuario_por_identificador(ident_in, usuarios)
-                        if u_enc:
-                            st.session_state["recuperar_usuario"] = u_enc
+            elif modo == "recuperar":
+                st.subheader("🔑 Lembrar / Recuperar Senha")
+                with st.form("form_buscar_rec", border=False):
+                    rec_in = st.text_input("Digite seu usuário", value=st.session_state.get("rec_usuario", ""), placeholder="Ex: maria")
+                    if st.form_submit_button("🔍 Buscar conta", use_container_width=True):
+                        u_limpo = rec_in.strip().lower()
+                        if not u_limpo:
+                            st.warning("Informe seu usuário.")
+                        else:
+                            st.session_state["rec_usuario"] = u_limpo
                             st.rerun()
+
+                if rec_u := st.session_state.get("rec_usuario"):
+                    reg_raw = usuarios.get(rec_u)
+                    if reg_raw is None:
+                        st.error(f"Usuário **@{html.escape(rec_u)}** não encontrado.")
+                    else:
+                        reg = dict(reg_raw) if isinstance(reg_raw, dict) else {"tipo": "senha", "hash": reg_raw, "nome": rec_u}
+                        if lembrete := str(reg.get("lembrete", "")).strip():
+                            st.info(f"💡 **Lembrete da sua senha:** {lembrete}")
+                            st.caption("Se lembrou da senha com essa dica, clique em **Voltar para Entrar** abaixo.")
                         else:
-                            st.session_state.pop("recuperar_usuario", None)
-                            st.error("Nenhuma conta encontrada com esse usuário ou e-mail.")
+                            st.caption("Esta conta ainda não tem um lembrete de senha salvo.")
 
-                if rec_u := st.session_state.get("recuperar_usuario"):
-                    raw_reg = usuarios.get(rec_u)
-                    reg = dict(raw_reg) if isinstance(raw_reg, dict) else {"tipo": "senha", "hash": raw_reg or "", "nome": rec_u}
-                    st.markdown(f"**Conta localizada:** `{rec_u}`")
+                        tem_perg = bool(reg.get("pergunta_seg") and reg.get("resposta_seg_hash"))
+                        tem_email = bool(str(reg.get("email", "")).strip())
+                        tel_limpo = re.sub(r"\D", "", str(reg.get("telefone", "")))
+                        tem_tel = len(tel_limpo) >= 8
 
-                    if dica := str(reg.get("dica_senha", "")).strip():
-                        st.info(f"💡 **Dica para lembrar sua senha:** {dica}")
+                        metodos = []
+                        if tem_perg:
+                            metodos.append("Pergunta secreta")
+                        if tem_email:
+                            metodos.append("E-mail cadastrado")
+                        if tem_tel:
+                            metodos.append("WhatsApp cadastrado")
 
-                    tem_rec_hash = bool(reg.get("recuperacao_hash"))
-                    email_cad = str(reg.get("email", "")).strip().lower()
-                    tel_cad = re.sub(r"\D", "", str(reg.get("telefone", "")))
-                    nome_cad = normalizar_texto(reg.get("nome", ""))
-
-                    with st.form("form_redefinir_senha", border=False):
-                        st.markdown("**Não lembrou? Confirme seus dados para criar uma nova senha:**")
-                        if tem_rec_hash:
-                            lbl_v, ph_v = "Palavra de recuperação *", "Digite sua palavra de recuperação"
-                        elif email_cad and tel_cad:
-                            lbl_v, ph_v = "E-mail ou WhatsApp cadastrado *", "Ex: maria@email.com ou 11999999999"
-                        elif email_cad:
-                            lbl_v, ph_v = "E-mail cadastrado *", "Ex: maria@email.com"
-                        elif tel_cad:
-                            lbl_v, ph_v = "WhatsApp cadastrado *", "Ex: (11) 99999-9999"
+                        if not metodos:
+                            st.warning("Esta conta não possui pergunta secreta, e-mail ou WhatsApp cadastrados para redefinir a senha automaticamente.")
                         else:
-                            lbl_v, ph_v = "Nome completo cadastrado *", "Digite o nome usado no cadastro"
+                            st.divider()
+                            st.markdown("**🔄 Não lembrou? Redefina sua senha:**")
+                            metodo = st.radio("Confirmar identidade usando:", metodos, horizontal=True, key="rec_metodo_verif") if len(metodos) > 1 else metodos[0]
 
-                        resp_v = st.text_input(lbl_v, placeholder=ph_v)
-                        nova_s = st.text_input("Nova senha *", type="password", placeholder="Mín. 4 caracteres")
-                        conf_s = st.text_input("Confirmar nova senha *", type="password", placeholder="Repita a nova senha")
+                            with st.form("form_redefinir_senha", border=False):
+                                if metodo == "Pergunta secreta":
+                                    st.markdown(f"❓ **{html.escape(reg['pergunta_seg'])}**")
+                                    verif_in = st.text_input("Sua resposta secreta", placeholder="Digite a resposta")
+                                elif metodo == "E-mail cadastrado":
+                                    verif_in = st.text_input(f"Confirme o e-mail ({mascarar_email(reg['email'])})", placeholder="Digite o e-mail completo")
+                                else:
+                                    verif_in = st.text_input(f"Confirme o WhatsApp ({mascarar_telefone(reg['telefone'])})", placeholder="Digite o número com DDD")
 
-                        if st.form_submit_button("✅ Salvar nova senha", type="primary", use_container_width=True):
-                            if tem_rec_hash:
-                                verif_ok = verificar_senha(normalizar_texto(resp_v), reg["recuperacao_hash"])
-                            elif email_cad or tel_cad:
-                                resp_tel = re.sub(r"\D", "", resp_v)
-                                verif_ok = bool(
-                                    (email_cad and resp_v.strip().lower() == email_cad)
-                                    or (tel_cad and resp_tel and resp_tel == tel_cad)
-                                )
-                            else:
-                                verif_ok = bool(nome_cad) and normalizar_texto(resp_v) == nome_cad
+                                ns1, ns2 = st.columns(2)
+                                nova_s = ns1.text_input("Nova senha *", type="password", placeholder="Mín. 4 caracteres")
+                                conf_s = ns2.text_input("Confirmar senha *", type="password")
 
-                            if not verif_ok:
-                                st.error("Os dados informados não conferem com o cadastro.")
-                            elif len(nova_s) < 4:
-                                st.warning("A nova senha deve ter pelo menos 4 caracteres.")
-                            elif nova_s != conf_s:
-                                st.error("As senhas não coincidem.")
-                            else:
-                                u_edit = usuarios.copy()
-                                reg["tipo"] = "senha"
-                                reg["hash"] = gerar_hash_senha(nova_s)
-                                u_edit[rec_u] = reg
-                                salvar_usuarios(u_edit)
-                                st.session_state.pop("recuperar_usuario", None)
-                                st.session_state.update({
-                                    "modo_login": "entrar",
-                                    "login_msg_sucesso": f"Senha da conta **{rec_u}** redefinida! Já pode entrar.",
-                                })
-                                st.rerun()
+                                if st.form_submit_button("✅ Salvar nova senha", type="primary", use_container_width=True):
+                                    if metodo == "Pergunta secreta":
+                                        ok_verif = verificar_senha(normalizar_texto(verif_in), reg["resposta_seg_hash"])
+                                    elif metodo == "E-mail cadastrado":
+                                        ok_verif = verif_in.strip().lower() == str(reg.get("email", "")).strip().lower()
+                                    else:
+                                        ok_verif = re.sub(r"\D", "", verif_in) == tel_limpo
+
+                                    if not ok_verif:
+                                        st.error("Os dados de confirmação não conferem.")
+                                    elif len(nova_s) < 4:
+                                        st.warning("A nova senha deve ter pelo menos 4 caracteres.")
+                                    elif nova_s != conf_s:
+                                        st.error("As senhas não coincidem.")
+                                    else:
+                                        u_edit = usuarios.copy()
+                                        reg["hash"] = gerar_hash_senha(nova_s)
+                                        u_edit[rec_u] = reg
+                                        salvar_usuarios(u_edit)
+                                        st.session_state.pop("rec_usuario", None)
+                                        st.session_state["modo_login"] = "entrar"
+                                        st.session_state["msg_login_ok"] = f"Senha da conta **{rec_u}** redefinida! Já pode entrar."
+                                        st.rerun()
 
                 st.divider()
-                if st.button("← Voltar para o login", use_container_width=True):
-                    st.session_state.pop("recuperar_usuario", None)
+                if st.button("← Voltar para Entrar", use_container_width=True):
+                    st.session_state.pop("rec_usuario", None)
                     st.session_state["modo_login"] = "entrar"
                     st.rerun()
 
@@ -578,9 +624,12 @@ def exibir_tela_login():
                     a1, a2 = st.columns(2)
                     novo_u = a1.text_input("Usuário *", placeholder="Ex: maria")
                     nova_s = a2.text_input("Senha *", type="password", placeholder="Mín. 4 caracteres")
-                    d1, d2 = st.columns(2)
-                    dica_p = d1.text_input("Dica para lembrar a senha (opcional)", placeholder="Ex: Nome do pet + ano")
-                    rec_p = d2.text_input("Palavra de recuperação (opcional)", placeholder="Ex: Cidade onde nasci")
+
+                    st.caption("💡 **Para lembrar ou recuperar sua senha caso esqueça:**")
+                    lemb_p = st.text_input("Lembrete / dica da senha (opcional)", placeholder="Ex: Nome do pet + ano especial")
+                    s1, s2 = st.columns(2)
+                    perg_p = s1.selectbox("Pergunta secreta (opcional)", PERGUNTAS_SEGURANCA)
+                    resp_p = s2.text_input("Resposta secreta (opcional)", placeholder="Ex: Rex")
 
                     if st.form_submit_button("✅ Criar conta e entrar", type="primary", use_container_width=True):
                         nome_ok, nl = nome_p.strip(), novo_u.strip().lower()
@@ -594,17 +643,20 @@ def exibir_tela_login():
                             st.warning("A senha deve ter pelo menos 4 caracteres.")
                         else:
                             u_edit = usuarios.copy()
-                            u_edit[nl] = {
+                            novo_reg = {
                                 "tipo": "senha",
                                 "hash": gerar_hash_senha(nova_s),
                                 "nome": nome_ok,
                                 "email": email_p.strip(),
                                 "telefone": tel_p.strip(),
                                 "cidade": cid_p.strip(),
-                                "dica_senha": dica_p.strip(),
-                                "recuperacao_hash": gerar_hash_senha(normalizar_texto(rec_p)) if rec_p.strip() else "",
+                                "lembrete": lemb_p.strip(),
                                 "criado_em": date.today().isoformat(),
                             }
+                            if resp_p.strip():
+                                novo_reg["pergunta_seg"] = perg_p
+                                novo_reg["resposta_seg_hash"] = gerar_hash_senha(normalizar_texto(resp_p))
+                            u_edit[nl] = novo_reg
                             salvar_usuarios(u_edit)
                             st.session_state.update({"autenticado": True, "usuario_logado": nl, "nome_usuario": nome_ok, "msg_sucesso": f"Conta criada! Bem-vindo(a), **{nome_ok}**."})
                             st.session_state.pop("modo_login", None)
@@ -973,7 +1025,7 @@ def renderizar_topo_nubank():
     with st.container(key="topo_nubank"):
         c_user, c_btn = st.columns([5, 1])
         c_user.markdown(
-            f'<div class="listai-nu-user">{avatar_html(nome_usuario, usuario_atual, 46)}'
+            f'<div class="listai-nu-user">{avatar_html(nome_usuario, usuario_atual, 44)}'
             f'<div class="listai-nu-texts"><div class="listai-nu-brand">Listaí • Beta</div>'
             f'<div class="listai-nu-hello">Olá, {html.escape(p_nome)}</div>'
             f'<div class="listai-nu-sub">{html.escape(sub_reg)}</div></div></div>',
@@ -988,11 +1040,11 @@ def renderizar_topo_nubank():
                 st.rerun()
 
 
-def renderizar_barra_inferior():
-    with st.container(key="barra_inferior"):
+def renderizar_barra_navegacao():
+    with st.container(key="barra_navegacao"):
         for idx, (col, (ico, txt), pag) in enumerate(zip(st.columns(len(NAV_ITENS), gap="small"), NAV_ITENS, PAGINAS)):
             ativo = st.session_state["pagina_atual"] == pag
-            if col.button(f"{ico}\n{txt}", key=f"bottom_nav_{idx}", type="primary" if ativo else "secondary", use_container_width=True) and not ativo:
+            if col.button(f"{ico}\n{txt}", key=f"top_nav_{idx}", type="primary" if ativo else "secondary", use_container_width=True) and not ativo:
                 st.session_state.update({"pagina_atual": pag, "rolar_topo": True})
                 st.rerun()
 
@@ -1069,6 +1121,7 @@ def renderizar_editor_compra(df_c, idx_edit, state_key, usuario):
                     df_edit[COLUNAS].to_csv(cam, index=False)
                     limpar_cache_compras()
                 st.session_state.pop(state_key, None)
+                st.session_state["ultima_cat_adicionada"] = e_cat
                 st.session_state["msg_sucesso"] = f"'{p_ok}' atualizado ({e_cat})!"
                 st.rerun()
         elif excluir:
@@ -1152,7 +1205,78 @@ def _fmt_dt(dt):
     return dt.strftime("%d/%m/%Y") if pd.notna(dt) else "Sem data"
 
 
-def renderizar_grupos_historico(df_exib, col_grupo, total_geral, modo="categoria", abrir_padrao=True):
+def renderizar_historico_simples_categorizado(df_c, df_v, usuario):
+    with st.container(border=True):
+        st.markdown("#### 🧾 Histórico Simples por Categoria")
+        if df_c.empty:
+            st.caption("Nenhuma compra registrada ainda. Adicione seu primeiro produto acima!")
+            return
+
+        if (edit_idx := st.session_state.get("edit_compra_idx")) is not None:
+            renderizar_editor_compra(df_c, edit_idx, "edit_compra_idx", usuario)
+
+        mes_hoje = date.today().strftime("%Y-%m")
+        tem_mes = not df_v.empty and bool((df_v["Mês"] == mes_hoje).any())
+        opcoes_per = ["📅 Mês atual", "📋 Todas"] if tem_mes else ["📋 Todas"]
+        per_sel = st.radio("Período:", opcoes_per, horizontal=True, key="hist_ini_periodo", label_visibility="collapsed") if len(opcoes_per) > 1 else opcoes_per[0]
+
+        df_base = df_v[df_v["Mês"] == mes_hoje].copy() if (per_sel == "📅 Mês atual" and not df_v.empty) else df_c.copy()
+        if "Data_dt" not in df_base.columns:
+            df_base["Data_dt"] = pd.to_datetime(df_base["Data"], errors="coerce")
+        df_base["Categoria"] = df_base["Categoria"].replace("", "Outros").fillna("Outros")
+        df_base["Supermercado"] = df_base["Supermercado"].replace("", "Não informado").fillna("Não informado")
+
+        tot_per, qtd_per = float(df_base["Total"].sum()), len(df_base)
+        st.caption(f"Total no período: **{formatar_reais(tot_per)}** ({qtd_per} {'item' if qtd_per == 1 else 'itens'})")
+
+        resumo = df_base.groupby("Categoria", as_index=False)["Total"].sum().sort_values("Total", ascending=False)
+        total_base = max(tot_per, 0.01)
+        abrir_todos = len(resumo) <= 3
+        ult_cat = st.session_state.get("ultima_cat_adicionada")
+
+        for idx, row_g in enumerate(resumo.itertuples(index=False)):
+            cat_nome = row_g.Categoria
+            tot_cat = float(row_g.Total)
+            pct = min(100.0, (tot_cat / total_base) * 100)
+            sub = df_base[df_base["Categoria"] == cat_nome].sort_values(by="Data_dt", ascending=False, na_position="last")
+            ico = ICONES_CATEGORIA.get(cat_nome, "📦")
+            qtd_c = len(sub)
+            plural = "item" if qtd_c == 1 else "itens"
+
+            st.markdown(
+                f'<div class="listai-hist-card"><div class="listai-hist-head">'
+                f'<div class="listai-hist-title">{ico} {html.escape(str(cat_nome))} '
+                f'<span class="listai-hist-badge">{qtd_c} {plural} • {pct:.0f}%</span></div>'
+                f'<div class="listai-hist-total">{formatar_reais(tot_cat)}</div></div>'
+                f'<div class="listai-hist-track"><div class="listai-hist-fill" style="width:{pct:.1f}%"></div></div></div>',
+                unsafe_allow_html=True,
+            )
+            expandir = abrir_todos or (cat_nome == ult_cat) or (not ult_cat and idx == 0)
+            with st.expander(f"Ver {qtd_c} {plural} de {cat_nome}", expanded=expandir):
+                with st.container(key=f"hist_ini_cat_{idx}"):
+                    for idx_r, rr in sub.head(15).iterrows():
+                        c_info, c_ed = st.columns([6, 1])
+                        qtd_r = _fmt_qtd(rr.get("Quantidade", 1))
+                        tot_r = formatar_reais(float(rr.get("Total", 0.0)))
+                        merc_r = html.escape(str(rr.get("Supermercado") or "-"))
+                        dt_r = _fmt_dt(rr.get("Data_dt"))
+                        c_info.markdown(
+                            f'<div class="listai-rec-row"><div class="listai-rec-nome">{html.escape(str(rr["Produto"]))} (x{qtd_r}) — {tot_r}</div>'
+                            f'<div class="listai-rec-meta">🏪 {merc_r} · 📅 {dt_r}</div></div>',
+                            unsafe_allow_html=True,
+                        )
+                        if c_ed.button("✏️", key=f"btn_ed_ini_{idx_r}", help="Editar ou excluir", use_container_width=True):
+                            st.session_state["edit_compra_idx"] = idx_r
+                            st.rerun()
+                if qtd_c > 15:
+                    st.caption(f"Mostrando os 15 mais recentes de {qtd_c} itens. Veja todos em **🧾 Histórico**.")
+
+        if st.button("🧾 Ver histórico completo e filtros", use_container_width=True, key="btn_ir_hist_completo"):
+            st.session_state.update({"pagina_atual": PAGINAS[3], "rolar_topo": True})
+            st.rerun()
+
+
+def renderizar_grupos_historico(df_exib, col_grupo, total_geral, modo="categoria"):
     resumo = df_exib.groupby(col_grupo, as_index=False)["Total"].sum().sort_values("Total", ascending=False)
     total_base, abrir_todos = max(total_geral, 0.01), len(resumo) <= 4
 
@@ -1176,7 +1300,7 @@ def renderizar_grupos_historico(df_exib, col_grupo, total_geral, modo="categoria
             f'<div class="listai-hist-track"><div class="listai-hist-fill" style="width:{pct:.1f}%"></div></div></div>',
             unsafe_allow_html=True,
         )
-        with st.expander(f"Ver produtos de {nome_grp} ({qtd})", expanded=(abrir_padrao and (abrir_todos or idx == 0))):
+        with st.expander(f"Ver produtos de {nome_grp} ({qtd})", expanded=(abrir_todos or idx == 0)):
             itens = []
             for r in sub.to_dict("records"):
                 dt_txt = _fmt_dt(r.get("Data_dt"))
@@ -1310,6 +1434,7 @@ def pagina_compra():
         cat_idx = cat_opcoes.index(cat_default) if cat_default in cat_opcoes else 0
         cat_esc = st.selectbox("🏷️ Categoria", cat_opcoes, index=cat_idx, key=f"input_cat_{versao}", format_func=lambda c: c if c == "✨ Automática" else f"{ICONES_CATEGORIA.get(c, '📦')} {c}")
 
+        # Linha do botão Adicionar + Somente o botão de áudio ao lado
         with st.container(key="acao_add_voz"):
             c_add, c_mic = st.columns([5, 1], vertical_alignment="center")
             clicou_add = c_add.button("✅ Adicionar", type="primary", use_container_width=True, key=f"btn_add_prod_{versao}")
@@ -1379,6 +1504,7 @@ def pagina_compra():
                         st.session_state["msg_limite_alerta"] = f"⚠️ Gastos do mês chegaram a **{formatar_reais(novo_tot)}** (acima do limite de **{formatar_reais(lim)}**)."
                     st.session_state.update({
                         "msg_sucesso": f"'{prod_ok}' adicionado em **{merc_final}** ({cat}).{extra}",
+                        "ultima_cat_adicionada": cat,
                         "valor_produto": "",
                         "valor_quantidade": 1,
                         "valor_preco": 1.00,
@@ -1391,70 +1517,15 @@ def pagina_compra():
                     st.session_state.pop("aviso_voz", None)
                     st.rerun()
 
-    # --- 2. Adicionados Recentemente + Edição Rápida ---
-    if not df_c.empty:
-        with st.container(border=True):
-            st.markdown("#### 🕒 Adicionados Recentemente")
-            if (edit_idx := st.session_state.get("edit_compra_idx")) is not None:
-                renderizar_editor_compra(df_c, edit_idx, "edit_compra_idx", usuario_atual)
-
-            recentes = df_c.tail(5).iloc[::-1]
-            with st.container(key="recentes_box"):
-                for idx_r, rr in recentes.iterrows():
-                    c_info, c_ed = st.columns([6, 1])
-                    cat_r = str(rr.get("Categoria") or "Outros")
-                    ico_r = ICONES_CATEGORIA.get(cat_r, "📦")
-                    qtd_r = _fmt_qtd(rr.get("Quantidade", 1))
-                    tot_r = formatar_reais(float(rr.get("Total", 0.0)))
-                    merc_r = html.escape(str(rr.get("Supermercado") or "-"))
-                    c_info.markdown(
-                        f'<div class="listai-rec-row"><div class="listai-rec-nome">{ico_r} {html.escape(str(rr["Produto"]))} (x{qtd_r}) — {tot_r}</div>'
-                        f'<div class="listai-rec-meta">{html.escape(cat_r)} · 🏪 {merc_r}</div></div>',
-                        unsafe_allow_html=True,
-                    )
-                    if c_ed.button("✏️", key=f"btn_ed_rec_{idx_r}", help="Editar produto", use_container_width=True):
-                        st.session_state["edit_compra_idx"] = idx_r
-                        st.rerun()
-
-    # --- 3. Histórico Simples e Categorizado na Tela Inicial ---
-    with st.container(border=True):
-        st.markdown("#### 🧾 Histórico por Categoria")
-        if df_c.empty:
-            st.caption("Suas compras aparecerão aqui organizadas por categoria.")
-            return
-
-        tem_mes_atual = not df_v.empty and bool((df_v["Mês"] == mes_hoje).any())
-        periodo_home = st.radio(
-            "Período",
-            ["Este mês", "Tudo"],
-            index=0 if tem_mes_atual else 1,
-            horizontal=True,
-            key="home_hist_periodo",
-            label_visibility="collapsed",
-        )
-
-        df_hist = df_c.copy()
-        df_hist["Supermercado"] = df_hist["Supermercado"].replace("", "Não informado").fillna("Não informado")
-        df_hist["Categoria"] = df_hist["Categoria"].replace("", "Outros").fillna("Outros")
-        if periodo_home == "Este mês":
-            df_hist = df_hist[df_hist["Data_dt"].dt.strftime("%Y-%m") == mes_hoje]
-
-        if df_hist.empty:
-            st.caption("Nenhuma compra registrada neste mês. Selecione **Tudo** para ver compras anteriores.")
-        else:
-            tot_hist = float(df_hist["Total"].sum())
-            st.caption(f"**{len(df_hist)}** item(ns) em **{df_hist['Categoria'].nunique()}** categoria(s) • Total: **{formatar_reais(tot_hist)}**")
-            renderizar_grupos_historico(df_hist, "Categoria", tot_hist, modo="categoria", abrir_padrao=False)
-
-        if st.button("🔎 Ver histórico completo e filtros", use_container_width=True, key="btn_home_hist_full"):
-            st.session_state.update({"pagina_atual": PAGINAS[3], "rolar_topo": True})
-            st.rerun()
+    # --- 2. Histórico Simples e Categorizado na Tela Inicial ---
+    renderizar_historico_simples_categorizado(df_c, df_v, usuario_atual)
 
 
 def pagina_lista():
     st.subheader("📝 Lista de Compras")
     df_c, _ = obter_compras_com_datas(usuario_atual)
     df_pre = carregar_pre_lista(usuario_atual).copy()
+    versao = st.session_state["form_versao"]
 
     with st.container(border=True):
         with st.container(key="add_lista_row"):
@@ -1491,7 +1562,7 @@ def pagina_lista():
                 lbl = f"~~{ico_i} {nome_i} (x{qtd_i})~~" if pego else f"**{ico_i} {nome_i}** (x{qtd_i}) · *{cat_i}*"
                 if (mk := c_chk.checkbox(lbl, value=pego, key=f"chk_pre_{iid}")) != pego:
                     df_pre.loc[idx, "Comprado"], alt_chk = mk, True
-                if c_lnc.button("💰", key=f"btn_lancar_{iid}", help="Lançar preço na tela de compra", use_container_width=True):
+                if c_lnc.button("💰", key=f"btn_lancar_{iid}", help="Lançar preço em Compra", use_container_width=True):
                     df_pre.loc[idx, "Comprado"] = True
                     salvar_pre_lista(df_pre, usuario_atual)
                     st.session_state.pop("aviso_voz", None)
@@ -1499,7 +1570,7 @@ def pagina_lista():
                         "valor_produto": nome_i,
                         "valor_quantidade": qtd_i,
                         "valor_categoria": cat_i if cat_i in LISTA_CATEGORIAS else "✨ Automática",
-                        "form_versao": st.session_state["form_versao"] + 1,
+                        "form_versao": versao + 1,
                         "pagina_atual": PAGINAS[0],
                         "rolar_topo": True,
                     })
@@ -1799,9 +1870,26 @@ def pagina_perfil():
                         st.session_state.update({"nome_usuario": nome_ok, "msg_sucesso": "Informações salvas!"})
                         st.rerun()
 
-        with st.expander("🔒 Senha, Dica e Recuperação"):
+        with st.expander("💡 Lembrete e Pergunta de Recuperação", expanded=not bool(reg_u.get("lembrete") or reg_u.get("resposta_seg_hash"))):
+            with st.form("form_recuperacao_perfil", border=False):
+                r_lemb = st.text_input("Lembrete / dica da senha", value=reg_u.get("lembrete", ""), placeholder="Ex: Nome do pet + ano")
+                perg_atual = reg_u.get("pergunta_seg", PERGUNTAS_SEGURANCA[0])
+                perg_idx = PERGUNTAS_SEGURANCA.index(perg_atual) if perg_atual in PERGUNTAS_SEGURANCA else 0
+                r_perg = st.selectbox("Pergunta secreta", PERGUNTAS_SEGURANCA, index=perg_idx)
+                tem_resp = bool(reg_u.get("resposta_seg_hash"))
+                r_resp = st.text_input("Resposta secreta", placeholder="Já configurada (digite apenas para trocar)" if tem_resp else "Digite sua resposta secreta")
+                if st.form_submit_button("💾 Salvar recuperação", use_container_width=True):
+                    reg_u["lembrete"] = r_lemb.strip()
+                    reg_u["pergunta_seg"] = r_perg
+                    if r_resp.strip():
+                        reg_u["resposta_seg_hash"] = gerar_hash_senha(normalizar_texto(r_resp))
+                    u_dict[usuario_atual] = reg_u
+                    salvar_usuarios(u_dict)
+                    st.session_state["msg_sucesso"] = "Configurações de lembrete/recuperação salvas!"
+                    st.rerun()
+
+        with st.expander("🔒 Alterar Senha"):
             with st.form("form_trocar_senha", clear_on_submit=True, border=False):
-                st.markdown("**Alterar senha**")
                 s_at = st.text_input("Senha atual", type="password")
                 s_nv = st.text_input("Nova senha", type="password")
                 s_cf = st.text_input("Confirmar senha", type="password")
@@ -1818,21 +1906,6 @@ def pagina_perfil():
                         salvar_usuarios(u_dict)
                         st.session_state["msg_sucesso"] = "Senha atualizada!"
                         st.rerun()
-
-            st.divider()
-            with st.form("form_rec_senha_perfil", border=False):
-                st.markdown("**Lembrar / Recuperar se esquecer**")
-                st.caption("✅ Palavra de recuperação configurada." if reg_u.get("recuperacao_hash") else "⚠️ Nenhuma palavra de recuperação configurada.")
-                p_dica = st.text_input("Dica de senha", value=reg_u.get("dica_senha", ""), placeholder="Ex: Nome do pet + ano")
-                p_rec = st.text_input("Nova palavra de recuperação (opcional)", placeholder="Deixe vazio para manter a atual")
-                if st.form_submit_button("💾 Salvar dica e recuperação", use_container_width=True):
-                    reg_u["dica_senha"] = p_dica.strip()
-                    if p_rec.strip():
-                        reg_u["recuperacao_hash"] = gerar_hash_senha(normalizar_texto(p_rec))
-                    u_dict[usuario_atual] = reg_u
-                    salvar_usuarios(u_dict)
-                    st.session_state["msg_sucesso"] = "Opções de recuperação salvas!"
-                    st.rerun()
 
     with c_dir:
         renderizar_painel_limite_mensal(usuario_atual, "perfil", expandir_config=True)
@@ -1858,6 +1931,20 @@ def pagina_perfil():
         with st.expander("👑 Admin — Usuários"):
             st.metric("Total", len(u_dict))
             st.dataframe(pd.DataFrame([{"Usuário": k, "Nome": v.get("nome", k) if isinstance(v, dict) else k, "E-mail": v.get("email", "-") if isinstance(v, dict) else "-", "Cidade": v.get("cidade", "-") if isinstance(v, dict) else "-"} for k, v in sorted(u_dict.items())]), hide_index=True, use_container_width=True)
+            with st.form("form_admin_reset_senha", border=False):
+                st.markdown("**🔑 Redefinir senha de um usuário**")
+                adm_u = st.selectbox("Usuário", sorted(u_dict.keys()))
+                adm_s = st.text_input("Nova senha provisória", type="password")
+                if st.form_submit_button("Redefinir senha", use_container_width=True):
+                    if len(adm_s) < 4:
+                        st.warning("Mínimo 4 caracteres.")
+                    else:
+                        reg_adm = dict(u_dict[adm_u]) if isinstance(u_dict[adm_u], dict) else {"tipo": "senha", "nome": adm_u}
+                        reg_adm["hash"] = gerar_hash_senha(adm_s)
+                        u_dict[adm_u] = reg_adm
+                        salvar_usuarios(u_dict)
+                        st.session_state["msg_sucesso"] = f"Senha de **@{adm_u}** redefinida!"
+                        st.rerun()
 
     if st.button("🚪 Sair da conta", type="secondary", use_container_width=True, key="perfil_logout"):
         limpar_estado_usuario(incluir_auth=True)
@@ -1884,6 +1971,7 @@ if st.session_state.pop("rolar_topo", False):
 
 gps_coords, gps_regiao, gps_mercados = st.session_state.get("gps_coords"), st.session_state.get("gps_regiao", ""), st.session_state.get("gps_mercados", [])
 renderizar_topo_nubank()
+renderizar_barra_navegacao()
 
 if msg := st.session_state.pop("msg_sucesso", None):
     st.success(msg)
@@ -1901,4 +1989,3 @@ if msg_lim := st.session_state.pop("msg_limite_alerta", None):
 }[st.session_state["pagina_atual"]]()
 
 exibir_rodape_anuncio()
-renderizar_barra_inferior()
