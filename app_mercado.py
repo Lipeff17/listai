@@ -70,7 +70,7 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 }
 .st-key-kpi_2cols [data-testid="stHorizontalBlock"], [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 .st-key-row_qtd_preco [data-testid="stHorizontalBlock"] { grid-template-columns: 0.85fr 1.15fr !important; align-items: end !important; }
-.st-key-acao_add_voz [data-testid="stHorizontalBlock"] { grid-template-columns: 1.2fr 1fr !important; align-items: stretch !important; }
+.st-key-acao_add_voz [data-testid="stHorizontalBlock"] { grid-template-columns: 1.15fr 1fr !important; align-items: center !important; }
 .st-key-add_lista_row [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 64px !important; align-items: end !important; }
 .st-key-lista_chk_box [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 40px 40px !important; gap: 0.25rem !important; }
 [class*="st-key-hist_ini_cat_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
@@ -81,20 +81,53 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 [class*="st-key-hist_ini_cat_"] [data-testid="stColumn"], [class*="st-key-edit_qp_"] [data-testid="stColumn"],
 [class*="st-key-edit_btns_"] [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 
-/* Botão Bonito de Voz ao lado de Adicionar */
-.st-key-acao_add_voz .stButton > button { min-height: 2.65rem !important; font-weight: 700 !important; }
-.st-key-acao_add_voz [data-testid="stColumn"]:last-child .stButton > button {
+/* Botão Direto de Gravação por Voz (1 toque já grava!) */
+@keyframes listai-pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+.st-key-acao_add_voz .stButton > button { height: 44px !important; min-height: 44px !important; margin: 0 !important; }
+.st-key-acao_add_voz [data-testid="stAudioInput"] { width: 100% !important; margin: 0 !important; }
+.st-key-acao_add_voz [data-testid="stAudioInput"] > div {
+    width: 100% !important; height: 44px !important; min-height: 44px !important;
+    border-radius: 10px !important; overflow: hidden !important;
+    display: flex !important; align-items: center !important; padding: 0 !important;
+}
+/* Estado parado: botão verde-água inteiro escrito "Por Voz" */
+.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i])) {
     background: linear-gradient(135deg, #0D9488 0%, #10B981 100%) !important;
     border: none !important;
-    color: #FFFFFF !important;
     box-shadow: 0 3px 10px rgba(13, 148, 136, 0.28) !important;
 }
-.st-key-acao_add_voz [data-testid="stColumn"]:last-child .stButton > button:hover {
-    filter: brightness(1.06);
+.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i])) > *:nth-child(n+2) {
+    display: none !important;
 }
-.st-key-acao_add_voz [data-testid="stColumn"]:last-child .stButton > button p {
-    color: #FFFFFF !important;
-    font-weight: 700 !important;
+.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i])) > div:first-child {
+    width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important;
+}
+.st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i]) {
+    width: 100% !important; height: 100% !important; background: transparent !important; border: none !important;
+    color: #FFFFFF !important; display: flex !important; align-items: center !important; justify-content: center !important;
+    gap: 6px !important; padding: 0 10px !important; cursor: pointer !important;
+}
+.st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i]) svg {
+    color: #FFFFFF !important; fill: #FFFFFF !important; width: 18px !important; height: 18px !important; flex-shrink: 0 !important;
+}
+.st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i])::after {
+    content: "Por Voz"; font-size: 0.90rem; font-weight: 700; color: #FFFFFF; white-space: nowrap;
+}
+/* Estado gravando: fundo vermelho claro + botão parar pulsando + onda/tempo visíveis */
+.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button[aria-label*="Stop" i]),
+.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button[aria-label*="Parar" i]) {
+    background: #FEF2F2 !important; border: 1.5px solid #EF4444 !important;
+    padding: 0 8px !important; gap: 6px !important; justify-content: flex-start !important;
+}
+.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Stop" i],
+.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Parar" i] {
+    width: 32px !important; height: 32px !important; min-width: 32px !important; padding: 0 !important;
+    border-radius: 50% !important; background: #EF4444 !important; border: none !important;
+    animation: listai-pulse 1.2s infinite !important; flex-shrink: 0 !important;
+}
+.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Stop" i] svg,
+.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Parar" i] svg {
+    color: #FFFFFF !important; fill: #FFFFFF !important;
 }
 
 /* Lista e Histórico Inicial */
@@ -326,7 +359,7 @@ def obter_api_key_gemini():
 
 
 def limpar_estado_usuario(incluir_auth=False):
-    chaves = {"aviso_voz", "aviso_voz_erro", "abrir_gravador_voz", "ultimo_audio_hash", "msg_sucesso", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria", "ultima_cat_adicionada"}
+    chaves = {"aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "msg_sucesso", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria", "ultima_cat_adicionada"}
     if incluir_auth:
         st.session_state.update({"autenticado": False, "usuario_logado": ""})
         chaves.update({"modo_login", "rec_usuario", "msg_login_ok", "gemini_api_key_usuario", "pagina_atual", "pagina_anterior"})
@@ -1281,46 +1314,41 @@ def pagina_compra():
         cat_def = st.session_state.get("valor_categoria", "✨ Automática")
         cat_esc = st.selectbox("🏷️ Categoria", cat_opcoes, index=cat_opcoes.index(cat_def) if cat_def in cat_opcoes else 0, key=f"input_cat_{versao}", format_func=lambda c: c if c == "✨ Automática" else f"{ICONES_CATEGORIA.get(c, '📦')} {c}")
 
-        # Dois botões lado a lado: Adicionar + Por Voz
+        # Adicionar + Por Voz lado a lado (1 toque já inicia a gravação!)
         with st.container(key="acao_add_voz"):
-            c_add, c_mic = st.columns([1.2, 1], vertical_alignment="center")
+            c_add, c_mic = st.columns([1.15, 1], vertical_alignment="center")
             clicou_add = c_add.button("✅ Adicionar", type="primary", use_container_width=True, key=f"btn_add_prod_{versao}")
-            if c_mic.button("🎤 Por Voz", type="secondary", use_container_width=True, key=f"btn_voz_{versao}"):
-                st.session_state["abrir_gravador_voz"] = not st.session_state.get("abrir_gravador_voz", False)
-                st.rerun()
+            audio = c_mic.audio_input("Por Voz", label_visibility="collapsed", key=f"audio_zap_{versao}")
 
-        if st.session_state.get("abrir_gravador_voz", False):
-            with st.container(border=True):
+        if audio is not None:
+            ab = audio.getvalue()
+            ah = hashlib.sha256(ab).hexdigest()
+            if ah != st.session_state.get("ultimo_audio_hash"):
+                st.session_state["ultimo_audio_hash"] = ah
                 if not api_key:
-                    st.warning("Configure sua Chave Gemini em **👤 Perfil → Inteligência Artificial** para usar o comando de voz.")
+                    st.session_state.update({"aviso_voz_erro": "Configure a Chave Gemini em **👤 Perfil → Inteligência Artificial** para usar a voz.", "form_versao": versao + 1})
+                    st.rerun()
                 else:
-                    st.caption("🎙️ Toque no microfone abaixo, fale a compra (ex: *'2 arroz 5kg no Atacadão por 24,90'*) e pare a gravação:")
-                    audio = st.audio_input("Gravar compra por voz", label_visibility="collapsed", key=f"audio_zap_{versao}")
-                    if audio is not None:
-                        ab = audio.getvalue()
-                        ah = hashlib.sha256(ab).hexdigest()
-                        if ah != st.session_state.get("ultimo_audio_hash"):
-                            st.session_state["ultimo_audio_hash"] = ah
-                            with st.spinner("Ouvindo e preenchendo..."):
-                                try:
-                                    dv = reconhecer_produto_por_voz(ab, api_key, mime_type=getattr(audio, "type", None) or "audio/wav")
-                                    if not dv["produto"]:
-                                        st.session_state.update({"aviso_voz_erro": "Não entendi o produto. Tente falar mais perto do microfone.", "form_versao": versao + 1})
-                                    else:
-                                        st.session_state.update({
-                                            "valor_produto": dv["produto"],
-                                            "valor_quantidade": dv["quantidade"],
-                                            "valor_preco": dv["preco_unitario"] or 1.00,
-                                            "valor_categoria": dv["categoria"] if dv["categoria"] in LISTA_CATEGORIAS else "✨ Automática",
-                                            "aviso_voz": dv,
-                                            "abrir_gravador_voz": False,
-                                            "form_versao": versao + 1,
-                                        })
-                                        if dv["supermercado"]:
-                                            st.session_state.update({"valor_supermercado": dv["supermercado"], "merc_para_selecionar": dv["supermercado"]})
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"Erro no áudio: {e}")
+                    with st.spinner("Ouvindo e preenchendo..."):
+                        try:
+                            dv = reconhecer_produto_por_voz(ab, api_key, mime_type=getattr(audio, "type", None) or "audio/wav")
+                            if not dv["produto"]:
+                                st.session_state.update({"aviso_voz_erro": "Não entendi o produto. Tente falar mais perto do microfone.", "form_versao": versao + 1})
+                            else:
+                                st.session_state.update({
+                                    "valor_produto": dv["produto"],
+                                    "valor_quantidade": dv["quantidade"],
+                                    "valor_preco": dv["preco_unitario"] or 1.00,
+                                    "valor_categoria": dv["categoria"] if dv["categoria"] in LISTA_CATEGORIAS else "✨ Automática",
+                                    "aviso_voz": dv,
+                                    "form_versao": versao + 1,
+                                })
+                                if dv["supermercado"]:
+                                    st.session_state.update({"valor_supermercado": dv["supermercado"], "merc_para_selecionar": dv["supermercado"]})
+                            st.rerun()
+                        except Exception as e:
+                            st.session_state.update({"aviso_voz_erro": f"Erro no áudio: {e}", "form_versao": versao + 1})
+                            st.rerun()
 
         with st.expander(f"📅 Data ({date.today().strftime('%d/%m/%Y')}) e região ({reg_ativa or '-'})", expanded=(reg_sel == "➕ Nova região...")):
             cd1, cd2 = st.columns(2, vertical_alignment="center")
@@ -1353,7 +1381,6 @@ def pagina_compra():
                         st.session_state["msg_limite_alerta"] = f"⚠️ Gastos do mês chegaram a **{formatar_reais(novo_tot)}** (acima do limite de **{formatar_reais(lim)}**)."
                     st.session_state.update({"msg_sucesso": f"'{prod_ok}' adicionado em **{merc_final}** ({cat}).{extra}", "ultima_cat_adicionada": cat, "valor_produto": "", "valor_quantidade": 1, "valor_preco": 1.00, "valor_categoria": "✨ Automática", "valor_supermercado": "", "regiao_para_selecionar": reg_final, "merc_para_selecionar": merc_final, "form_versao": versao + 1})
                     st.session_state.pop("aviso_voz", None)
-                    st.session_state.pop("abrir_gravador_voz", None)
                     st.rerun()
 
     renderizar_historico_simples_categorizado(df_c, df_v, usuario_atual)
