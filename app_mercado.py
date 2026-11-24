@@ -64,76 +64,46 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 /* Grids Fixos */
 .st-key-kpi_2cols [data-testid="stHorizontalBlock"], .st-key-row_qtd_preco [data-testid="stHorizontalBlock"],
 .st-key-acao_add_voz [data-testid="stHorizontalBlock"], .st-key-add_lista_row [data-testid="stHorizontalBlock"],
-.st-key-lista_chk_box [data-testid="stHorizontalBlock"], [class*="st-key-hist_ini_cat_"] [data-testid="stHorizontalBlock"],
+.st-key-lista_chk_box [data-testid="stHorizontalBlock"], [class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"],
 [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] {
     display: grid !important; gap: 0.45rem !important; align-items: center !important; width: 100% !important;
 }
 .st-key-kpi_2cols [data-testid="stHorizontalBlock"], [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 .st-key-row_qtd_preco [data-testid="stHorizontalBlock"] { grid-template-columns: 0.85fr 1.15fr !important; align-items: end !important; }
-.st-key-acao_add_voz [data-testid="stHorizontalBlock"] { grid-template-columns: 1.15fr 1fr !important; align-items: center !important; }
+.st-key-acao_add_voz [data-testid="stHorizontalBlock"] { grid-template-columns: 1fr 1.35fr !important; align-items: center !important; }
 .st-key-add_lista_row [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 64px !important; align-items: end !important; }
 .st-key-lista_chk_box [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 40px 40px !important; gap: 0.25rem !important; }
-[class*="st-key-hist_ini_cat_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
+[class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
 [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 .st-key-kpi_4cols [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.5rem !important; width: 100% !important; }
 .st-key-kpi_2cols [data-testid="stColumn"], .st-key-kpi_4cols [data-testid="stColumn"], .st-key-row_qtd_preco [data-testid="stColumn"],
 .st-key-acao_add_voz [data-testid="stColumn"], .st-key-add_lista_row [data-testid="stColumn"], .st-key-lista_chk_box [data-testid="stColumn"],
-[class*="st-key-hist_ini_cat_"] [data-testid="stColumn"], [class*="st-key-edit_qp_"] [data-testid="stColumn"],
+[class*="st-key-compra_grp_"] [data-testid="stColumn"], [class*="st-key-edit_qp_"] [data-testid="stColumn"],
 [class*="st-key-edit_btns_"] [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 
-/* Botão Direto de Gravação por Voz (1 toque já grava!) */
-@keyframes listai-pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+/* Gravador de Áudio Nativo Visível ao lado de Adicionar (sem esconder elementos!) */
 .st-key-acao_add_voz .stButton > button { height: 44px !important; min-height: 44px !important; margin: 0 !important; }
 .st-key-acao_add_voz [data-testid="stAudioInput"] { width: 100% !important; margin: 0 !important; }
 .st-key-acao_add_voz [data-testid="stAudioInput"] > div {
-    width: 100% !important; height: 44px !important; min-height: 44px !important;
-    border-radius: 10px !important; overflow: hidden !important;
-    display: flex !important; align-items: center !important; padding: 0 !important;
-}
-/* Estado parado: botão verde-água inteiro escrito "Por Voz" */
-.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i])) {
-    background: linear-gradient(135deg, #0D9488 0%, #10B981 100%) !important;
-    border: none !important;
-    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.28) !important;
-}
-.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i])) > *:nth-child(n+2) {
-    display: none !important;
-}
-.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i])) > div:first-child {
-    width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important;
-}
-.st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i]) {
-    width: 100% !important; height: 100% !important; background: transparent !important; border: none !important;
-    color: #FFFFFF !important; display: flex !important; align-items: center !important; justify-content: center !important;
-    gap: 6px !important; padding: 0 10px !important; cursor: pointer !important;
-}
-.st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i]) svg {
-    color: #FFFFFF !important; fill: #FFFFFF !important; width: 18px !important; height: 18px !important; flex-shrink: 0 !important;
-}
-.st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type:not([aria-label*="Stop" i]):not([aria-label*="Parar" i]):not([aria-label*="Play" i]):not([aria-label*="Pause" i])::after {
-    content: "Por Voz"; font-size: 0.90rem; font-weight: 700; color: #FFFFFF; white-space: nowrap;
-}
-/* Estado gravando: fundo vermelho claro + botão parar pulsando + onda/tempo visíveis */
-.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button[aria-label*="Stop" i]),
-.st-key-acao_add_voz [data-testid="stAudioInput"] > div:has(button[aria-label*="Parar" i]) {
-    background: #FEF2F2 !important; border: 1.5px solid #EF4444 !important;
-    padding: 0 8px !important; gap: 6px !important; justify-content: flex-start !important;
+    background: #ECFDF5 !important; border: 1.5px solid #10B981 !important;
+    border-radius: 10px !important; min-height: 44px !important;
 }
 .st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Stop" i],
 .st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Parar" i] {
-    width: 32px !important; height: 32px !important; min-width: 32px !important; padding: 0 !important;
-    border-radius: 50% !important; background: #EF4444 !important; border: none !important;
-    animation: listai-pulse 1.2s infinite !important; flex-shrink: 0 !important;
-}
-.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Stop" i] svg,
-.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Parar" i] svg {
-    color: #FFFFFF !important; fill: #FFFFFF !important;
+    background: #EF4444 !important; color: #FFFFFF !important; border-radius: 8px !important;
 }
 
-/* Lista e Histórico Inicial */
-.st-key-lista_chk_box .stButton > button, [class*="st-key-hist_ini_cat_"] .stButton > button { padding: 0.25rem 0.2rem !important; min-height: 2.1rem !important; font-size: 0.85rem !important; }
+/* Lista e Compra Mensal na Tela Inicial */
+.st-key-lista_chk_box .stButton > button, [class*="st-key-compra_grp_"] .stButton > button { padding: 0.25rem 0.2rem !important; min-height: 2.1rem !important; font-size: 0.85rem !important; }
 .st-key-lista_chk_box .stCheckbox { margin: 0 !important; }
 .st-key-lista_chk_box .stCheckbox label p { font-size: 0.88rem !important; line-height: 1.25 !important; word-break: break-word !important; }
+.listai-compra-banner { background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%); border: 1px solid #86EFAC; border-left: 5px solid #16A34A; border-radius: 13px; padding: 0.8rem 0.95rem; margin-bottom: 0.65rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.listai-compra-eyebrow { font-size: 0.72rem; font-weight: 800; color: #15803D; text-transform: uppercase; letter-spacing: 0.5px; }
+.listai-compra-merc { font-size: 1.08rem; font-weight: 800; color: #064E3B; margin-top: 2px; }
+.listai-compra-data { font-size: 0.80rem; color: #475569; margin-top: 2px; }
+.listai-compra-total-box { text-align: right; }
+.listai-compra-total-lbl { font-size: 0.72rem; color: #475569; font-weight: 600; }
+.listai-compra-total-val { font-size: 1.28rem; font-weight: 800; color: #15803D; line-height: 1.1; }
 .listai-rec-row { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 0.45rem 0.65rem; min-width: 0; }
 .listai-rec-nome { font-weight: 700; font-size: 0.88rem; color: #064E3B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .listai-rec-meta { font-size: 0.76rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -359,7 +329,7 @@ def obter_api_key_gemini():
 
 
 def limpar_estado_usuario(incluir_auth=False):
-    chaves = {"aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "msg_sucesso", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria", "ultima_cat_adicionada"}
+    chaves = {"aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "msg_sucesso", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria"}
     if incluir_auth:
         st.session_state.update({"autenticado": False, "usuario_logado": ""})
         chaves.update({"modo_login", "rec_usuario", "msg_login_ok", "gemini_api_key_usuario", "pagina_atual", "pagina_anterior"})
@@ -952,11 +922,12 @@ def _fmt_dt(dt):
     return dt.strftime("%d/%m/%Y") if pd.notna(dt) else "Sem data"
 
 
-def _html_hist_card(ico, nome, qtd, pct, total):
+def _html_hist_card(ico, nome, qtd, pct, total, badge_extra=""):
     plural = "item" if qtd == 1 else "itens"
+    extra_html = f'<span class="listai-hist-badge">{html.escape(badge_extra)}</span> ' if badge_extra else ""
     return (
         f'<div class="listai-hist-card"><div class="listai-hist-head">'
-        f'<div class="listai-hist-title">{ico} {html.escape(str(nome))} <span class="listai-hist-badge">{qtd} {plural} • {pct:.0f}%</span></div>'
+        f'<div class="listai-hist-title">{ico} {html.escape(str(nome))} {extra_html}<span class="listai-hist-badge">{qtd} {plural} • {pct:.0f}%</span></div>'
         f'<div class="listai-hist-total">{formatar_reais(total)}</div></div>'
         f'<div class="listai-hist-track"><div class="listai-hist-fill" style="width:{pct:.1f}%"></div></div></div>'
     )
@@ -1060,7 +1031,7 @@ def renderizar_editor_compra(df_c, idx_edit, state_key, usuario):
                     df_edit[COLUNAS].to_csv(cam, index=False)
                     limpar_cache_compras()
                 st.session_state.pop(state_key, None)
-                st.session_state.update({"ultima_cat_adicionada": e_cat, "msg_sucesso": f"'{p_ok}' atualizado ({e_cat})!"})
+                st.session_state["msg_sucesso"] = f"'{p_ok}' atualizado ({e_cat})!"
                 st.rerun()
         elif excluir:
             df_edit = carregar_dados(usuario)
@@ -1075,55 +1046,68 @@ def renderizar_editor_compra(df_c, idx_edit, state_key, usuario):
             st.rerun()
 
 
-def renderizar_historico_simples_categorizado(df_c, df_v, usuario):
+def renderizar_compra_mensal(df_c, df_v, usuario, merc_atual, data_atual):
+    mes_hoje = date.today().strftime("%Y-%m")
+    mes_lbl = f"{mes_hoje[5:]}/{mes_hoje[:4]}"
+    data_str = data_atual.strftime("%d/%m/%Y")
+    merc_exib = merc_atual.strip() or "Supermercado"
+
+    df_mes = df_v[df_v["Mês"] == mes_hoje].copy() if not df_v.empty else pd.DataFrame(columns=COLUNAS)
+    if not df_mes.empty:
+        df_mes["Categoria"] = df_mes["Categoria"].replace("", "Outros").fillna("Outros")
+        df_mes["Supermercado"] = df_mes["Supermercado"].replace("", "Não informado").fillna("Não informado")
+        df_mes["Data_fmt"] = df_mes["Data_dt"].dt.strftime("%d/%m/%Y")
+        df_mes["Data_iso"] = df_mes["Data_dt"].dt.strftime("%Y-%m-%d")
+        tot_mes, qtd_mes = float(df_mes["Total"].sum()), len(df_mes)
+    else:
+        tot_mes, qtd_mes = 0.0, 0
+
     with st.container(border=True):
-        st.markdown("#### 🧾 Histórico Simples por Categoria")
-        if df_c.empty:
-            st.caption("Nenhuma compra registrada ainda. Adicione seu primeiro produto acima!")
-            return
+        st.markdown(
+            f'<div class="listai-compra-banner">'
+            f'<div><div class="listai-compra-eyebrow">🛒 Compra do Mês • {mes_lbl}</div>'
+            f'<div class="listai-compra-merc">🏪 {html.escape(merc_exib)}</div>'
+            f'<div class="listai-compra-data">📅 {data_str} • {qtd_mes} {"item" if qtd_mes == 1 else "itens"} no mês</div></div>'
+            f'<div class="listai-compra-total-box"><div class="listai-compra-total-lbl">Total do mês</div>'
+            f'<div class="listai-compra-total-val">{formatar_reais(tot_mes)}</div></div></div>',
+            unsafe_allow_html=True,
+        )
+
         if (edit_idx := st.session_state.get("edit_compra_idx")) is not None:
             renderizar_editor_compra(df_c, edit_idx, "edit_compra_idx", usuario)
 
-        mes_hoje = date.today().strftime("%Y-%m")
-        tem_mes = not df_v.empty and bool((df_v["Mês"] == mes_hoje).any())
-        op_per = ["📅 Mês atual", "📋 Todas"] if tem_mes else ["📋 Todas"]
-        per_sel = st.radio("Período:", op_per, horizontal=True, key="hist_ini_periodo", label_visibility="collapsed") if len(op_per) > 1 else op_per[0]
+        if df_mes.empty:
+            st.caption("Sua compra deste mês está começando. Adicione produtos acima para montar sua nota!")
+            return
 
-        df_base = df_v[df_v["Mês"] == mes_hoje].copy() if (per_sel == "📅 Mês atual" and not df_v.empty) else df_c.copy()
-        if "Data_dt" not in df_base.columns:
-            df_base["Data_dt"] = pd.to_datetime(df_base["Data"], errors="coerce")
-        df_base["Categoria"] = df_base["Categoria"].replace("", "Outros").fillna("Outros")
-        df_base["Supermercado"] = df_base["Supermercado"].replace("", "Não informado").fillna("Não informado")
+        grupos = df_mes.groupby(["Supermercado", "Data_iso", "Data_fmt"], as_index=False)["Total"].sum()
+        grupos["Atual"] = (grupos["Supermercado"].str.lower() == merc_exib.lower()) & (grupos["Data_fmt"] == data_str)
+        grupos = grupos.sort_values(by=["Atual", "Data_iso", "Total"], ascending=[False, False, False]).reset_index(drop=True)
+        total_base, abrir_todos = max(tot_mes, 0.01), len(grupos) <= 2
 
-        tot_per, qtd_per = float(df_base["Total"].sum()), len(df_base)
-        st.caption(f"Total no período: **{formatar_reais(tot_per)}** ({qtd_per} {'item' if qtd_per == 1 else 'itens'})")
+        for idx, g in grupos.iterrows():
+            sub = df_mes[(df_mes["Supermercado"] == g["Supermercado"]) & (df_mes["Data_iso"] == g["Data_iso"])].iloc[::-1]
+            qtd_g, tot_g = len(sub), float(g["Total"])
+            pct = min(100.0, (tot_g / total_base) * 100)
+            badge = "Agora" if g["Atual"] else ""
+            st.markdown(_html_hist_card("🏪", f"{g['Supermercado']} · {g['Data_fmt']}", qtd_g, pct, tot_g, badge_extra=badge), unsafe_allow_html=True)
 
-        resumo = df_base.groupby("Categoria", as_index=False)["Total"].sum().sort_values("Total", ascending=False)
-        total_base, abrir_todos, ult_cat = max(tot_per, 0.01), len(resumo) <= 3, st.session_state.get("ultima_cat_adicionada")
-
-        for idx, row_g in enumerate(resumo.itertuples(index=False)):
-            cat_n, tot_c = row_g.Categoria, float(row_g.Total)
-            pct = min(100.0, (tot_c / total_base) * 100)
-            sub = df_base[df_base["Categoria"] == cat_n].sort_values(by="Data_dt", ascending=False, na_position="last")
-            qtd_c = len(sub)
-            st.markdown(_html_hist_card(ICONES_CATEGORIA.get(cat_n, "📦"), cat_n, qtd_c, pct, tot_c), unsafe_allow_html=True)
-
-            with st.expander(f"Ver {qtd_c} {'item' if qtd_c == 1 else 'itens'} de {cat_n}", expanded=(abrir_todos or cat_n == ult_cat or (not ult_cat and idx == 0))):
-                with st.container(key=f"hist_ini_cat_{idx}"):
-                    for idx_r, rr in sub.head(15).iterrows():
+            with st.expander(f"Ver {qtd_g} {'produto' if qtd_g == 1 else 'produtos'} de {g['Supermercado']} ({g['Data_fmt']})", expanded=(abrir_todos or idx == 0)):
+                with st.container(key=f"compra_grp_{idx}"):
+                    for idx_r, rr in sub.head(20).iterrows():
+                        cat_r = str(rr.get("Categoria") or "Outros")
+                        ico_r = ICONES_CATEGORIA.get(cat_r, "📦")
                         c_info, c_ed = st.columns([6, 1])
                         c_info.markdown(
-                            f'<div class="listai-rec-row"><div class="listai-rec-nome">{html.escape(str(rr["Produto"]))} (x{_fmt_qtd(rr.get("Quantidade", 1))}) — {formatar_reais(float(rr.get("Total", 0.0)))}</div>'
-                            f'<div class="listai-rec-meta">🏪 {html.escape(str(rr.get("Supermercado") or "-"))} · 📅 {_fmt_dt(rr.get("Data_dt"))}</div></div>',
+                            f'<div class="listai-rec-row"><div class="listai-rec-nome">{ico_r} {html.escape(str(rr["Produto"]))} (x{_fmt_qtd(rr.get("Quantidade", 1))}) — {formatar_reais(float(rr.get("Total", 0.0)))}</div>'
+                            f'<div class="listai-rec-meta">{html.escape(cat_r)} · {formatar_reais(float(rr.get("Preço Unitário", 0.0)))}/un</div></div>',
                             unsafe_allow_html=True,
                         )
                         if c_ed.button("✏️", key=f"btn_ed_ini_{idx_r}", help="Editar ou excluir", use_container_width=True):
                             st.session_state["edit_compra_idx"] = idx_r
                             st.rerun()
-                if qtd_c > 15:
-                    st.caption(f"Mostrando os 15 mais recentes de {qtd_c} itens. Veja todos em **🧾 Histórico**.")
 
-        if st.button("🧾 Ver histórico completo e filtros", use_container_width=True, key="btn_ir_hist_completo"):
+        if st.button("🧾 Ver outros meses e filtros", use_container_width=True, key="btn_ir_hist_completo"):
             st.session_state.update({"pagina_atual": PAGINAS[3], "rolar_topo": True})
             st.rerun()
 
@@ -1314,11 +1298,13 @@ def pagina_compra():
         cat_def = st.session_state.get("valor_categoria", "✨ Automática")
         cat_esc = st.selectbox("🏷️ Categoria", cat_opcoes, index=cat_opcoes.index(cat_def) if cat_def in cat_opcoes else 0, key=f"input_cat_{versao}", format_func=lambda c: c if c == "✨ Automática" else f"{ICONES_CATEGORIA.get(c, '📦')} {c}")
 
-        # Adicionar + Por Voz lado a lado (1 toque já inicia a gravação!)
+        # Adicionar + Gravador de Voz Nativo lado a lado
         with st.container(key="acao_add_voz"):
-            c_add, c_mic = st.columns([1.15, 1], vertical_alignment="center")
+            c_add, c_mic = st.columns([1, 1.35], vertical_alignment="center")
             clicou_add = c_add.button("✅ Adicionar", type="primary", use_container_width=True, key=f"btn_add_prod_{versao}")
             audio = c_mic.audio_input("Por Voz", label_visibility="collapsed", key=f"audio_zap_{versao}")
+
+        st.caption("🎤 Toque no microfone ao lado para falar (ex: *'2 arroz por 24,90'*)." if api_key else "🎤 Para usar a voz, informe sua Chave Gemini em **👤 Perfil → Inteligência Artificial**.")
 
         if audio is not None:
             ab = audio.getvalue()
@@ -1379,11 +1365,11 @@ def pagina_compra():
                         extra = " Preço compartilhado!"
                     if lim > 0 and mes_c == mes_hoje and novo_tot > lim:
                         st.session_state["msg_limite_alerta"] = f"⚠️ Gastos do mês chegaram a **{formatar_reais(novo_tot)}** (acima do limite de **{formatar_reais(lim)}**)."
-                    st.session_state.update({"msg_sucesso": f"'{prod_ok}' adicionado em **{merc_final}** ({cat}).{extra}", "ultima_cat_adicionada": cat, "valor_produto": "", "valor_quantidade": 1, "valor_preco": 1.00, "valor_categoria": "✨ Automática", "valor_supermercado": "", "regiao_para_selecionar": reg_final, "merc_para_selecionar": merc_final, "form_versao": versao + 1})
+                    st.session_state.update({"msg_sucesso": f"'{prod_ok}' adicionado em **{merc_final}** ({cat}).{extra}", "valor_produto": "", "valor_quantidade": 1, "valor_preco": 1.00, "valor_categoria": "✨ Automática", "valor_supermercado": "", "regiao_para_selecionar": reg_final, "merc_para_selecionar": merc_final, "form_versao": versao + 1})
                     st.session_state.pop("aviso_voz", None)
                     st.rerun()
 
-    renderizar_historico_simples_categorizado(df_c, df_v, usuario_atual)
+    renderizar_compra_mensal(df_c, df_v, usuario_atual, merc_final, data_c)
 
 
 def pagina_lista():
