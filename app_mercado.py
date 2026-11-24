@@ -27,50 +27,31 @@ st.set_page_config(page_title="Listaí — Preços e Compras", page_icon="🛒",
 st.markdown(
 """<style>
 html, body, .stApp { background-color: #F3F8F5 !important; color: #132A1E !important; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important; overflow-x: clip !important; }
-.block-container { padding: 0.9rem 1rem 3rem 1rem !important; max-width: 1080px; }
+.block-container { padding: 3rem 1rem 3.2rem 1rem !important; max-width: 1080px; }
 h1, h2, h3, h4 { color: #064E3B !important; font-weight: 800 !important; letter-spacing: -0.3px; }
 label, .stMarkdown p, .stCheckbox p, .stRadio p { color: #132A1E !important; }
 [data-testid="stCaptionContainer"] p, small { color: #475569 !important; font-size: 0.82rem !important; }
 section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] { display: none !important; }
 
-/* Topo Estilo Nubank (CSS Grid para nunca quebrar no celular) */
-.st-key-topo_nubank { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%) !important; border-radius: 16px !important; padding: 0.85rem 1rem !important; margin-bottom: 0.6rem !important; box-shadow: 0 6px 20px rgba(21, 128, 61, 0.22) !important; }
+/* Topo Estilo Nubank */
+.st-key-topo_nubank { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%) !important; border-radius: 16px !important; padding: 0.9rem 1rem !important; margin-bottom: 0.65rem !important; box-shadow: 0 6px 20px rgba(21, 128, 61, 0.22) !important; }
 .st-key-topo_nubank [data-testid="stVerticalBlock"] { background: transparent !important; gap: 0 !important; }
-.st-key-topo_nubank [data-testid="stHorizontalBlock"] {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    align-items: center !important;
-    gap: 0.65rem !important;
-    width: 100% !important;
-}
+.st-key-topo_nubank [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: minmax(0, 1fr) auto !important; align-items: center !important; gap: 0.65rem !important; width: 100% !important; }
 .st-key-topo_nubank [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 .st-key-topo_nubank [data-testid="stColumn"]:last-child { width: auto !important; justify-self: end !important; }
 .st-key-topo_nubank [data-testid="stColumn"]:first-child [data-testid="stElementContainer"],
 .st-key-topo_nubank [data-testid="stColumn"]:first-child [data-testid="stMarkdown"] { width: 100% !important; min-width: 0 !important; }
 .st-key-topo_nubank [data-testid="stColumn"]:last-child [data-testid="stElementContainer"] { width: auto !important; }
-
 .listai-nu-user { display: flex; align-items: center; gap: 0.7rem; width: 100%; min-width: 0; }
 .listai-nu-texts { flex: 1 1 auto; min-width: 0; }
 .listai-nu-brand { font-size: 0.68rem; font-weight: 700; color: #BBF7D0; text-transform: uppercase; letter-spacing: 0.7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.listai-nu-hello { font-size: 1.2rem; font-weight: 800; color: #FFFFFF; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.listai-nu-hello { font-size: 1.2rem; font-weight: 800; color: #FFFFFF; line-height: 1.18; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .listai-nu-sub { font-size: 0.76rem; color: #DCFCE7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .st-key-topo_nubank .stButton > button { background: #FFFFFF !important; border: 2px solid #DCFCE7 !important; color: #064E3B !important; border-radius: 999px !important; padding: 0.36rem 0.85rem !important; font-size: 0.80rem !important; font-weight: 800 !important; white-space: nowrap !important; width: auto !important; }
 .st-key-topo_nubank .stButton > button p { color: #064E3B !important; font-weight: 800 !important; white-space: nowrap !important; }
 
-/* Barra de Navegação Superior (logo abaixo do topo, sem colidir com ícones do Streamlit) */
-.st-key-barra_navegacao {
-    position: sticky !important;
-    top: 0.35rem !important;
-    z-index: 999 !important;
-    background: rgba(255, 255, 255, 0.96) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1px solid #86EFAC !important;
-    border-radius: 14px !important;
-    padding: 0.28rem 0.32rem !important;
-    margin-bottom: 0.7rem !important;
-    box-shadow: 0 4px 14px rgba(6, 78, 59, 0.12) !important;
-}
+/* Barra de Navegação Superior */
+.st-key-barra_navegacao { background: #FFFFFF !important; border: 1px solid #86EFAC !important; border-radius: 14px !important; padding: 0.28rem 0.32rem !important; margin-bottom: 0.75rem !important; box-shadow: 0 3px 12px rgba(6, 78, 59, 0.08) !important; }
 .st-key-barra_navegacao [data-testid="stVerticalBlock"] { gap: 0 !important; }
 .st-key-barra_navegacao [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 0.18rem !important; width: 100% !important; }
 .st-key-barra_navegacao [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
@@ -80,19 +61,14 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-barra_navegacao .stButton > button[kind="primary"] { background: linear-gradient(135deg, #15803D, #16A34A) !important; color: #FFFFFF !important; }
 .st-key-barra_navegacao .stButton > button[kind="primary"] p { color: #FFFFFF !important; }
 
-/* Grids Fixos para Mobile e Desktop */
-.st-key-kpi_2cols [data-testid="stHorizontalBlock"],
-.st-key-row_qtd_preco [data-testid="stHorizontalBlock"],
-.st-key-acao_add_voz [data-testid="stHorizontalBlock"],
-.st-key-add_lista_row [data-testid="stHorizontalBlock"],
-.st-key-lista_chk_box [data-testid="stHorizontalBlock"],
-[class*="st-key-hist_ini_cat_"] [data-testid="stHorizontalBlock"],
-[class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"],
-[class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] {
+/* Grids Fixos */
+.st-key-kpi_2cols [data-testid="stHorizontalBlock"], .st-key-row_qtd_preco [data-testid="stHorizontalBlock"],
+.st-key-acao_add_voz [data-testid="stHorizontalBlock"], .st-key-add_lista_row [data-testid="stHorizontalBlock"],
+.st-key-lista_chk_box [data-testid="stHorizontalBlock"], [class*="st-key-hist_ini_cat_"] [data-testid="stHorizontalBlock"],
+[class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] {
     display: grid !important; gap: 0.45rem !important; align-items: center !important; width: 100% !important;
 }
-.st-key-kpi_2cols [data-testid="stHorizontalBlock"],
-[class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.st-key-kpi_2cols [data-testid="stHorizontalBlock"], [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 .st-key-row_qtd_preco [data-testid="stHorizontalBlock"] { grid-template-columns: 0.85fr 1.15fr !important; align-items: end !important; }
 .st-key-acao_add_voz [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 48px !important; }
 .st-key-add_lista_row [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 64px !important; align-items: end !important; }
@@ -100,72 +76,45 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 [class*="st-key-hist_ini_cat_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
 [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 .st-key-kpi_4cols [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.5rem !important; width: 100% !important; }
-
-.st-key-kpi_2cols [data-testid="stColumn"],
-.st-key-kpi_4cols [data-testid="stColumn"],
-.st-key-row_qtd_preco [data-testid="stColumn"],
-.st-key-acao_add_voz [data-testid="stColumn"],
-.st-key-add_lista_row [data-testid="stColumn"],
-.st-key-lista_chk_box [data-testid="stColumn"],
-[class*="st-key-hist_ini_cat_"] [data-testid="stColumn"],
-[class*="st-key-edit_qp_"] [data-testid="stColumn"],
+.st-key-kpi_2cols [data-testid="stColumn"], .st-key-kpi_4cols [data-testid="stColumn"], .st-key-row_qtd_preco [data-testid="stColumn"],
+.st-key-acao_add_voz [data-testid="stColumn"], .st-key-add_lista_row [data-testid="stColumn"], .st-key-lista_chk_box [data-testid="stColumn"],
+[class*="st-key-hist_ini_cat_"] [data-testid="stColumn"], [class*="st-key-edit_qp_"] [data-testid="stColumn"],
 [class*="st-key-edit_btns_"] [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 
-/* Botão de Áudio Compacto (Somente o Botão) ao lado de Adicionar */
+/* Botão de Áudio Compacto */
 @keyframes listai-pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 .st-key-acao_add_voz [data-testid="stAudioInput"] { width: 46px !important; margin: 0 auto !important; }
-.st-key-acao_add_voz [data-testid="stAudioInput"] > div {
-    background: transparent !important; border: none !important; box-shadow: none !important;
-    padding: 0 !important; width: 46px !important; min-width: 46px !important; height: 44px !important;
-    overflow: hidden !important; position: relative !important; display: flex !important; align-items: center !important; justify-content: center !important;
-}
-.st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type {
-    width: 44px !important; height: 44px !important; min-width: 44px !important; padding: 0 !important;
-    background: #25D366 !important; color: #FFFFFF !important; border-radius: 50% !important; border: none !important;
-    box-shadow: 0 3px 10px rgba(37, 211, 102, 0.38) !important; flex-shrink: 0 !important; z-index: 2 !important;
-}
-.st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type:hover { background: #16A34A !important; transform: scale(1.04); }
+.st-key-acao_add_voz [data-testid="stAudioInput"] > div { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; width: 46px !important; min-width: 46px !important; height: 44px !important; overflow: hidden !important; position: relative !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+.st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type { width: 44px !important; height: 44px !important; min-width: 44px !important; padding: 0 !important; background: #25D366 !important; color: #FFFFFF !important; border-radius: 50% !important; border: none !important; box-shadow: 0 3px 10px rgba(37, 211, 102, 0.38) !important; flex-shrink: 0 !important; z-index: 2 !important; }
 .st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Stop" i],
-.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Parar" i] {
-    background: #EF4444 !important; animation: listai-pulse 1.2s infinite !important;
-}
+.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Parar" i] { background: #EF4444 !important; animation: listai-pulse 1.2s infinite !important; }
 .st-key-acao_add_voz [data-testid="stAudioInput"] button:first-of-type svg { color: #FFFFFF !important; fill: #FFFFFF !important; }
 .st-key-acao_add_voz [data-testid="stAudioInput"] > div > div:nth-child(n+2),
-.st-key-acao_add_voz [data-testid="stAudioInput"] [data-testid="stAudioInputWaveformTimeCode"] {
-    position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; opacity: 0 !important; pointer-events: none !important;
-}
+.st-key-acao_add_voz [data-testid="stAudioInput"] [data-testid="stAudioInputWaveformTimeCode"] { position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; opacity: 0 !important; pointer-events: none !important; }
 
-/* Botões compactos da lista e histórico inicial */
-.st-key-lista_chk_box .stButton > button,
-[class*="st-key-hist_ini_cat_"] .stButton > button { padding: 0.25rem 0.2rem !important; min-height: 2.1rem !important; font-size: 0.85rem !important; }
+/* Lista e Histórico Inicial */
+.st-key-lista_chk_box .stButton > button, [class*="st-key-hist_ini_cat_"] .stButton > button { padding: 0.25rem 0.2rem !important; min-height: 2.1rem !important; font-size: 0.85rem !important; }
 .st-key-lista_chk_box .stCheckbox { margin: 0 !important; }
 .st-key-lista_chk_box .stCheckbox label p { font-size: 0.88rem !important; line-height: 1.25 !important; word-break: break-word !important; }
 .listai-rec-row { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 0.45rem 0.65rem; min-width: 0; }
 .listai-rec-nome { font-weight: 700; font-size: 0.88rem; color: #064E3B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .listai-rec-meta { font-size: 0.76rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Avatares e Foto Clicável no Perfil */
-.listai-avatar { border-radius: 50%; background: rgba(255, 255, 255, 0.22); border: 2px solid rgba(255, 255, 255, 0.88); color: #FFFFFF; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.listai-avatar-solid { border-radius: 50%; background: linear-gradient(135deg, #064E3B, #16A34A); border: 2px solid #86EFAC; color: #FFFFFF; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+/* Avatares e Perfil */
+.listai-avatar, .listai-avatar-solid { border-radius: 50%; color: #FFFFFF; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.listai-avatar { background: rgba(255, 255, 255, 0.22); border: 2px solid rgba(255, 255, 255, 0.88); }
+.listai-avatar-solid { background: linear-gradient(135deg, #064E3B, #16A34A); border: 2px solid #86EFAC; }
 .listai-avatar-img { border-radius: 50%; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.92); flex-shrink: 0; display: block; }
-.st-key-perfil_hero_top [data-testid="stHorizontalBlock"] {
-    display: grid !important;
-    grid-template-columns: 78px minmax(0, 1fr) !important;
-    align-items: center !important;
-    gap: 0.85rem !important;
-    width: 100% !important;
-}
+.st-key-perfil_hero_top [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: 78px minmax(0, 1fr) !important; align-items: center !important; gap: 0.85rem !important; width: 100% !important; }
 .st-key-perfil_hero_top [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
-.st-key-avatar_clicavel { position: relative !important; width: 78px !important; height: 78px !important; border-radius: 50% !important; cursor: pointer !important; }
-.st-key-avatar_clicavel [data-testid="stVerticalBlock"] { position: relative !important; width: 78px !important; height: 78px !important; gap: 0 !important; }
-.listai-avatar-wrap { position: relative; width: 78px; height: 78px; }
+.st-key-avatar_clicavel, .st-key-avatar_clicavel [data-testid="stVerticalBlock"], .listai-avatar-wrap { position: relative !important; width: 78px !important; height: 78px !important; border-radius: 50% !important; gap: 0 !important; }
+.st-key-avatar_clicavel { cursor: pointer !important; }
 .listai-cam-badge { position: absolute; right: 0; bottom: 0; width: 26px; height: 26px; border-radius: 50%; background: #16A34A; border: 2px solid #FFFFFF; color: #FFFFFF; font-size: 12px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .st-key-avatar_clicavel [data-testid="stFileUploader"] { position: absolute !important; inset: 0 !important; width: 78px !important; height: 78px !important; opacity: 0.001 !important; z-index: 20 !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; border-radius: 50% !important; }
-.st-key-avatar_clicavel [data-testid="stFileUploaderDropzone"],
-.st-key-avatar_clicavel [data-testid="stFileUploaderDropzone"] button { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; min-height: 78px !important; padding: 0 !important; border: none !important; border-radius: 50% !important; }
+.st-key-avatar_clicavel [data-testid="stFileUploaderDropzone"], .st-key-avatar_clicavel [data-testid="stFileUploaderDropzone"] button { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; min-height: 78px !important; padding: 0 !important; border: none !important; border-radius: 50% !important; }
 .st-key-avatar_clicavel [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
 
-/* Header Login e Cards */
+/* Cards Diversos */
 .listai-header { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%); padding: 1.05rem 1.2rem; border-radius: 16px; color: #FFFFFF !important; margin-bottom: 0.8rem; }
 .listai-header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
 .listai-brand { display: flex; align-items: center; gap: 0.7rem; }
@@ -181,7 +130,6 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .listai-profile-info span { color: #475569; font-size: 0.84rem; display: block; margin-top: 2px; }
 .listai-foto-dica { color: #15803D !important; font-weight: 600; font-size: 0.78rem !important; }
 .listai-ad-badge { display: inline-block; background: #DCFCE7; color: #166534; font-size: 0.70rem; font-weight: 700; padding: 0.12rem 0.5rem; border-radius: 6px; margin-bottom: 0.2rem; }
-.listai-mini-status { font-size: 0.79rem; color: #475569; margin: 0.25rem 0 0.15rem 0; }
 
 /* Histórico e Feed */
 .listai-hist-card { background: #FFFFFF; border: 1px solid #D1FAE5; border-left: 5px solid #16A34A; border-radius: 13px; padding: 0.75rem 0.9rem 0.55rem 0.9rem; margin-bottom: 0.35rem; }
@@ -221,8 +169,8 @@ div[data-testid="stMetricValue"] { color: #064E3B !important; font-weight: 800 !
 div[data-testid="stProgress"] > div > div > div > div { background-color: #16A34A !important; }
 
 @media (max-width: 680px) {
-    .block-container { padding: 0.5rem 0.65rem 4rem 0.65rem !important; }
-    .st-key-topo_nubank { padding: 0.68rem 0.8rem !important; margin-bottom: 0.45rem !important; }
+    .block-container { padding: 2.8rem 0.65rem 4.5rem 0.65rem !important; }
+    .st-key-topo_nubank { padding: 0.82rem 0.85rem !important; margin-bottom: 0.5rem !important; }
     .listai-nu-hello { font-size: 1.05rem !important; }
     .st-key-topo_nubank .stButton > button { padding: 0.3rem 0.7rem !important; font-size: 0.76rem !important; }
     div[data-testid="stMetric"] { padding: 8px 11px !important; }
@@ -237,28 +185,14 @@ div[data-testid="stProgress"] > div > div > div > div { background-color: #16A34
 unsafe_allow_html=True,
 )
 
-LOGO_SVG = (
-    '<div class="listai-logo-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none">'
-    '<defs><linearGradient id="lg" x1="0" y1="12" x2="24" y2="4" gradientUnits="userSpaceOnUse">'
-    '<stop offset="0%" stop-color="#0077E6"/><stop offset="55%" stop-color="#00B8B0"/><stop offset="100%" stop-color="#16A34A"/></linearGradient></defs>'
-    '<path d="M2 4H5L7.4 14.5C7.6 15.4 8.4 16 9.3 16H17.5C18.4 16 19.2 15.4 19.4 14.5L21 7H6" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
-    '<path d="M9.5 10.2L12 12.6L19.5 4.8" stroke="url(#lg)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>'
-    '<circle cx="9.5" cy="19.5" r="1.6" fill="#0077E6"/><circle cx="17" cy="19.5" r="1.6" fill="#16A34A"/></svg></div>'
-)
+LOGO_SVG = '<div class="listai-logo-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="lg" x1="0" y1="12" x2="24" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0077E6"/><stop offset="55%" stop-color="#00B8B0"/><stop offset="100%" stop-color="#16A34A"/></linearGradient></defs><path d="M2 4H5L7.4 14.5C7.6 15.4 8.4 16 9.3 16H17.5C18.4 16 19.2 15.4 19.4 14.5L21 7H6" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 10.2L12 12.6L19.5 4.8" stroke="url(#lg)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.6" fill="#0077E6"/><circle cx="17" cy="19.5" r="1.6" fill="#16A34A"/></svg></div>'
 
 # --- Constantes ---
 PASTA_DADOS_USUARIOS, ARQUIVO_COMUNIDADE, ARQUIVO_MERCADOS, ARQUIVO_USUARIOS = "dados_usuarios", "precos_comunidade.csv", "supermercados.json", "usuarios.json"
 NAV_ITENS = [("🛒", "Compra"), ("📝", "Lista"), ("📊", "Gráficos"), ("🧾", "Histórico"), ("🏆", "Preços"), ("🗺️", "Mercados")]
 PAGINAS = [f"{ico} {txt}" for ico, txt in NAV_ITENS]
 PAGINA_PERFIL = "👤 Perfil"
-
-PERGUNTAS_SEGURANCA = [
-    "Qual o nome do seu primeiro pet?",
-    "Qual sua cidade natal?",
-    "Qual o nome da sua mãe?",
-    "Qual sua comida favorita?",
-    "Qual o nome da sua escola de infância?",
-]
+PERGUNTAS_SEGURANCA = ["Qual o nome do seu primeiro pet?", "Qual sua cidade natal?", "Qual o nome da sua mãe?", "Qual sua comida favorita?", "Qual o nome da sua escola de infância?"]
 
 COLUNAS = ["Data", "Região", "Supermercado", "Produto", "Categoria", "Quantidade", "Preço Unitário", "Total"]
 COLUNAS_PRE_LISTA = ["ID", "Produto", "Quantidade", "Categoria", "Comprado"]
@@ -294,23 +228,18 @@ CATEGORIAS_FALLBACK = {
 }
 
 
-def _norm_basico(texto):
+def normalizar_texto(texto):
     return "".join(c for c in unicodedata.normalize("NFD", str(texto).lower().strip()) if unicodedata.category(c) != "Mn")
 
 
-# Pré-compilado em ordem decrescente de tamanho para evitar colisões (ex: "molho de tomate" antes de "tomate")
 _REGRAS_CATEGORIA = sorted(
-    [(re.compile(rf"\b{re.escape(_norm_basico(p))}\b"), cat, len(_norm_basico(p))) for cat, ps in CATEGORIAS_FALLBACK.items() for p in ps],
+    [(re.compile(rf"\b{re.escape(normalizar_texto(p))}\b"), cat, len(normalizar_texto(p))) for cat, ps in CATEGORIAS_FALLBACK.items() for p in ps],
     key=lambda x: x[2],
     reverse=True,
 )
 
 
 # --- Utilitários ---
-def normalizar_texto(texto):
-    return _norm_basico(texto)
-
-
 def ler_json(caminho, padrao):
     if os.path.exists(caminho) and os.path.getsize(caminho) > 0:
         try:
@@ -352,8 +281,7 @@ def mascarar_email(email):
     if "@" not in e:
         return "***"
     local, dom = e.split("@", 1)
-    vis = local[:2] if len(local) > 2 else local[:1]
-    return f"{vis}***@{dom}"
+    return f"{local[:2] if len(local) > 2 else local[:1]}***@{dom}"
 
 
 def mascarar_telefone(tel):
@@ -497,7 +425,6 @@ def exibir_tela_login():
 
         with st.container(border=True):
             modo = st.session_state["modo_login"]
-
             if modo == "entrar":
                 st.subheader("🔐 Entrar")
                 if msg_ok := st.session_state.pop("msg_login_ok", None):
@@ -531,70 +458,58 @@ def exibir_tela_login():
                 with st.form("form_buscar_rec", border=False):
                     rec_in = st.text_input("Digite seu usuário", value=st.session_state.get("rec_usuario", ""), placeholder="Ex: maria")
                     if st.form_submit_button("🔍 Buscar conta", use_container_width=True):
-                        u_limpo = rec_in.strip().lower()
-                        if not u_limpo:
+                        if not (u_limpo := rec_in.strip().lower()):
                             st.warning("Informe seu usuário.")
                         else:
                             st.session_state["rec_usuario"] = u_limpo
                             st.rerun()
 
                 if rec_u := st.session_state.get("rec_usuario"):
-                    reg_raw = usuarios.get(rec_u)
-                    if reg_raw is None:
+                    if (reg_raw := usuarios.get(rec_u)) is None:
                         st.error(f"Usuário **@{html.escape(rec_u)}** não encontrado.")
                     else:
                         reg = dict(reg_raw) if isinstance(reg_raw, dict) else {"tipo": "senha", "hash": reg_raw, "nome": rec_u}
                         if lembrete := str(reg.get("lembrete", "")).strip():
                             st.info(f"💡 **Lembrete da sua senha:** {lembrete}")
-                            st.caption("Se lembrou da senha com essa dica, clique em **Voltar para Entrar** abaixo.")
+                            st.caption("Se lembrou da senha com essa dica, clique em **Voltar para Entrar**.")
                         else:
-                            st.caption("Esta conta ainda não tem um lembrete de senha salvo.")
+                            st.caption("Esta conta não tem um lembrete de senha salvo.")
 
-                        tem_perg = bool(reg.get("pergunta_seg") and reg.get("resposta_seg_hash"))
-                        tem_email = bool(str(reg.get("email", "")).strip())
                         tel_limpo = re.sub(r"\D", "", str(reg.get("telefone", "")))
-                        tem_tel = len(tel_limpo) >= 8
-
-                        metodos = []
-                        if tem_perg:
-                            metodos.append("Pergunta secreta")
-                        if tem_email:
-                            metodos.append("E-mail cadastrado")
-                        if tem_tel:
-                            metodos.append("WhatsApp cadastrado")
+                        metodos = [m for cond, m in [
+                            (bool(reg.get("pergunta_seg") and reg.get("resposta_seg_hash")), "Pergunta secreta"),
+                            (bool(str(reg.get("email", "")).strip()), "E-mail cadastrado"),
+                            (len(tel_limpo) >= 8, "WhatsApp cadastrado"),
+                        ] if cond]
 
                         if not metodos:
-                            st.warning("Esta conta não possui pergunta secreta, e-mail ou WhatsApp cadastrados para redefinir a senha automaticamente.")
+                            st.warning("Esta conta não possui pergunta secreta, e-mail ou WhatsApp cadastrados para redefinir automaticamente.")
                         else:
                             st.divider()
                             st.markdown("**🔄 Não lembrou? Redefina sua senha:**")
-                            metodo = st.radio("Confirmar identidade usando:", metodos, horizontal=True, key="rec_metodo_verif") if len(metodos) > 1 else metodos[0]
-
+                            metodo = st.radio("Confirmar usando:", metodos, horizontal=True, key="rec_metodo_verif") if len(metodos) > 1 else metodos[0]
                             with st.form("form_redefinir_senha", border=False):
                                 if metodo == "Pergunta secreta":
                                     st.markdown(f"❓ **{html.escape(reg['pergunta_seg'])}**")
-                                    verif_in = st.text_input("Sua resposta secreta", placeholder="Digite a resposta")
+                                    verif_in = st.text_input("Sua resposta secreta")
                                 elif metodo == "E-mail cadastrado":
-                                    verif_in = st.text_input(f"Confirme o e-mail ({mascarar_email(reg['email'])})", placeholder="Digite o e-mail completo")
+                                    verif_in = st.text_input(f"Confirme o e-mail ({mascarar_email(reg['email'])})")
                                 else:
-                                    verif_in = st.text_input(f"Confirme o WhatsApp ({mascarar_telefone(reg['telefone'])})", placeholder="Digite o número com DDD")
+                                    verif_in = st.text_input(f"Confirme o WhatsApp ({mascarar_telefone(reg['telefone'])})")
 
                                 ns1, ns2 = st.columns(2)
                                 nova_s = ns1.text_input("Nova senha *", type="password", placeholder="Mín. 4 caracteres")
                                 conf_s = ns2.text_input("Confirmar senha *", type="password")
-
                                 if st.form_submit_button("✅ Salvar nova senha", type="primary", use_container_width=True):
-                                    if metodo == "Pergunta secreta":
-                                        ok_verif = verificar_senha(normalizar_texto(verif_in), reg["resposta_seg_hash"])
-                                    elif metodo == "E-mail cadastrado":
-                                        ok_verif = verif_in.strip().lower() == str(reg.get("email", "")).strip().lower()
-                                    else:
-                                        ok_verif = re.sub(r"\D", "", verif_in) == tel_limpo
-
-                                    if not ok_verif:
+                                    ok_v = (
+                                        verificar_senha(normalizar_texto(verif_in), reg["resposta_seg_hash"]) if metodo == "Pergunta secreta"
+                                        else (verif_in.strip().lower() == str(reg.get("email", "")).strip().lower() if metodo == "E-mail cadastrado"
+                                              else re.sub(r"\D", "", verif_in) == tel_limpo)
+                                    )
+                                    if not ok_v:
                                         st.error("Os dados de confirmação não conferem.")
                                     elif len(nova_s) < 4:
-                                        st.warning("A nova senha deve ter pelo menos 4 caracteres.")
+                                        st.warning("Mínimo 4 caracteres.")
                                     elif nova_s != conf_s:
                                         st.error("As senhas não coincidem.")
                                     else:
@@ -603,8 +518,7 @@ def exibir_tela_login():
                                         u_edit[rec_u] = reg
                                         salvar_usuarios(u_edit)
                                         st.session_state.pop("rec_usuario", None)
-                                        st.session_state["modo_login"] = "entrar"
-                                        st.session_state["msg_login_ok"] = f"Senha da conta **{rec_u}** redefinida! Já pode entrar."
+                                        st.session_state.update({"modo_login": "entrar", "msg_login_ok": f"Senha de **{rec_u}** redefinida! Já pode entrar."})
                                         st.rerun()
 
                 st.divider()
@@ -624,9 +538,8 @@ def exibir_tela_login():
                     a1, a2 = st.columns(2)
                     novo_u = a1.text_input("Usuário *", placeholder="Ex: maria")
                     nova_s = a2.text_input("Senha *", type="password", placeholder="Mín. 4 caracteres")
-
                     st.caption("💡 **Para lembrar ou recuperar sua senha caso esqueça:**")
-                    lemb_p = st.text_input("Lembrete / dica da senha (opcional)", placeholder="Ex: Nome do pet + ano especial")
+                    lemb_p = st.text_input("Lembrete / dica da senha (opcional)", placeholder="Ex: Nome do pet + ano")
                     s1, s2 = st.columns(2)
                     perg_p = s1.selectbox("Pergunta secreta (opcional)", PERGUNTAS_SEGURANCA)
                     resp_p = s2.text_input("Resposta secreta (opcional)", placeholder="Ex: Rex")
@@ -636,26 +549,16 @@ def exibir_tela_login():
                         if len(nome_ok) < 2:
                             st.warning("Digite seu nome completo.")
                         elif len(nl) < 2:
-                            st.warning("O usuário deve ter pelo menos 2 caracteres.")
+                            st.warning("Usuário deve ter pelo menos 2 caracteres.")
                         elif nl in usuarios:
                             st.error("Esse usuário já existe. Escolha outro.")
                         elif len(nova_s) < 4:
-                            st.warning("A senha deve ter pelo menos 4 caracteres.")
+                            st.warning("Senha deve ter pelo menos 4 caracteres.")
                         else:
                             u_edit = usuarios.copy()
-                            novo_reg = {
-                                "tipo": "senha",
-                                "hash": gerar_hash_senha(nova_s),
-                                "nome": nome_ok,
-                                "email": email_p.strip(),
-                                "telefone": tel_p.strip(),
-                                "cidade": cid_p.strip(),
-                                "lembrete": lemb_p.strip(),
-                                "criado_em": date.today().isoformat(),
-                            }
+                            novo_reg = {"tipo": "senha", "hash": gerar_hash_senha(nova_s), "nome": nome_ok, "email": email_p.strip(), "telefone": tel_p.strip(), "cidade": cid_p.strip(), "lembrete": lemb_p.strip(), "criado_em": date.today().isoformat()}
                             if resp_p.strip():
-                                novo_reg["pergunta_seg"] = perg_p
-                                novo_reg["resposta_seg_hash"] = gerar_hash_senha(normalizar_texto(resp_p))
+                                novo_reg.update({"pergunta_seg": perg_p, "resposta_seg_hash": gerar_hash_senha(normalizar_texto(resp_p))})
                             u_edit[nl] = novo_reg
                             salvar_usuarios(u_edit)
                             st.session_state.update({"autenticado": True, "usuario_logado": nl, "nome_usuario": nome_ok, "msg_sucesso": f"Conta criada! Bem-vindo(a), **{nome_ok}**."})
@@ -801,8 +704,7 @@ def buscar_supermercados_por_regiao(texto, raio=3000):
 
 @st.cache_data(show_spinner=False)
 def carregar_mercados():
-    dados = ler_json(ARQUIVO_MERCADOS, dict)
-    if isinstance(dados, dict) and dados:
+    if isinstance(dados := ler_json(ARQUIVO_MERCADOS, dict), dict) and dados:
         return dados
     iniciais = {"Centro (Exemplo)": ["Atacadão", "Carrefour", "Supermercado Local"]}
     salvar_json(ARQUIVO_MERCADOS, iniciais)
@@ -810,8 +712,7 @@ def carregar_mercados():
 
 
 def registrar_varios_mercados(regiao, nomes):
-    regiao = regiao.strip()
-    if not regiao or not nomes:
+    if not (regiao := regiao.strip()) or not nomes:
         return 0
     mercados = carregar_mercados().copy()
     atual = set(mercados.get(regiao, []))
@@ -840,13 +741,10 @@ def processar_leitura_gps(loc, usuario):
                     st.warning(f"⚠️ {erro}")
 
 
-# --- IA (Categorização Leve + Voz) ---
+# --- IA (Categorização + Voz) ---
 def identificar_categoria_local(produto):
     p_norm = normalizar_texto(produto)
-    for padrao, cat, _ in _REGRAS_CATEGORIA:
-        if padrao.search(p_norm):
-            return cat
-    return "Outros"
+    return next((cat for padrao, cat, _ in _REGRAS_CATEGORIA if padrao.search(p_norm)), "Outros")
 
 
 @st.cache_data(ttl=86400, show_spinner=False)
@@ -876,8 +774,7 @@ def classificar_lote_com_ia(prods_norm, api_key):
 
 
 def identificar_categoria(produto, api_key):
-    cat_local = identificar_categoria_local(produto)
-    if cat_local != "Outros" or not api_key:
+    if (cat_local := identificar_categoria_local(produto)) != "Outros" or not api_key:
         return cat_local
     try:
         return classificar_com_ia(normalizar_texto(produto), api_key)
@@ -886,17 +783,11 @@ def identificar_categoria(produto, api_key):
 
 
 def identificar_categorias_em_lote(produtos, api_key):
-    if not produtos:
-        return []
     res = [identificar_categoria_local(p) for p in produtos]
-    if not api_key:
-        return res
-    desconhecidos = [(i, normalizar_texto(produtos[i])) for i, c in enumerate(res) if c == "Outros"]
-    if not desconhecidos:
+    if not api_key or not (desc := [(i, normalizar_texto(produtos[i])) for i, c in enumerate(res) if c == "Outros"]):
         return res
     try:
-        cats_ia = classificar_lote_com_ia(tuple(p for _, p in desconhecidos), api_key)
-        for (idx, _), cat_ia in zip(desconhecidos, cats_ia):
+        for (idx, _), cat_ia in zip(desc, classificar_lote_com_ia(tuple(p for _, p in desc), api_key)):
             res[idx] = cat_ia
     except Exception:
         pass
@@ -909,8 +800,7 @@ def reconhecer_produto_por_voz(audio_bytes, api_key, mime_type="audio/wav"):
     prompt = f"Extraia do áudio de compra no Brasil: transcricao, produto, categoria (uma de: {', '.join(LISTA_CATEGORIAS)}), quantidade (1 padrão), preco_unitario (0 padrão) e supermercado ('' padrão)."
     resp = obter_gemini_client(api_key).models.generate_content(model="gemini-3.5-flash-lite", contents=[types.Part.from_bytes(data=audio_bytes, mime_type=mime_type), prompt], config=types.GenerateContentConfig(response_mime_type="application/json", response_schema=schema))
     d = json.loads(resp.text)
-    cat_n = normalizar_texto(d.get("categoria", ""))
-    prod_ok = str(d.get("produto", "")).strip()
+    cat_n, prod_ok = normalizar_texto(d.get("categoria", "")), str(d.get("produto", "")).strip()
     cat_ok = next((c for c in LISTA_CATEGORIAS if normalizar_texto(c) in cat_n), None) or identificar_categoria_local(prod_ok)
     return {"transcricao": str(d.get("transcricao", "")).strip(), "produto": prod_ok, "categoria": cat_ok, "quantidade": max(1, int(d.get("quantidade") or 1)), "preco_unitario": max(0.0, float(d.get("preco_unitario") or 0.0)), "supermercado": str(d.get("supermercado", "")).strip()}
 
@@ -919,14 +809,14 @@ def reconhecer_produto_por_voz(audio_bytes, api_key, mime_type="audio/wav"):
 def _ler_csv_seguro(caminho, colunas, cols_num):
     if not (os.path.exists(caminho) and os.path.getsize(caminho) > 0):
         return pd.DataFrame(columns=colunas)
-    df, alt_cols = pd.read_csv(caminho), False
+    df, alt = pd.read_csv(caminho), False
     for c in colunas:
         if c not in df.columns:
-            alt_cols, df[c] = True, (0.0 if c in cols_num else "")
+            alt, df[c] = True, (0.0 if c in cols_num else "")
     df = df[colunas]
     for c in cols_num:
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
-    if alt_cols:
+    if alt:
         df.to_csv(caminho, index=False)
     return df
 
@@ -1006,17 +896,34 @@ def salvar_pre_lista(df_pre, usuario):
     carregar_pre_lista.clear()
 
 
-def adicionar_itens_pre_lista(texto, qtd, api_key, usuario, categoria_fixa=None):
+def adicionar_itens_pre_lista(texto, qtd, api_key, usuario):
     itens = [i.strip() for i in texto.split(",") if i.strip()]
     if not itens:
         return 0
-    cats = [categoria_fixa] * len(itens) if (categoria_fixa and categoria_fixa in LISTA_CATEGORIAS) else identificar_categorias_em_lote(itens, api_key)
-    novas = [{"ID": secrets.token_hex(4), "Produto": p, "Quantidade": max(1, int(qtd)), "Categoria": cat, "Comprado": False} for p, cat in zip(itens, cats)]
+    novas = [{"ID": secrets.token_hex(4), "Produto": p, "Quantidade": max(1, int(qtd)), "Categoria": cat, "Comprado": False} for p, cat in zip(itens, identificar_categorias_em_lote(itens, api_key))]
     salvar_pre_lista(pd.concat([carregar_pre_lista(usuario), pd.DataFrame(novas, columns=COLUNAS_PRE_LISTA)], ignore_index=True), usuario)
     return len(novas)
 
 
 # --- Componentes de UI ---
+def _fmt_qtd(v):
+    return int(v) if float(v).is_integer() else v
+
+
+def _fmt_dt(dt):
+    return dt.strftime("%d/%m/%Y") if pd.notna(dt) else "Sem data"
+
+
+def _html_hist_card(ico, nome, qtd, pct, total):
+    plural = "item" if qtd == 1 else "itens"
+    return (
+        f'<div class="listai-hist-card"><div class="listai-hist-head">'
+        f'<div class="listai-hist-title">{ico} {html.escape(str(nome))} <span class="listai-hist-badge">{qtd} {plural} • {pct:.0f}%</span></div>'
+        f'<div class="listai-hist-total">{formatar_reais(total)}</div></div>'
+        f'<div class="listai-hist-track"><div class="listai-hist-fill" style="width:{pct:.1f}%"></div></div></div>'
+    )
+
+
 def renderizar_topo_nubank():
     p_nome = nome_usuario.strip().split()[0] if nome_usuario.strip() else usuario_atual
     sub_reg = f"📍 {gps_regiao}" if gps_regiao else "Lista inteligente e menor preço"
@@ -1085,11 +992,8 @@ def renderizar_editor_compra(df_c, idx_edit, state_key, usuario):
         st.session_state.pop(state_key, None)
         return
     r = df_c.loc[idx_edit]
-    dt_parsed = pd.to_datetime(r.get("Data"), errors="coerce")
-    dt_val = dt_parsed.date() if pd.notna(dt_parsed) else date.today()
-    cat_atual = str(r.get("Categoria") or "Outros")
-    cat_idx = LISTA_CATEGORIAS.index(cat_atual) if cat_atual in LISTA_CATEGORIAS else LISTA_CATEGORIAS.index("Outros")
-
+    dt_p = pd.to_datetime(r.get("Data"), errors="coerce")
+    cat_at = str(r.get("Categoria") or "Outros")
     with st.form(f"form_edit_{state_key}_{idx_edit}", border=True):
         st.markdown(f"**✏️ Editando:** {html.escape(str(r.get('Produto', '')))}")
         e_prod = st.text_input("Produto", value=str(r.get("Produto", "")))
@@ -1097,9 +1001,9 @@ def renderizar_editor_compra(df_c, idx_edit, state_key, usuario):
             cq, cp = st.columns(2)
             e_qtd = cq.number_input("Qtd", min_value=1, value=max(1, int(float(r.get("Quantidade", 1) or 1))), step=1)
             e_preco = cp.number_input("Preço (R$)", min_value=0.01, value=max(0.01, float(r.get("Preço Unitário", 1.0) or 1.0)), step=0.01, format="%.2f")
-        e_cat = st.selectbox("Categoria", LISTA_CATEGORIAS, index=cat_idx)
+        e_cat = st.selectbox("Categoria", LISTA_CATEGORIAS, index=LISTA_CATEGORIAS.index(cat_at) if cat_at in LISTA_CATEGORIAS else LISTA_CATEGORIAS.index("Outros"))
         e_merc = st.text_input("Supermercado", value=str(r.get("Supermercado", "")))
-        e_dt = st.date_input("Data", value=dt_val, format="DD/MM/YYYY")
+        e_dt = st.date_input("Data", value=dt_p.date() if pd.notna(dt_p) else date.today(), format="DD/MM/YYYY")
 
         with st.container(key=f"edit_btns_{state_key}"):
             b1, b2, b3 = st.columns(3)
@@ -1109,20 +1013,16 @@ def renderizar_editor_compra(df_c, idx_edit, state_key, usuario):
 
         cam = obter_arquivo_usuario(usuario, "compras.csv")
         if salvar:
-            p_ok = e_prod.strip()
-            m_ok = e_merc.strip() or "Não informado"
-            if not p_ok:
+            if not (p_ok := e_prod.strip()):
                 st.warning("Informe o nome do produto.")
             else:
                 df_edit = carregar_dados(usuario).copy()
                 if idx_edit in df_edit.index:
-                    v_tot = float(e_qtd) * float(e_preco)
-                    df_edit.loc[idx_edit, ["Data", "Supermercado", "Produto", "Categoria", "Quantidade", "Preço Unitário", "Total"]] = [e_dt.isoformat(), m_ok, p_ok, e_cat, int(e_qtd), float(e_preco), v_tot]
+                    df_edit.loc[idx_edit, ["Data", "Supermercado", "Produto", "Categoria", "Quantidade", "Preço Unitário", "Total"]] = [e_dt.isoformat(), e_merc.strip() or "Não informado", p_ok, e_cat, int(e_qtd), float(e_preco), float(e_qtd) * float(e_preco)]
                     df_edit[COLUNAS].to_csv(cam, index=False)
                     limpar_cache_compras()
                 st.session_state.pop(state_key, None)
-                st.session_state["ultima_cat_adicionada"] = e_cat
-                st.session_state["msg_sucesso"] = f"'{p_ok}' atualizado ({e_cat})!"
+                st.session_state.update({"ultima_cat_adicionada": e_cat, "msg_sucesso": f"'{p_ok}' atualizado ({e_cat})!"})
                 st.rerun()
         elif excluir:
             df_edit = carregar_dados(usuario)
@@ -1134,6 +1034,59 @@ def renderizar_editor_compra(df_c, idx_edit, state_key, usuario):
             st.rerun()
         elif cancelar:
             st.session_state.pop(state_key, None)
+            st.rerun()
+
+
+def renderizar_historico_simples_categorizado(df_c, df_v, usuario):
+    with st.container(border=True):
+        st.markdown("#### 🧾 Histórico Simples por Categoria")
+        if df_c.empty:
+            st.caption("Nenhuma compra registrada ainda. Adicione seu primeiro produto acima!")
+            return
+        if (edit_idx := st.session_state.get("edit_compra_idx")) is not None:
+            renderizar_editor_compra(df_c, edit_idx, "edit_compra_idx", usuario)
+
+        mes_hoje = date.today().strftime("%Y-%m")
+        tem_mes = not df_v.empty and bool((df_v["Mês"] == mes_hoje).any())
+        op_per = ["📅 Mês atual", "📋 Todas"] if tem_mes else ["📋 Todas"]
+        per_sel = st.radio("Período:", op_per, horizontal=True, key="hist_ini_periodo", label_visibility="collapsed") if len(op_per) > 1 else op_per[0]
+
+        df_base = df_v[df_v["Mês"] == mes_hoje].copy() if (per_sel == "📅 Mês atual" and not df_v.empty) else df_c.copy()
+        if "Data_dt" not in df_base.columns:
+            df_base["Data_dt"] = pd.to_datetime(df_base["Data"], errors="coerce")
+        df_base["Categoria"] = df_base["Categoria"].replace("", "Outros").fillna("Outros")
+        df_base["Supermercado"] = df_base["Supermercado"].replace("", "Não informado").fillna("Não informado")
+
+        tot_per, qtd_per = float(df_base["Total"].sum()), len(df_base)
+        st.caption(f"Total no período: **{formatar_reais(tot_per)}** ({qtd_per} {'item' if qtd_per == 1 else 'itens'})")
+
+        resumo = df_base.groupby("Categoria", as_index=False)["Total"].sum().sort_values("Total", ascending=False)
+        total_base, abrir_todos, ult_cat = max(tot_per, 0.01), len(resumo) <= 3, st.session_state.get("ultima_cat_adicionada")
+
+        for idx, row_g in enumerate(resumo.itertuples(index=False)):
+            cat_n, tot_c = row_g.Categoria, float(row_g.Total)
+            pct = min(100.0, (tot_c / total_base) * 100)
+            sub = df_base[df_base["Categoria"] == cat_n].sort_values(by="Data_dt", ascending=False, na_position="last")
+            qtd_c = len(sub)
+            st.markdown(_html_hist_card(ICONES_CATEGORIA.get(cat_n, "📦"), cat_n, qtd_c, pct, tot_c), unsafe_allow_html=True)
+
+            with st.expander(f"Ver {qtd_c} {'item' if qtd_c == 1 else 'itens'} de {cat_n}", expanded=(abrir_todos or cat_n == ult_cat or (not ult_cat and idx == 0))):
+                with st.container(key=f"hist_ini_cat_{idx}"):
+                    for idx_r, rr in sub.head(15).iterrows():
+                        c_info, c_ed = st.columns([6, 1])
+                        c_info.markdown(
+                            f'<div class="listai-rec-row"><div class="listai-rec-nome">{html.escape(str(rr["Produto"]))} (x{_fmt_qtd(rr.get("Quantidade", 1))}) — {formatar_reais(float(rr.get("Total", 0.0)))}</div>'
+                            f'<div class="listai-rec-meta">🏪 {html.escape(str(rr.get("Supermercado") or "-"))} · 📅 {_fmt_dt(rr.get("Data_dt"))}</div></div>',
+                            unsafe_allow_html=True,
+                        )
+                        if c_ed.button("✏️", key=f"btn_ed_ini_{idx_r}", help="Editar ou excluir", use_container_width=True):
+                            st.session_state["edit_compra_idx"] = idx_r
+                            st.rerun()
+                if qtd_c > 15:
+                    st.caption(f"Mostrando os 15 mais recentes de {qtd_c} itens. Veja todos em **🧾 Histórico**.")
+
+        if st.button("🧾 Ver histórico completo e filtros", use_container_width=True, key="btn_ir_hist_completo"):
+            st.session_state.update({"pagina_atual": PAGINAS[3], "rolar_topo": True})
             st.rerun()
 
 
@@ -1197,138 +1150,31 @@ def renderizar_graficos_compras(df, df_validos, limite_mensal=0.0):
         st.altair_chart((bc + bc.mark_text(align="left", baseline="middle", dx=6, fontSize=11, fontWeight="bold", color="#064E3B").encode(text="Label:N")).properties(height=270, title="Onde você gastou mais").configure(background="#FFFFFF"), use_container_width=True)
 
 
-def _fmt_qtd(v):
-    return int(v) if float(v).is_integer() else v
-
-
-def _fmt_dt(dt):
-    return dt.strftime("%d/%m/%Y") if pd.notna(dt) else "Sem data"
-
-
-def renderizar_historico_simples_categorizado(df_c, df_v, usuario):
-    with st.container(border=True):
-        st.markdown("#### 🧾 Histórico Simples por Categoria")
-        if df_c.empty:
-            st.caption("Nenhuma compra registrada ainda. Adicione seu primeiro produto acima!")
-            return
-
-        if (edit_idx := st.session_state.get("edit_compra_idx")) is not None:
-            renderizar_editor_compra(df_c, edit_idx, "edit_compra_idx", usuario)
-
-        mes_hoje = date.today().strftime("%Y-%m")
-        tem_mes = not df_v.empty and bool((df_v["Mês"] == mes_hoje).any())
-        opcoes_per = ["📅 Mês atual", "📋 Todas"] if tem_mes else ["📋 Todas"]
-        per_sel = st.radio("Período:", opcoes_per, horizontal=True, key="hist_ini_periodo", label_visibility="collapsed") if len(opcoes_per) > 1 else opcoes_per[0]
-
-        df_base = df_v[df_v["Mês"] == mes_hoje].copy() if (per_sel == "📅 Mês atual" and not df_v.empty) else df_c.copy()
-        if "Data_dt" not in df_base.columns:
-            df_base["Data_dt"] = pd.to_datetime(df_base["Data"], errors="coerce")
-        df_base["Categoria"] = df_base["Categoria"].replace("", "Outros").fillna("Outros")
-        df_base["Supermercado"] = df_base["Supermercado"].replace("", "Não informado").fillna("Não informado")
-
-        tot_per, qtd_per = float(df_base["Total"].sum()), len(df_base)
-        st.caption(f"Total no período: **{formatar_reais(tot_per)}** ({qtd_per} {'item' if qtd_per == 1 else 'itens'})")
-
-        resumo = df_base.groupby("Categoria", as_index=False)["Total"].sum().sort_values("Total", ascending=False)
-        total_base = max(tot_per, 0.01)
-        abrir_todos = len(resumo) <= 3
-        ult_cat = st.session_state.get("ultima_cat_adicionada")
-
-        for idx, row_g in enumerate(resumo.itertuples(index=False)):
-            cat_nome = row_g.Categoria
-            tot_cat = float(row_g.Total)
-            pct = min(100.0, (tot_cat / total_base) * 100)
-            sub = df_base[df_base["Categoria"] == cat_nome].sort_values(by="Data_dt", ascending=False, na_position="last")
-            ico = ICONES_CATEGORIA.get(cat_nome, "📦")
-            qtd_c = len(sub)
-            plural = "item" if qtd_c == 1 else "itens"
-
-            st.markdown(
-                f'<div class="listai-hist-card"><div class="listai-hist-head">'
-                f'<div class="listai-hist-title">{ico} {html.escape(str(cat_nome))} '
-                f'<span class="listai-hist-badge">{qtd_c} {plural} • {pct:.0f}%</span></div>'
-                f'<div class="listai-hist-total">{formatar_reais(tot_cat)}</div></div>'
-                f'<div class="listai-hist-track"><div class="listai-hist-fill" style="width:{pct:.1f}%"></div></div></div>',
-                unsafe_allow_html=True,
-            )
-            expandir = abrir_todos or (cat_nome == ult_cat) or (not ult_cat and idx == 0)
-            with st.expander(f"Ver {qtd_c} {plural} de {cat_nome}", expanded=expandir):
-                with st.container(key=f"hist_ini_cat_{idx}"):
-                    for idx_r, rr in sub.head(15).iterrows():
-                        c_info, c_ed = st.columns([6, 1])
-                        qtd_r = _fmt_qtd(rr.get("Quantidade", 1))
-                        tot_r = formatar_reais(float(rr.get("Total", 0.0)))
-                        merc_r = html.escape(str(rr.get("Supermercado") or "-"))
-                        dt_r = _fmt_dt(rr.get("Data_dt"))
-                        c_info.markdown(
-                            f'<div class="listai-rec-row"><div class="listai-rec-nome">{html.escape(str(rr["Produto"]))} (x{qtd_r}) — {tot_r}</div>'
-                            f'<div class="listai-rec-meta">🏪 {merc_r} · 📅 {dt_r}</div></div>',
-                            unsafe_allow_html=True,
-                        )
-                        if c_ed.button("✏️", key=f"btn_ed_ini_{idx_r}", help="Editar ou excluir", use_container_width=True):
-                            st.session_state["edit_compra_idx"] = idx_r
-                            st.rerun()
-                if qtd_c > 15:
-                    st.caption(f"Mostrando os 15 mais recentes de {qtd_c} itens. Veja todos em **🧾 Histórico**.")
-
-        if st.button("🧾 Ver histórico completo e filtros", use_container_width=True, key="btn_ir_hist_completo"):
-            st.session_state.update({"pagina_atual": PAGINAS[3], "rolar_topo": True})
-            st.rerun()
-
-
 def renderizar_grupos_historico(df_exib, col_grupo, total_geral, modo="categoria"):
     resumo = df_exib.groupby(col_grupo, as_index=False)["Total"].sum().sort_values("Total", ascending=False)
     total_base, abrir_todos = max(total_geral, 0.01), len(resumo) <= 4
-
     for idx, row_g in enumerate(resumo.itertuples(index=False)):
         nome_grp, total_grp = getattr(row_g, col_grupo), float(row_g.Total)
         pct = min(100.0, (total_grp / total_base) * 100)
-        sub = df_exib[df_exib[col_grupo] == nome_grp].sort_values(
-            by=("Data_dt" if modo == "categoria" else ["Categoria", "Data_dt"]),
-            ascending=(False if modo == "categoria" else [True, False]),
-            na_position="last",
-        )
+        sub = df_exib[df_exib[col_grupo] == nome_grp].sort_values(by=("Data_dt" if modo == "categoria" else ["Categoria", "Data_dt"]), ascending=(False if modo == "categoria" else [True, False]), na_position="last")
         ico = ICONES_CATEGORIA.get(nome_grp, "📦") if modo == "categoria" else "🏪"
         qtd = len(sub)
-        plural = "item" if qtd == 1 else "itens"
-
-        st.markdown(
-            f'<div class="listai-hist-card"><div class="listai-hist-head">'
-            f'<div class="listai-hist-title">{ico} {html.escape(str(nome_grp))} '
-            f'<span class="listai-hist-badge">{qtd} {plural} • {pct:.0f}%</span></div>'
-            f'<div class="listai-hist-total">{formatar_reais(total_grp)}</div></div>'
-            f'<div class="listai-hist-track"><div class="listai-hist-fill" style="width:{pct:.1f}%"></div></div></div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown(_html_hist_card(ico, nome_grp, qtd, pct, total_grp), unsafe_allow_html=True)
         with st.expander(f"Ver produtos de {nome_grp} ({qtd})", expanded=(abrir_todos or idx == 0)):
             itens = []
             for r in sub.to_dict("records"):
-                dt_txt = _fmt_dt(r.get("Data_dt"))
-                merc_str = html.escape(str(r.get("Supermercado") or "Não informado"))
-                cat_str = str(r.get("Categoria") or "Outros")
+                dt_txt, merc_str, cat_str = _fmt_dt(r.get("Data_dt")), html.escape(str(r.get("Supermercado") or "Não informado")), str(r.get("Categoria") or "Outros")
                 meta = f"🏪 {merc_str} · 📅 {dt_txt}" if modo == "categoria" else f"{ICONES_CATEGORIA.get(cat_str, '📦')} {html.escape(cat_str)} · 📅 {dt_txt}"
-                itens.append(
-                    f'<div class="listai-hist-item"><div><div class="listai-hist-prod">{html.escape(str(r.get("Produto", "")))} <small>(x{_fmt_qtd(r.get("Quantidade", 1))})</small></div>'
-                    f'<div class="listai-hist-meta">{meta}</div></div>'
-                    f'<div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(float(r.get("Total", 0.0)))}</div>'
-                    f'<div class="listai-hist-unit">{formatar_reais(float(r.get("Preço Unitário", 0.0)))}/un</div></div></div>'
-                )
+                itens.append(f'<div class="listai-hist-item"><div><div class="listai-hist-prod">{html.escape(str(r.get("Produto", "")))} <small>(x{_fmt_qtd(r.get("Quantidade", 1))})</small></div><div class="listai-hist-meta">{meta}</div></div><div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(float(r.get("Total", 0.0)))}</div><div class="listai-hist-unit">{formatar_reais(float(r.get("Preço Unitário", 0.0)))}/un</div></div></div>')
             st.markdown("".join(itens), unsafe_allow_html=True)
 
 
 def _montar_row_feed(r, mostrar_data=False):
     cat = str(r.get("Categoria") or "Outros")
-    merc_esc = html.escape(str(r.get("Supermercado") or "Não informado"))
-    tags = f'<span class="listai-feed-tag">🏪 {merc_esc}</span><span class="listai-feed-tag listai-feed-tag-cat">{html.escape(cat)}</span>'
+    tags = f'<span class="listai-feed-tag">🏪 {html.escape(str(r.get("Supermercado") or "Não informado"))}</span><span class="listai-feed-tag listai-feed-tag-cat">{html.escape(cat)}</span>'
     if mostrar_data:
         tags += f'<span class="listai-feed-tag">📅 {_fmt_dt(r.get("Data_dt"))}</span>'
-    return (
-        f'<div class="listai-feed-row"><div class="listai-feed-left"><div class="listai-feed-ico">{ICONES_CATEGORIA.get(cat, "📦")}</div>'
-        f'<div class="listai-feed-info"><div class="listai-feed-name">{html.escape(str(r.get("Produto", "")))} <small>(x{_fmt_qtd(r.get("Quantidade", 1))})</small></div>'
-        f'<div class="listai-feed-tags">{tags}</div></div></div>'
-        f'<div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(float(r.get("Total", 0.0)))}</div>'
-        f'<div class="listai-hist-unit">{formatar_reais(float(r.get("Preço Unitário", 0.0)))}/un</div></div></div>'
-    )
+    return f'<div class="listai-feed-row"><div class="listai-feed-left"><div class="listai-feed-ico">{ICONES_CATEGORIA.get(cat, "📦")}</div><div class="listai-feed-info"><div class="listai-feed-name">{html.escape(str(r.get("Produto", "")))} <small>(x{_fmt_qtd(r.get("Quantidade", 1))})</small></div><div class="listai-feed-tags">{tags}</div></div></div><div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(float(r.get("Total", 0.0)))}</div><div class="listai-hist-unit">{formatar_reais(float(r.get("Preço Unitário", 0.0)))}/un</div></div></div>'
 
 
 def renderizar_lista_geral_historico(df_tab, agrupar_por_data=True):
@@ -1344,11 +1190,11 @@ def renderizar_lista_geral_historico(df_tab, agrupar_por_data=True):
             blocos.append(mapa[dia])
         mapa[dia]["total"] += float(r.get("Total", 0.0))
         mapa[dia]["itens"].append(r)
-
     partes = []
     for g in blocos:
         dia_lbl = f"Hoje ({g['dia']})" if g["dia"] == hoje else g["dia"]
-        partes.append(f'<div class="listai-feed-day"><span>📅 {html.escape(dia_lbl)}</span><span>Total: {formatar_reais(g["total"])}</span></div><div class="listai-feed-box">{"".join(_montar_row_feed(r, False) for r in g["itens"])}</div>')
+        rows_html = "".join(_montar_row_feed(r) for r in g["itens"])
+        partes.append(f'<div class="listai-feed-day"><span>📅 {html.escape(dia_lbl)}</span><span>Total: {formatar_reais(g["total"])}</span></div><div class="listai-feed-box">{rows_html}</div>')
     st.markdown("".join(partes), unsafe_allow_html=True)
 
 
@@ -1384,9 +1230,7 @@ def pagina_compra():
     renderizar_painel_limite_mensal(usuario_atual, "compra", gasto_mes=gasto_mes)
 
     mercados_reg = carregar_mercados()
-    regioes = sorted(mercados_reg.keys())
-    if gps_regiao and gps_regiao not in regioes:
-        regioes = [gps_regiao] + regioes
+    regioes = ([gps_regiao] if gps_regiao and gps_regiao not in mercados_reg else []) + sorted(mercados_reg.keys())
     op_reg = regioes + ["➕ Nova região..."]
 
     if (rp := st.session_state.pop("regiao_para_selecionar", None)) in op_reg:
@@ -1398,7 +1242,6 @@ def pagina_compra():
     reg_ativa = st.session_state.get("input_nova_regiao", "").strip() if reg_sel == "➕ Nova região..." else reg_sel
     versao, dist_gps = st.session_state["form_versao"], dict(gps_mercados)
 
-    # --- 1. Adicionar Produto + Áudio ao lado do botão ---
     with st.container(border=True):
         st.markdown("#### 🛒 Adicionar Produto")
         lista_m = [st.session_state["valor_supermercado"].strip()] if st.session_state.get("valor_supermercado", "").strip() else []
@@ -1417,24 +1260,22 @@ def pagina_compra():
 
         if aviso := st.session_state.get("aviso_voz"):
             txt_v = f"🎤 **Ouvi:** *\"{aviso['transcricao']}\"* • **{aviso['categoria']}**"
-            txt_v += f" • **{aviso['supermercado']}**" if aviso.get("supermercado") else ""
+            if aviso.get("supermercado"):
+                txt_v += f" • **{aviso['supermercado']}**"
             st.info(txt_v)
         if err_v := st.session_state.pop("aviso_voz_erro", None):
             st.warning(err_v)
 
         prod = st.text_input("Produto", value=st.session_state["valor_produto"], placeholder="Ex: Arroz 5kg, Sabão Omo, Café...", key=f"input_produto_{versao}")
-
         with st.container(key="row_qtd_preco"):
             c_qtd, c_prc = st.columns(2)
             qtd = c_qtd.number_input("Qtd", min_value=1, value=int(st.session_state["valor_quantidade"]), step=1, key=f"input_qtd_{versao}")
             preco = c_prc.number_input("Preço (R$)", min_value=0.01, value=float(st.session_state["valor_preco"]), step=0.01, format="%.2f", key=f"input_preco_{versao}")
 
         cat_opcoes = ["✨ Automática"] + LISTA_CATEGORIAS
-        cat_default = st.session_state.get("valor_categoria", "✨ Automática")
-        cat_idx = cat_opcoes.index(cat_default) if cat_default in cat_opcoes else 0
-        cat_esc = st.selectbox("🏷️ Categoria", cat_opcoes, index=cat_idx, key=f"input_cat_{versao}", format_func=lambda c: c if c == "✨ Automática" else f"{ICONES_CATEGORIA.get(c, '📦')} {c}")
+        cat_def = st.session_state.get("valor_categoria", "✨ Automática")
+        cat_esc = st.selectbox("🏷️ Categoria", cat_opcoes, index=cat_opcoes.index(cat_def) if cat_def in cat_opcoes else 0, key=f"input_cat_{versao}", format_func=lambda c: c if c == "✨ Automática" else f"{ICONES_CATEGORIA.get(c, '📦')} {c}")
 
-        # Linha do botão Adicionar + Somente o botão de áudio ao lado
         with st.container(key="acao_add_voz"):
             c_add, c_mic = st.columns([5, 1], vertical_alignment="center")
             clicou_add = c_add.button("✅ Adicionar", type="primary", use_container_width=True, key=f"btn_add_prod_{versao}")
@@ -1454,14 +1295,7 @@ def pagina_compra():
                             if not dv["produto"]:
                                 st.session_state.update({"aviso_voz_erro": "Não entendi o produto. Tente falar mais perto do microfone.", "form_versao": versao + 1})
                             else:
-                                st.session_state.update({
-                                    "valor_produto": dv["produto"],
-                                    "valor_quantidade": dv["quantidade"],
-                                    "valor_preco": dv["preco_unitario"] or 1.00,
-                                    "valor_categoria": dv["categoria"] if dv["categoria"] in LISTA_CATEGORIAS else "✨ Automática",
-                                    "aviso_voz": dv,
-                                    "form_versao": versao + 1,
-                                })
+                                st.session_state.update({"valor_produto": dv["produto"], "valor_quantidade": dv["quantidade"], "valor_preco": dv["preco_unitario"] or 1.00, "valor_categoria": dv["categoria"] if dv["categoria"] in LISTA_CATEGORIAS else "✨ Automática", "aviso_voz": dv, "form_versao": versao + 1})
                                 if dv["supermercado"]:
                                     st.session_state.update({"valor_supermercado": dv["supermercado"], "merc_para_selecionar": dv["supermercado"]})
                             st.rerun()
@@ -1476,8 +1310,7 @@ def pagina_compra():
             reg_final = st.text_input("Nome da nova região", placeholder="Ex: Campinas - Centro", key="input_nova_regiao").strip() if reg_esc == "➕ Nova região..." else reg_esc
 
         if clicou_add:
-            prod_ok = prod.strip()
-            if not prod_ok:
+            if not (prod_ok := prod.strip()):
                 st.warning("Digite ou fale o nome do produto.")
             elif not reg_final or not merc_final:
                 st.warning("Informe a Região e o Supermercado.")
@@ -1488,12 +1321,8 @@ def pagina_compra():
                 if lim > 0 and orc["bloquear"] and mes_c == mes_hoje and novo_tot > lim:
                     st.error(f"🚫 Bloqueado pelo limite mensal de **{formatar_reais(lim)}**!")
                 else:
-                    if cat_esc != "✨ Automática":
-                        cat = cat_esc
-                    else:
-                        av = st.session_state.get("aviso_voz")
-                        cat = av["categoria"] if (av and normalizar_texto(prod_ok) == normalizar_texto(av.get("produto", "")) and av.get("categoria") in LISTA_CATEGORIAS) else identificar_categoria(prod_ok, api_key)
-
+                    av = st.session_state.get("aviso_voz")
+                    cat = cat_esc if cat_esc != "✨ Automática" else (av["categoria"] if (av and normalizar_texto(prod_ok) == normalizar_texto(av.get("produto", "")) and av.get("categoria") in LISTA_CATEGORIAS) else identificar_categoria(prod_ok, api_key))
                     registrar_varios_mercados(reg_final, [merc_final])
                     salvar_compra_usuario(usuario_atual, pd.DataFrame([[data_c.isoformat(), reg_final, merc_final, prod_ok, cat, qtd, preco, v_tot]], columns=COLUNAS))
                     extra = ""
@@ -1502,22 +1331,10 @@ def pagina_compra():
                         extra = " Preço compartilhado!"
                     if lim > 0 and mes_c == mes_hoje and novo_tot > lim:
                         st.session_state["msg_limite_alerta"] = f"⚠️ Gastos do mês chegaram a **{formatar_reais(novo_tot)}** (acima do limite de **{formatar_reais(lim)}**)."
-                    st.session_state.update({
-                        "msg_sucesso": f"'{prod_ok}' adicionado em **{merc_final}** ({cat}).{extra}",
-                        "ultima_cat_adicionada": cat,
-                        "valor_produto": "",
-                        "valor_quantidade": 1,
-                        "valor_preco": 1.00,
-                        "valor_categoria": "✨ Automática",
-                        "valor_supermercado": "",
-                        "regiao_para_selecionar": reg_final,
-                        "merc_para_selecionar": merc_final,
-                        "form_versao": versao + 1,
-                    })
+                    st.session_state.update({"msg_sucesso": f"'{prod_ok}' adicionado em **{merc_final}** ({cat}).{extra}", "ultima_cat_adicionada": cat, "valor_produto": "", "valor_quantidade": 1, "valor_preco": 1.00, "valor_categoria": "✨ Automática", "valor_supermercado": "", "regiao_para_selecionar": reg_final, "merc_para_selecionar": merc_final, "form_versao": versao + 1})
                     st.session_state.pop("aviso_voz", None)
                     st.rerun()
 
-    # --- 2. Histórico Simples e Categorizado na Tela Inicial ---
     renderizar_historico_simples_categorizado(df_c, df_v, usuario_atual)
 
 
@@ -1566,14 +1383,7 @@ def pagina_lista():
                     df_pre.loc[idx, "Comprado"] = True
                     salvar_pre_lista(df_pre, usuario_atual)
                     st.session_state.pop("aviso_voz", None)
-                    st.session_state.update({
-                        "valor_produto": nome_i,
-                        "valor_quantidade": qtd_i,
-                        "valor_categoria": cat_i if cat_i in LISTA_CATEGORIAS else "✨ Automática",
-                        "form_versao": versao + 1,
-                        "pagina_atual": PAGINAS[0],
-                        "rolar_topo": True,
-                    })
+                    st.session_state.update({"valor_produto": nome_i, "valor_quantidade": qtd_i, "valor_categoria": cat_i if cat_i in LISTA_CATEGORIAS else "✨ Automática", "form_versao": versao + 1, "pagina_atual": PAGINAS[0], "rolar_topo": True})
                     st.rerun()
                 if c_del.button("🗑️", key=f"btn_del_pre_{iid}", help="Remover", use_container_width=True):
                     salvar_pre_lista(df_pre.drop(index=idx), usuario_atual)
@@ -1594,11 +1404,10 @@ def pagina_lista():
                     cq_l, cc_l = st.columns(2)
                     aj_qtd = cq_l.number_input("Qtd", min_value=1, value=max(1, int(row_l["Quantidade"])), step=1)
                     aj_cat = cc_l.selectbox("Categoria", LISTA_CATEGORIAS, index=LISTA_CATEGORIAS.index(cat_l))
-                if st.form_submit_button("💾 Atualizar item da lista", use_container_width=True):
-                    if aj_nome.strip():
-                        df_pre.loc[idx_l, ["Produto", "Quantidade", "Categoria"]] = [aj_nome.strip(), int(aj_qtd), aj_cat]
-                        salvar_pre_lista(df_pre, usuario_atual)
-                        st.rerun()
+                if st.form_submit_button("💾 Atualizar item da lista", use_container_width=True) and aj_nome.strip():
+                    df_pre.loc[idx_l, ["Produto", "Quantidade", "Categoria"]] = [aj_nome.strip(), int(aj_qtd), aj_cat]
+                    salvar_pre_lista(df_pre, usuario_atual)
+                    st.rerun()
 
         with st.container(key="kpi_2cols"):
             a1, a2 = st.columns(2)
@@ -1680,8 +1489,8 @@ def pagina_historico():
 
         with st.expander("✏️ Editar uma compra", expanded=(st.session_state.get("edit_hist_idx") is not None)):
             ops_ed = {i: f"{r['Data'] or 'Sem data'} | {r['Produto']} (x{_fmt_qtd(r['Quantidade'])}) — {formatar_reais(float(r['Total']))}" for i, r in df_e.iloc[::-1].iterrows()}
-            idx_escolhido = st.selectbox("Selecione o produto para editar:", list(ops_ed.keys()), format_func=lambda i: ops_ed[i], key="sel_hist_edit")
-            renderizar_editor_compra(df_c, idx_escolhido, "edit_hist_idx", usuario_atual)
+            idx_ed = st.selectbox("Selecione o produto:", list(ops_ed.keys()), format_func=lambda i: ops_ed[i], key="sel_hist_edit")
+            renderizar_editor_compra(df_c, idx_ed, "edit_hist_idx", usuario_atual)
 
         aba_cat, aba_merc, aba_lst = st.tabs(["🏷️ Categoria", "🏪 Mercado", "📋 Geral"])
         with aba_cat:
@@ -1734,30 +1543,16 @@ def pagina_precos():
         st.warning("Nenhum preço encontrado. Tente outro produto ou **Todas** as regiões.")
     else:
         m = df_f.iloc[0]
-        menor_p, maior_p = float(m["Preço Unitário"]), float(df_f["Preço Unitário"].max())
-        economia = max(0.0, maior_p - menor_p)
+        menor_p, economia = float(m["Preço Unitário"]), max(0.0, float(df_f["Preço Unitário"].max()) - float(m["Preço Unitário"]))
         eco_html = f'<span class="listai-eco-pill">Economia de até {formatar_reais(economia)}</span>' if economia > 0.01 else ""
-
-        st.markdown(
-            f'<div class="listai-winner-card">'
-            f'<div><h3>🏆 Melhor oferta: {html.escape(str(m["Produto"]))}</h3><div>🏪 <strong>{html.escape(str(m["Supermercado"] or "Mercado"))}</strong> • {html.escape(str(m["Região"] or ""))}</div>{eco_html}</div>'
-            f'<div class="listai-winner-price">{formatar_reais(menor_p)}</div></div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="listai-winner-card"><div><h3>🏆 Melhor oferta: {html.escape(str(m["Produto"]))}</h3><div>🏪 <strong>{html.escape(str(m["Supermercado"] or "Mercado"))}</strong> • {html.escape(str(m["Região"] or ""))}</div>{eco_html}</div><div class="listai-winner-price">{formatar_reais(menor_p)}</div></div>', unsafe_allow_html=True)
 
         linhas, medalhas = [], {0: "🥇", 1: "🥈", 2: "🥉"}
         for i, r in enumerate(df_f.head(30).to_dict("records")):
             p_unit = float(r.get("Preço Unitário", 0.0))
             diff = p_unit - menor_p
             diff_html = '<div class="listai-diff-best">✓ Menor preço</div>' if diff <= 0.01 else f'<div class="listai-diff-up">+{formatar_reais(diff)}</div>'
-            linhas.append(
-                f'<div class="listai-feed-row"><div class="listai-feed-left"><div class="listai-feed-ico">{medalhas.get(i, f"{i + 1}º")}</div>'
-                f'<div class="listai-feed-info"><div class="listai-feed-name">{html.escape(str(r.get("Produto", "")))}</div>'
-                f'<div class="listai-feed-tags"><span class="listai-feed-tag">🏪 {html.escape(str(r.get("Supermercado") or "Mercado"))}</span>'
-                f'<span class="listai-feed-tag listai-feed-tag-cat">{html.escape(str(r.get("Região") or "-"))}</span>'
-                f'<span class="listai-feed-tag">📅 {_fmt_dt(r.get("Data_dt"))}</span></div></div></div>'
-                f'<div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(p_unit)}</div>{diff_html}</div></div>'
-            )
+            linhas.append(f'<div class="listai-feed-row"><div class="listai-feed-left"><div class="listai-feed-ico">{medalhas.get(i, f"{i + 1}º")}</div><div class="listai-feed-info"><div class="listai-feed-name">{html.escape(str(r.get("Produto", "")))}</div><div class="listai-feed-tags"><span class="listai-feed-tag">🏪 {html.escape(str(r.get("Supermercado") or "Mercado"))}</span><span class="listai-feed-tag listai-feed-tag-cat">{html.escape(str(r.get("Região") or "-"))}</span><span class="listai-feed-tag">📅 {_fmt_dt(r.get("Data_dt"))}</span></div></div></div><div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(p_unit)}</div>{diff_html}</div></div>')
         st.markdown(f'<div class="listai-feed-box">{"".join(linhas)}</div>', unsafe_allow_html=True)
 
         zap = "\n".join(["🛒 *Melhores preços no Listaí:*", ""] + [f"• *{r['Produto']}*: R$ {r['Preço Unitário']:.2f} ({r['Supermercado']} - {r['Região']})" for r in df_f.head(5).to_dict("records")])
@@ -1823,8 +1618,7 @@ def pagina_perfil():
     raw_u = u_dict.get(usuario_atual, {})
     reg_u = dict(raw_u) if isinstance(raw_u, dict) else {"tipo": "senha", "hash": raw_u, "nome": nome_usuario}
     df_p, _ = obter_compras_com_datas(usuario_atual)
-    criado_em = reg_u.get("criado_em")
-    sub_p = f"@{usuario_atual}" + (f" • Desde {criado_em}" if criado_em else "")
+    sub_p = f"@{usuario_atual}" + (f" • Desde {reg_u['criado_em']}" if reg_u.get("criado_em") else "")
 
     with st.container(border=True):
         with st.container(key="perfil_hero_top"):
@@ -1834,7 +1628,8 @@ def pagina_perfil():
                     st.markdown(f'<div class="listai-avatar-wrap">{avatar_html(nome_usuario, usuario_atual, 78, True)}<span class="listai-cam-badge">📷</span></div>', unsafe_allow_html=True)
                     if (f_up := st.file_uploader("Foto", type=list(EXTENSOES_FOTO) + ["jpeg"], label_visibility="collapsed", key=f"up_foto_{st.session_state.get('foto_versao', 0)}")) is not None:
                         raw = f_up.getvalue()
-                        if (hf := hashlib.sha256(raw).hexdigest()) != st.session_state.get("ultima_foto_hash"):
+                        hf = hashlib.sha256(raw).hexdigest()
+                        if hf != st.session_state.get("ultima_foto_hash"):
                             salvar_foto_perfil(usuario_atual, raw, f_up.name)
                             st.session_state.update({"ultima_foto_hash": hf, "foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_sucesso": "Foto atualizada!"})
                             st.rerun()
@@ -1873,19 +1668,16 @@ def pagina_perfil():
         with st.expander("💡 Lembrete e Pergunta de Recuperação", expanded=not bool(reg_u.get("lembrete") or reg_u.get("resposta_seg_hash"))):
             with st.form("form_recuperacao_perfil", border=False):
                 r_lemb = st.text_input("Lembrete / dica da senha", value=reg_u.get("lembrete", ""), placeholder="Ex: Nome do pet + ano")
-                perg_atual = reg_u.get("pergunta_seg", PERGUNTAS_SEGURANCA[0])
-                perg_idx = PERGUNTAS_SEGURANCA.index(perg_atual) if perg_atual in PERGUNTAS_SEGURANCA else 0
-                r_perg = st.selectbox("Pergunta secreta", PERGUNTAS_SEGURANCA, index=perg_idx)
-                tem_resp = bool(reg_u.get("resposta_seg_hash"))
-                r_resp = st.text_input("Resposta secreta", placeholder="Já configurada (digite apenas para trocar)" if tem_resp else "Digite sua resposta secreta")
+                perg_at = reg_u.get("pergunta_seg", PERGUNTAS_SEGURANCA[0])
+                r_perg = st.selectbox("Pergunta secreta", PERGUNTAS_SEGURANCA, index=PERGUNTAS_SEGURANCA.index(perg_at) if perg_at in PERGUNTAS_SEGURANCA else 0)
+                r_resp = st.text_input("Resposta secreta", placeholder="Já configurada (digite apenas para trocar)" if reg_u.get("resposta_seg_hash") else "Digite sua resposta secreta")
                 if st.form_submit_button("💾 Salvar recuperação", use_container_width=True):
-                    reg_u["lembrete"] = r_lemb.strip()
-                    reg_u["pergunta_seg"] = r_perg
+                    reg_u.update({"lembrete": r_lemb.strip(), "pergunta_seg": r_perg})
                     if r_resp.strip():
                         reg_u["resposta_seg_hash"] = gerar_hash_senha(normalizar_texto(r_resp))
                     u_dict[usuario_atual] = reg_u
                     salvar_usuarios(u_dict)
-                    st.session_state["msg_sucesso"] = "Configurações de lembrete/recuperação salvas!"
+                    st.session_state["msg_sucesso"] = "Configurações de recuperação salvas!"
                     st.rerun()
 
         with st.expander("🔒 Alterar Senha"):
@@ -1932,8 +1724,7 @@ def pagina_perfil():
             st.metric("Total", len(u_dict))
             st.dataframe(pd.DataFrame([{"Usuário": k, "Nome": v.get("nome", k) if isinstance(v, dict) else k, "E-mail": v.get("email", "-") if isinstance(v, dict) else "-", "Cidade": v.get("cidade", "-") if isinstance(v, dict) else "-"} for k, v in sorted(u_dict.items())]), hide_index=True, use_container_width=True)
             with st.form("form_admin_reset_senha", border=False):
-                st.markdown("**🔑 Redefinir senha de um usuário**")
-                adm_u = st.selectbox("Usuário", sorted(u_dict.keys()))
+                adm_u = st.selectbox("Redefinir senha do usuário", sorted(u_dict.keys()))
                 adm_s = st.text_input("Nova senha provisória", type="password")
                 if st.form_submit_button("Redefinir senha", use_container_width=True):
                     if len(adm_s) < 4:
@@ -1978,14 +1769,5 @@ if msg := st.session_state.pop("msg_sucesso", None):
 if msg_lim := st.session_state.pop("msg_limite_alerta", None):
     st.warning(msg_lim)
 
-{
-    PAGINAS[0]: pagina_compra,
-    PAGINAS[1]: pagina_lista,
-    PAGINAS[2]: pagina_graficos,
-    PAGINAS[3]: pagina_historico,
-    PAGINAS[4]: pagina_precos,
-    PAGINAS[5]: pagina_mercados,
-    PAGINA_PERFIL: pagina_perfil,
-}[st.session_state["pagina_atual"]]()
-
+{PAGINAS[0]: pagina_compra, PAGINAS[1]: pagina_lista, PAGINAS[2]: pagina_graficos, PAGINAS[3]: pagina_historico, PAGINAS[4]: pagina_precos, PAGINAS[5]: pagina_mercados, PAGINA_PERFIL: pagina_perfil}[st.session_state["pagina_atual"]]()
 exibir_rodape_anuncio()
