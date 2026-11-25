@@ -81,7 +81,7 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 [class*="st-key-compra_grp_"] [data-testid="stColumn"], [class*="st-key-edit_qp_"] [data-testid="stColumn"],
 [class*="st-key-edit_btns_"] [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 
-/* Gravador de Áudio Nativo Visível ao lado de Adicionar (sem esconder elementos!) */
+/* Gravador de Áudio Nativo Visível ao lado de Adicionar */
 .st-key-acao_add_voz .stButton > button { height: 44px !important; min-height: 44px !important; margin: 0 !important; }
 .st-key-acao_add_voz [data-testid="stAudioInput"] { width: 100% !important; margin: 0 !important; }
 .st-key-acao_add_voz [data-testid="stAudioInput"] > div {
@@ -329,7 +329,7 @@ def obter_api_key_gemini():
 
 
 def limpar_estado_usuario(incluir_auth=False):
-    chaves = {"aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "msg_sucesso", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria"}
+    chaves = {"aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "msg_sucesso", "msg_foto_erro", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria"}
     if incluir_auth:
         st.session_state.update({"autenticado": False, "usuario_logado": ""})
         chaves.update({"modo_login", "rec_usuario", "msg_login_ok", "gemini_api_key_usuario", "pagina_atual", "pagina_anterior"})
@@ -357,21 +357,52 @@ def remover_foto_perfil(usuario):
 
 
 def salvar_foto_perfil(usuario, raw_bytes, nome_arquivo=""):
-    remover_foto_perfil(usuario)
     try:
-        from PIL import Image, ImageOps
-        img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw_bytes)))
-        lado = min(img.size)
-        l, t = (img.width - lado) // 2, (img.height - lado) // 2
-        img = img.crop((l, t, l + lado, t + lado)).resize((256, 256))
-        if img.mode in ("RGBA", "P", "LA"):
-            img = img.convert("RGB")
-        img.save(obter_arquivo_usuario(usuario, "foto_perfil.jpg"), format="JPEG", quality=88)
+        from PIL import Image, ImageFile, ImageOps
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
+        try:
+            import pillow_heif
+            pillow_heif.register_heif_opener()
+        except ImportError:
+            pass
+
+        with Image.open(io.BytesIO(raw_bytes)) as img_aberta:
+            img_aberta.load()
+            try:
+                img = ImageOps.exif_transpose(img_aberta)
+            except Exception:
+                img = img_aberta.copy()
+
+            if img.mode in ("RGBA", "LA", "PA", "RGBa") or (img.mode == "P" and "transparency" in img.info):
+                rgba = img.convert("RGBA")
+                fundo = Image.new("RGB", rgba.size, (255, 255, 255))
+                fundo.paste(rgba, mask=rgba.split()[-1])
+                img = fundo
+            elif img.mode != "RGB":
+                img = img.convert("RGB")
+
+            lado = min(img.size)
+            l, t = (img.width - lado) // 2, (img.height - lado) // 2
+            resample = getattr(getattr(Image, "Resampling", Image), "LANCZOS", Image.BICUBIC)
+            img = img.crop((l, t, l + lado, t + lado)).resize((256, 256), resample)
+
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=88, optimize=True)
+            dados_finais = buf.getvalue()
+
+        remover_foto_perfil(usuario)
+        with open(obter_arquivo_usuario(usuario, "foto_perfil.jpg"), "wb") as f:
+            f.write(dados_finais)
     except ImportError:
         ext = os.path.splitext(nome_arquivo.lower())[1].lstrip(".")
-        ext = "jpg" if ext == "jpeg" else (ext if ext in EXTENSOES_FOTO else "jpg")
+        ext = "jpg" if ext in ("jpeg", "jfif") else ext
+        if ext not in EXTENSOES_FOTO:
+            raise ValueError("Formato não suportado. Envie uma imagem JPG, PNG ou WEBP.")
+        remover_foto_perfil(usuario)
         with open(obter_arquivo_usuario(usuario, f"foto_perfil.{ext}"), "wb") as f:
             f.write(raw_bytes)
+    except Exception:
+        raise ValueError("Não foi possível ler essa foto. Tente outra imagem (JPG, PNG ou WEBP).")
     carregar_foto_perfil_base64.clear()
 
 
@@ -1655,17 +1686,23 @@ def pagina_perfil():
     sub_p = f"@{usuario_atual}" + (f" • Desde {reg_u['criado_em']}" if reg_u.get("criado_em") else "")
 
     with st.container(border=True):
+        if err_f := st.session_state.pop("msg_foto_erro", None):
+            st.warning(err_f)
         with st.container(key="perfil_hero_top"):
             c_av, c_inf = st.columns([1, 5], vertical_alignment="center")
             with c_av:
                 with st.container(key="avatar_clicavel"):
                     st.markdown(f'<div class="listai-avatar-wrap">{avatar_html(nome_usuario, usuario_atual, 78, True)}<span class="listai-cam-badge">📷</span></div>', unsafe_allow_html=True)
-                    if (f_up := st.file_uploader("Foto", type=list(EXTENSOES_FOTO) + ["jpeg"], label_visibility="collapsed", key=f"up_foto_{st.session_state.get('foto_versao', 0)}")) is not None:
+                    if (f_up := st.file_uploader("Foto", type=None, label_visibility="collapsed", key=f"up_foto_{st.session_state.get('foto_versao', 0)}")) is not None:
                         raw = f_up.getvalue()
                         hf = hashlib.sha256(raw).hexdigest()
                         if hf != st.session_state.get("ultima_foto_hash"):
-                            salvar_foto_perfil(usuario_atual, raw, f_up.name)
-                            st.session_state.update({"ultima_foto_hash": hf, "foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_sucesso": "Foto atualizada!"})
+                            st.session_state["ultima_foto_hash"] = hf
+                            try:
+                                salvar_foto_perfil(usuario_atual, raw, f_up.name)
+                                st.session_state.update({"foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_sucesso": "Foto atualizada!"})
+                            except ValueError as err_foto:
+                                st.session_state.update({"foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_foto_erro": str(err_foto)})
                             st.rerun()
             with c_inf:
                 st.markdown(f'<div class="listai-profile-info"><h3>{html.escape(nome_usuario)}</h3><span>{html.escape(sub_p)}</span><span class="listai-foto-dica">👆 Toque na foto para trocar</span></div>', unsafe_allow_html=True)
