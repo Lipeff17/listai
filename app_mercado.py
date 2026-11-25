@@ -62,14 +62,14 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-barra_navegacao .stButton > button[kind="primary"] p { color: #FFFFFF !important; }
 
 /* Grids Fixos */
-.st-key-kpi_2cols [data-testid="stHorizontalBlock"], .st-key-row_qtd_preco [data-testid="stHorizontalBlock"],
+[class*="st-key-kpi_2cols"] [data-testid="stHorizontalBlock"], .st-key-row_qtd_preco [data-testid="stHorizontalBlock"],
 .st-key-acao_add_voz [data-testid="stHorizontalBlock"], .st-key-add_lista_row [data-testid="stHorizontalBlock"],
 .st-key-lista_chk_box [data-testid="stHorizontalBlock"], [class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"],
 [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"],
 .st-key-foto_btns_row [data-testid="stHorizontalBlock"], .st-key-foto_pos_row [data-testid="stHorizontalBlock"] {
     display: grid !important; gap: 0.45rem !important; align-items: center !important; width: 100% !important;
 }
-.st-key-kpi_2cols [data-testid="stHorizontalBlock"], [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"],
+[class*="st-key-kpi_2cols"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"],
 .st-key-foto_btns_row [data-testid="stHorizontalBlock"], .st-key-foto_pos_row [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 .st-key-row_qtd_preco [data-testid="stHorizontalBlock"] { grid-template-columns: 0.85fr 1.15fr !important; align-items: end !important; }
 .st-key-acao_add_voz [data-testid="stHorizontalBlock"] { grid-template-columns: 1fr 1.35fr !important; align-items: center !important; }
@@ -77,8 +77,8 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-lista_chk_box [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 40px 40px !important; gap: 0.25rem !important; }
 [class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
 [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-.st-key-kpi_4cols [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.5rem !important; width: 100% !important; }
-.st-key-kpi_2cols [data-testid="stColumn"], .st-key-kpi_4cols [data-testid="stColumn"], .st-key-row_qtd_preco [data-testid="stColumn"],
+[class*="st-key-kpi_4cols"] [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.5rem !important; width: 100% !important; }
+[class*="st-key-kpi_2cols"] [data-testid="stColumn"], [class*="st-key-kpi_4cols"] [data-testid="stColumn"], .st-key-row_qtd_preco [data-testid="stColumn"],
 .st-key-acao_add_voz [data-testid="stColumn"], .st-key-add_lista_row [data-testid="stColumn"], .st-key-lista_chk_box [data-testid="stColumn"],
 [class*="st-key-compra_grp_"] [data-testid="stColumn"], [class*="st-key-edit_qp_"] [data-testid="stColumn"],
 [class*="st-key-edit_btns_"] [data-testid="stColumn"], .st-key-foto_btns_row [data-testid="stColumn"],
@@ -184,7 +184,7 @@ div[data-testid="stProgress"] > div > div > div > div { background-color: #16A34
     .st-key-topo_nubank .stButton > button { padding: 0.3rem 0.7rem !important; font-size: 0.76rem !important; }
     div[data-testid="stMetric"] { padding: 8px 11px !important; }
     div[data-testid="stMetricValue"] { font-size: 1.15rem !important; }
-    .st-key-kpi_4cols [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    [class*="st-key-kpi_4cols"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
     .st-key-barra_navegacao { padding: 0.22rem 0.22rem !important; margin-bottom: 0.55rem !important; }
     .st-key-barra_navegacao [data-testid="stHorizontalBlock"] { gap: 0.1rem !important; }
     .st-key-barra_navegacao .stButton > button { min-height: 2.38rem !important; padding: 0.2rem 0.02rem !important; }
@@ -339,7 +339,7 @@ def limpar_estado_usuario(incluir_auth=False):
             st.session_state.pop(k, None)
 
 
-# --- Foto de Perfil ---
+# --- Foto de Perfil (Otimizada para carregamento rápido) ---
 @st.cache_data(show_spinner=False)
 def carregar_foto_perfil_base64(usuario):
     for ext in EXTENSOES_FOTO:
@@ -351,12 +351,8 @@ def carregar_foto_perfil_base64(usuario):
 
 
 def carregar_foto_original_bytes(usuario):
-    p_orig = obter_arquivo_usuario(usuario, "foto_original.jpg")
-    if os.path.exists(p_orig) and os.path.getsize(p_orig) > 0:
-        with open(p_orig, "rb") as f:
-            return f.read()
-    for ext in EXTENSOES_FOTO:
-        p = obter_arquivo_usuario(usuario, f"foto_perfil.{ext}")
+    for nome_arq in ("foto_original.jpg", *(f"foto_perfil.{ext}" for ext in EXTENSOES_FOTO)):
+        p = obter_arquivo_usuario(usuario, nome_arq)
         if os.path.exists(p) and os.path.getsize(p) > 0:
             with open(p, "rb") as f:
                 return f.read()
@@ -382,6 +378,11 @@ def preparar_imagem_base(raw_bytes):
             pass
 
         with Image.open(io.BytesIO(raw_bytes)) as img_aberta:
+            if getattr(img_aberta, "format", "") == "JPEG":
+                try:
+                    img_aberta.draft("RGB", (640, 640))
+                except Exception:
+                    pass
             img_aberta.load()
             try:
                 img = ImageOps.exif_transpose(img_aberta)
@@ -396,10 +397,10 @@ def preparar_imagem_base(raw_bytes):
             elif img.mode != "RGB":
                 img = img.convert("RGB")
 
-            resample = getattr(getattr(Image, "Resampling", Image), "LANCZOS", Image.BICUBIC)
-            img.thumbnail((1024, 1024), resample)
+            resample = getattr(getattr(Image, "Resampling", Image), "BILINEAR", Image.BICUBIC)
+            img.thumbnail((640, 640), resample)
             buf = io.BytesIO()
-            img.save(buf, format="JPEG", quality=90, optimize=True)
+            img.save(buf, format="JPEG", quality=85)
             return buf.getvalue()
     except ImportError:
         return None
@@ -407,22 +408,22 @@ def preparar_imagem_base(raw_bytes):
         raise ValueError("Não foi possível abrir essa foto. Tente outra imagem (JPG, PNG ou WEBP).")
 
 
-@st.cache_data(show_spinner=False, max_entries=6)
+@st.cache_data(show_spinner=False, max_entries=8)
 def gerar_foto_ajustada(orig_bytes, modo="Preencher", zoom=1.0, pos_x=0, pos_y=0, rotacao=0):
     from PIL import Image, ImageFilter
     with Image.open(io.BytesIO(orig_bytes)) as im:
         img = im.convert("RGB")
     if rotacao:
         img = img.rotate(-int(rotacao), expand=True)
-    resample = getattr(getattr(Image, "Resampling", Image), "LANCZOS", Image.BICUBIC)
+    resample = getattr(getattr(Image, "Resampling", Image), "BILINEAR", Image.BICUBIC)
 
     if modo == "Encaixar inteira":
         lado = min(img.size)
         l, t = (img.width - lado) // 2, (img.height - lado) // 2
-        fundo = img.crop((l, t, l + lado, t + lado)).resize((256, 256), resample).filter(ImageFilter.GaussianBlur(14))
+        fundo = img.crop((l, t, l + lado, t + lado)).resize((64, 64), resample).filter(ImageFilter.GaussianBlur(4)).resize((200, 200), resample)
         frente = img.copy()
-        frente.thumbnail((256, 256), resample)
-        fundo.paste(frente, ((256 - frente.width) // 2, (256 - frente.height) // 2))
+        frente.thumbnail((200, 200), resample)
+        fundo.paste(frente, ((200 - frente.width) // 2, (200 - frente.height) // 2))
         final = fundo
     else:
         lado_base = min(img.size)
@@ -432,10 +433,10 @@ def gerar_foto_ajustada(orig_bytes, modo="Preencher", zoom=1.0, pos_x=0, pos_y=0
         cy = img.height // 2 + int((pos_y / 100.0) * max_dy)
         l = max(0, min(img.width - lado, cx - lado // 2))
         t = max(0, min(img.height - lado, cy - lado // 2))
-        final = img.crop((l, t, l + lado, t + lado)).resize((256, 256), resample)
+        final = img.crop((l, t, l + lado, t + lado)).resize((200, 200), resample)
 
     buf = io.BytesIO()
-    final.save(buf, format="JPEG", quality=88, optimize=True)
+    final.save(buf, format="JPEG", quality=84)
     return buf.getvalue()
 
 
@@ -524,7 +525,7 @@ def exibir_tela_login():
                         else:
                             st.error("Usuário ou senha incorretos.")
 
-                with st.container(key="kpi_2cols"):
+                with st.container(key="kpi_2cols_login"):
                     c_esq, c_cad = st.columns(2)
                     if c_esq.button("🔑 Esqueci a senha", use_container_width=True):
                         st.session_state.pop("rec_usuario", None)
@@ -1309,6 +1310,42 @@ def exibir_rodape_anuncio():
         c2.link_button(ad["texto_botao"], ad["url"], use_container_width=True)
 
 
+_st_fragment = getattr(st, "fragment", lambda f: f)
+
+
+@_st_fragment
+def renderizar_editor_foto_perfil(usuario, rascunho):
+    with st.container(border=True):
+        st.markdown("#### ✂️ Ajustar Foto do Perfil")
+        modo_f = st.radio("Como encaixar:", ["🔍 Preencher círculo", "🖼️ Caber inteira"], horizontal=True, key="foto_ed_modo")
+        if modo_f == "🔍 Preencher círculo":
+            zoom_f = st.slider("🔎 Zoom", 1.0, 2.5, 1.0, 0.1, key="foto_ed_zoom")
+            with st.container(key="foto_pos_row"):
+                c_px, c_py = st.columns(2)
+                pos_x = c_px.slider("⬅️ ➡️ Lado", -100, 100, 0, 5, key="foto_ed_px")
+                pos_y = c_py.slider("⬆️ ⬇️ Altura", -100, 100, 0, 5, key="foto_ed_py")
+        else:
+            zoom_f, pos_x, pos_y = 1.0, 0, 0
+        rot_f = st.radio("🔄 Girar:", [0, 90, 180, 270], horizontal=True, format_func=lambda g: f"{g}°", key="foto_ed_rot")
+
+        prev_bytes = gerar_foto_ajustada(rascunho, modo=("Encaixar inteira" if modo_f == "🖼️ Caber inteira" else "Preencher"), zoom=zoom_f, pos_x=pos_x, pos_y=pos_y, rotacao=rot_f)
+        prev_b64 = base64.b64encode(prev_bytes).decode("ascii")
+        st.markdown(f'<div class="listai-foto-preview"><img src="data:image/jpeg;base64,{prev_b64}" alt="Prévia"></div>', unsafe_allow_html=True)
+
+        with st.container(key="kpi_2cols_foto_ed"):
+            s_col, c_col = st.columns(2)
+            if s_col.button("✅ Salvar foto", type="primary", use_container_width=True, key="btn_salvar_foto_ed"):
+                salvar_foto_perfil_final(usuario, rascunho, prev_bytes)
+                for k_ed in ("foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot"):
+                    st.session_state.pop(k_ed, None)
+                st.session_state["msg_sucesso"] = "Foto de perfil salva!"
+                st.rerun()
+            if c_col.button("✖️ Cancelar", use_container_width=True, key="btn_cancelar_foto_ed"):
+                for k_ed in ("foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot"):
+                    st.session_state.pop(k_ed, None)
+                st.rerun()
+
+
 # --- Páginas ---
 def pagina_compra():
     mes_hoje = date.today().strftime("%Y-%m")
@@ -1317,7 +1354,7 @@ def pagina_compra():
     df_pre = carregar_pre_lista(usuario_atual)
     pend = int((~df_pre["Comprado"]).sum()) if not df_pre.empty else 0
 
-    with st.container(key="kpi_2cols"):
+    with st.container(key="kpi_2cols_compra"):
         k1, k2 = st.columns(2)
         k1.metric("📅 Gasto no mês", formatar_reais(gasto_mes))
         k2.metric("📝 Na lista", f"{pend} pendente(s)" if pend else "Tudo ok ✅")
@@ -1371,7 +1408,6 @@ def pagina_compra():
         cat_def = st.session_state.get("valor_categoria", "✨ Automática")
         cat_esc = st.selectbox("🏷️ Categoria", cat_opcoes, index=cat_opcoes.index(cat_def) if cat_def in cat_opcoes else 0, key=f"input_cat_{versao}", format_func=lambda c: c if c == "✨ Automática" else f"{ICONES_CATEGORIA.get(c, '📦')} {c}")
 
-        # Adicionar + Gravador de Voz Nativo lado a lado
         with st.container(key="acao_add_voz"):
             c_add, c_mic = st.columns([1, 1.35], vertical_alignment="center")
             clicou_add = c_add.button("✅ Adicionar", type="primary", use_container_width=True, key=f"btn_add_prod_{versao}")
@@ -1516,7 +1552,7 @@ def pagina_lista():
                     salvar_pre_lista(df_pre, usuario_atual)
                     st.rerun()
 
-        with st.container(key="kpi_2cols"):
+        with st.container(key="kpi_2cols_lista"):
             a1, a2 = st.columns(2)
             if a1.button("🧹 Limpar marcados", disabled=(pegos == 0), use_container_width=True):
                 salvar_pre_lista(df_pre[~df_pre["Comprado"]], usuario_atual)
@@ -1545,7 +1581,7 @@ def pagina_graficos():
             st.info("Você ainda não tem compras registradas. Adicione em **🛒 Compra**!")
         return
 
-    with st.container(key="kpi_4cols"):
+    with st.container(key="kpi_4cols_graf"):
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("💰 Total Geral", formatar_reais(df_c["Total"].sum()))
         m2.metric("📅 Mês Atual", formatar_reais(gasto), delta=delta, delta_color="inverse")
@@ -1568,7 +1604,7 @@ def pagina_historico():
         df_e = df_c.copy()
         df_e["Supermercado"] = df_e["Supermercado"].replace("", "Não informado").fillna("Não informado")
         df_e["Categoria"] = df_e["Categoria"].replace("", "Outros").fillna("Outros")
-        with st.container(key="kpi_4cols"):
+        with st.container(key="kpi_4cols_hist"):
             f1, f2, f3, f4 = st.columns(4)
             mes_s = f1.selectbox("📅 Mês", ["Todos"] + (sorted(df_v["Mês"].unique(), reverse=True) if not df_v.empty else []))
             merc_s = f2.selectbox("🏪 Mercado", ["Todos"] + sorted(df_e["Supermercado"].unique()))
@@ -1589,7 +1625,7 @@ def pagina_historico():
         st.warning("Nenhuma compra encontrada com os filtros selecionados.")
     else:
         tot_f = float(df_e["Total"].sum())
-        with st.container(key="kpi_2cols"):
+        with st.container(key="kpi_2cols_hist"):
             hm1, hm2 = st.columns(2)
             hm1.metric("💰 Total Filtrado", formatar_reais(tot_f))
             hm2.metric("🛍️ Compras", f"{len(df_e)} itens · {df_e['Categoria'].nunique()} cat.")
@@ -1782,37 +1818,9 @@ def pagina_perfil():
                             st.rerun()
 
         if st.session_state.get("editando_foto") and (rascunho := st.session_state.get("foto_rascunho")):
-            with st.container(border=True):
-                st.markdown("#### ✂️ Ajustar Foto do Perfil")
-                modo_f = st.radio("Como encaixar:", ["🔍 Preencher círculo", "🖼️ Caber inteira"], horizontal=True, key="foto_ed_modo")
-                if modo_f == "🔍 Preencher círculo":
-                    zoom_f = st.slider("🔎 Zoom", 1.0, 2.5, 1.0, 0.1, key="foto_ed_zoom")
-                    with st.container(key="foto_pos_row"):
-                        c_px, c_py = st.columns(2)
-                        pos_x = c_px.slider("⬅️ ➡️ Lado", -100, 100, 0, 5, key="foto_ed_px")
-                        pos_y = c_py.slider("⬆️ ⬇️ Altura", -100, 100, 0, 5, key="foto_ed_py")
-                else:
-                    zoom_f, pos_x, pos_y = 1.0, 0, 0
-                rot_f = st.radio("🔄 Girar:", [0, 90, 180, 270], horizontal=True, format_func=lambda g: f"{g}°", key="foto_ed_rot")
+            renderizar_editor_foto_perfil(usuario_atual, rascunho)
 
-                prev_bytes = gerar_foto_ajustada(rascunho, modo=("Encaixar inteira" if modo_f == "🖼️ Caber inteira" else "Preencher"), zoom=zoom_f, pos_x=pos_x, pos_y=pos_y, rotacao=rot_f)
-                prev_b64 = base64.b64encode(prev_bytes).decode("ascii")
-                st.markdown(f'<div class="listai-foto-preview"><img src="data:image/jpeg;base64,{prev_b64}" alt="Prévia"></div>', unsafe_allow_html=True)
-
-                with st.container(key="kpi_2cols"):
-                    s_col, c_col = st.columns(2)
-                    if s_col.button("✅ Salvar foto", type="primary", use_container_width=True, key="btn_salvar_foto_ed"):
-                        salvar_foto_perfil_final(usuario_atual, rascunho, prev_bytes)
-                        for k_ed in ("foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot"):
-                            st.session_state.pop(k_ed, None)
-                        st.session_state["msg_sucesso"] = "Foto de perfil salva!"
-                        st.rerun()
-                    if c_col.button("✖️ Cancelar", use_container_width=True, key="btn_cancelar_foto_ed"):
-                        for k_ed in ("foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot"):
-                            st.session_state.pop(k_ed, None)
-                        st.rerun()
-
-        with st.container(key="kpi_2cols"):
+        with st.container(key="kpi_2cols_perfil"):
             pm1, pm2 = st.columns(2)
             pm1.metric("🛍️ Compras", len(df_p))
             pm2.metric("💰 Acumulado", formatar_reais(float(df_p["Total"].sum()) if not df_p.empty else 0.0))
