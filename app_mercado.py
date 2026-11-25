@@ -65,10 +65,12 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-kpi_2cols [data-testid="stHorizontalBlock"], .st-key-row_qtd_preco [data-testid="stHorizontalBlock"],
 .st-key-acao_add_voz [data-testid="stHorizontalBlock"], .st-key-add_lista_row [data-testid="stHorizontalBlock"],
 .st-key-lista_chk_box [data-testid="stHorizontalBlock"], [class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"],
-[class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] {
+[class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"],
+.st-key-foto_btns_row [data-testid="stHorizontalBlock"], .st-key-foto_pos_row [data-testid="stHorizontalBlock"] {
     display: grid !important; gap: 0.45rem !important; align-items: center !important; width: 100% !important;
 }
-.st-key-kpi_2cols [data-testid="stHorizontalBlock"], [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.st-key-kpi_2cols [data-testid="stHorizontalBlock"], [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"],
+.st-key-foto_btns_row [data-testid="stHorizontalBlock"], .st-key-foto_pos_row [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 .st-key-row_qtd_preco [data-testid="stHorizontalBlock"] { grid-template-columns: 0.85fr 1.15fr !important; align-items: end !important; }
 .st-key-acao_add_voz [data-testid="stHorizontalBlock"] { grid-template-columns: 1fr 1.35fr !important; align-items: center !important; }
 .st-key-add_lista_row [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 64px !important; align-items: end !important; }
@@ -79,19 +81,15 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-kpi_2cols [data-testid="stColumn"], .st-key-kpi_4cols [data-testid="stColumn"], .st-key-row_qtd_preco [data-testid="stColumn"],
 .st-key-acao_add_voz [data-testid="stColumn"], .st-key-add_lista_row [data-testid="stColumn"], .st-key-lista_chk_box [data-testid="stColumn"],
 [class*="st-key-compra_grp_"] [data-testid="stColumn"], [class*="st-key-edit_qp_"] [data-testid="stColumn"],
-[class*="st-key-edit_btns_"] [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
+[class*="st-key-edit_btns_"] [data-testid="stColumn"], .st-key-foto_btns_row [data-testid="stColumn"],
+.st-key-foto_pos_row [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 
 /* Gravador de Áudio Nativo Visível ao lado de Adicionar */
 .st-key-acao_add_voz .stButton > button { height: 44px !important; min-height: 44px !important; margin: 0 !important; }
 .st-key-acao_add_voz [data-testid="stAudioInput"] { width: 100% !important; margin: 0 !important; }
-.st-key-acao_add_voz [data-testid="stAudioInput"] > div {
-    background: #ECFDF5 !important; border: 1.5px solid #10B981 !important;
-    border-radius: 10px !important; min-height: 44px !important;
-}
+.st-key-acao_add_voz [data-testid="stAudioInput"] > div { background: #ECFDF5 !important; border: 1.5px solid #10B981 !important; border-radius: 10px !important; min-height: 44px !important; }
 .st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Stop" i],
-.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Parar" i] {
-    background: #EF4444 !important; color: #FFFFFF !important; border-radius: 8px !important;
-}
+.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Parar" i] { background: #EF4444 !important; color: #FFFFFF !important; border-radius: 8px !important; }
 
 /* Lista e Compra Mensal na Tela Inicial */
 .st-key-lista_chk_box .stButton > button, [class*="st-key-compra_grp_"] .stButton > button { padding: 0.25rem 0.2rem !important; min-height: 2.1rem !important; font-size: 0.85rem !important; }
@@ -108,11 +106,13 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .listai-rec-nome { font-weight: 700; font-size: 0.88rem; color: #064E3B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .listai-rec-meta { font-size: 0.76rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Avatares e Perfil */
+/* Avatares, Foto Clicável e Prévia do Editor */
 .listai-avatar, .listai-avatar-solid { border-radius: 50%; color: #FFFFFF; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .listai-avatar { background: rgba(255, 255, 255, 0.22); border: 2px solid rgba(255, 255, 255, 0.88); }
 .listai-avatar-solid { background: linear-gradient(135deg, #064E3B, #16A34A); border: 2px solid #86EFAC; }
 .listai-avatar-img { border-radius: 50%; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.92); flex-shrink: 0; display: block; }
+.listai-foto-preview { display: flex; flex-direction: column; align-items: center; margin: 0.35rem 0 0.6rem 0; }
+.listai-foto-preview img { width: 132px; height: 132px; border-radius: 50%; object-fit: cover; border: 3px solid #16A34A; box-shadow: 0 4px 16px rgba(6, 78, 59, 0.20); }
 .st-key-perfil_hero_top [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: 78px minmax(0, 1fr) !important; align-items: center !important; gap: 0.85rem !important; width: 100% !important; }
 .st-key-perfil_hero_top [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 .st-key-avatar_clicavel, .st-key-avatar_clicavel [data-testid="stVerticalBlock"], .listai-avatar-wrap { position: relative !important; width: 78px !important; height: 78px !important; border-radius: 50% !important; gap: 0 !important; }
@@ -121,6 +121,7 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-avatar_clicavel [data-testid="stFileUploader"] { position: absolute !important; inset: 0 !important; width: 78px !important; height: 78px !important; opacity: 0.001 !important; z-index: 20 !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; border-radius: 50% !important; }
 .st-key-avatar_clicavel [data-testid="stFileUploaderDropzone"], .st-key-avatar_clicavel [data-testid="stFileUploaderDropzone"] button { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; min-height: 78px !important; padding: 0 !important; border: none !important; border-radius: 50% !important; }
 .st-key-avatar_clicavel [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
+.st-key-foto_btns_row .stButton > button { padding: 0.28rem 0.5rem !important; min-height: 2.1rem !important; font-size: 0.80rem !important; margin-top: 0.35rem !important; }
 
 /* Cards Diversos */
 .listai-header { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%); padding: 1.05rem 1.2rem; border-radius: 16px; color: #FFFFFF !important; margin-bottom: 0.8rem; }
@@ -329,7 +330,7 @@ def obter_api_key_gemini():
 
 
 def limpar_estado_usuario(incluir_auth=False):
-    chaves = {"aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "msg_sucesso", "msg_foto_erro", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria"}
+    chaves = {"aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "msg_sucesso", "msg_foto_erro", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords", "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria", "foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot"}
     if incluir_auth:
         st.session_state.update({"autenticado": False, "usuario_logado": ""})
         chaves.update({"modo_login", "rec_usuario", "msg_login_ok", "gemini_api_key_usuario", "pagina_atual", "pagina_anterior"})
@@ -349,14 +350,28 @@ def carregar_foto_perfil_base64(usuario):
     return None
 
 
-def remover_foto_perfil(usuario):
+def carregar_foto_original_bytes(usuario):
+    p_orig = obter_arquivo_usuario(usuario, "foto_original.jpg")
+    if os.path.exists(p_orig) and os.path.getsize(p_orig) > 0:
+        with open(p_orig, "rb") as f:
+            return f.read()
     for ext in EXTENSOES_FOTO:
-        if os.path.exists(p := obter_arquivo_usuario(usuario, f"foto_perfil.{ext}")):
+        p = obter_arquivo_usuario(usuario, f"foto_perfil.{ext}")
+        if os.path.exists(p) and os.path.getsize(p) > 0:
+            with open(p, "rb") as f:
+                return f.read()
+    return None
+
+
+def remover_foto_perfil(usuario, incluir_original=True):
+    alvos = [f"foto_perfil.{ext}" for ext in EXTENSOES_FOTO] + (["foto_original.jpg"] if incluir_original else [])
+    for nome_arq in alvos:
+        if os.path.exists(p := obter_arquivo_usuario(usuario, nome_arq)):
             os.remove(p)
     carregar_foto_perfil_base64.clear()
 
 
-def salvar_foto_perfil(usuario, raw_bytes, nome_arquivo=""):
+def preparar_imagem_base(raw_bytes):
     try:
         from PIL import Image, ImageFile, ImageOps
         ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -381,28 +396,55 @@ def salvar_foto_perfil(usuario, raw_bytes, nome_arquivo=""):
             elif img.mode != "RGB":
                 img = img.convert("RGB")
 
-            lado = min(img.size)
-            l, t = (img.width - lado) // 2, (img.height - lado) // 2
             resample = getattr(getattr(Image, "Resampling", Image), "LANCZOS", Image.BICUBIC)
-            img = img.crop((l, t, l + lado, t + lado)).resize((256, 256), resample)
-
+            img.thumbnail((1024, 1024), resample)
             buf = io.BytesIO()
-            img.save(buf, format="JPEG", quality=88, optimize=True)
-            dados_finais = buf.getvalue()
-
-        remover_foto_perfil(usuario)
-        with open(obter_arquivo_usuario(usuario, "foto_perfil.jpg"), "wb") as f:
-            f.write(dados_finais)
+            img.save(buf, format="JPEG", quality=90, optimize=True)
+            return buf.getvalue()
     except ImportError:
-        ext = os.path.splitext(nome_arquivo.lower())[1].lstrip(".")
-        ext = "jpg" if ext in ("jpeg", "jfif") else ext
-        if ext not in EXTENSOES_FOTO:
-            raise ValueError("Formato não suportado. Envie uma imagem JPG, PNG ou WEBP.")
-        remover_foto_perfil(usuario)
-        with open(obter_arquivo_usuario(usuario, f"foto_perfil.{ext}"), "wb") as f:
-            f.write(raw_bytes)
+        return None
     except Exception:
-        raise ValueError("Não foi possível ler essa foto. Tente outra imagem (JPG, PNG ou WEBP).")
+        raise ValueError("Não foi possível abrir essa foto. Tente outra imagem (JPG, PNG ou WEBP).")
+
+
+@st.cache_data(show_spinner=False, max_entries=6)
+def gerar_foto_ajustada(orig_bytes, modo="Preencher", zoom=1.0, pos_x=0, pos_y=0, rotacao=0):
+    from PIL import Image, ImageFilter
+    with Image.open(io.BytesIO(orig_bytes)) as im:
+        img = im.convert("RGB")
+    if rotacao:
+        img = img.rotate(-int(rotacao), expand=True)
+    resample = getattr(getattr(Image, "Resampling", Image), "LANCZOS", Image.BICUBIC)
+
+    if modo == "Encaixar inteira":
+        lado = min(img.size)
+        l, t = (img.width - lado) // 2, (img.height - lado) // 2
+        fundo = img.crop((l, t, l + lado, t + lado)).resize((256, 256), resample).filter(ImageFilter.GaussianBlur(14))
+        frente = img.copy()
+        frente.thumbnail((256, 256), resample)
+        fundo.paste(frente, ((256 - frente.width) // 2, (256 - frente.height) // 2))
+        final = fundo
+    else:
+        lado_base = min(img.size)
+        lado = max(32, int(lado_base / max(1.0, float(zoom))))
+        max_dx, max_dy = max(0, (img.width - lado) // 2), max(0, (img.height - lado) // 2)
+        cx = img.width // 2 + int((pos_x / 100.0) * max_dx)
+        cy = img.height // 2 + int((pos_y / 100.0) * max_dy)
+        l = max(0, min(img.width - lado, cx - lado // 2))
+        t = max(0, min(img.height - lado, cy - lado // 2))
+        final = img.crop((l, t, l + lado, t + lado)).resize((256, 256), resample)
+
+    buf = io.BytesIO()
+    final.save(buf, format="JPEG", quality=88, optimize=True)
+    return buf.getvalue()
+
+
+def salvar_foto_perfil_final(usuario, orig_bytes, final_bytes):
+    remover_foto_perfil(usuario, incluir_original=True)
+    with open(obter_arquivo_usuario(usuario, "foto_original.jpg"), "wb") as f:
+        f.write(orig_bytes)
+    with open(obter_arquivo_usuario(usuario, "foto_perfil.jpg"), "wb") as f:
+        f.write(final_bytes)
     carregar_foto_perfil_base64.clear()
 
 
@@ -1699,18 +1741,76 @@ def pagina_perfil():
                         if hf != st.session_state.get("ultima_foto_hash"):
                             st.session_state["ultima_foto_hash"] = hf
                             try:
-                                salvar_foto_perfil(usuario_atual, raw, f_up.name)
-                                st.session_state.update({"foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_sucesso": "Foto atualizada!"})
+                                base_bytes = preparar_imagem_base(raw)
+                                if base_bytes is None:
+                                    ext = os.path.splitext(f_up.name.lower())[1].lstrip(".")
+                                    ext = "jpg" if ext in ("jpeg", "jfif") else ext
+                                    if ext not in EXTENSOES_FOTO:
+                                        raise ValueError("Formato não suportado. Envie uma imagem JPG, PNG ou WEBP.")
+                                    remover_foto_perfil(usuario_atual)
+                                    with open(obter_arquivo_usuario(usuario_atual, f"foto_perfil.{ext}"), "wb") as f:
+                                        f.write(raw)
+                                    carregar_foto_perfil_base64.clear()
+                                    st.session_state.update({"foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_sucesso": "Foto atualizada!"})
+                                else:
+                                    for k_ed in ("foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot"):
+                                        st.session_state.pop(k_ed, None)
+                                    st.session_state.update({"foto_rascunho": base_bytes, "editando_foto": True, "foto_versao": st.session_state.get("foto_versao", 0) + 1})
                             except ValueError as err_foto:
                                 st.session_state.update({"foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_foto_erro": str(err_foto)})
                             st.rerun()
             with c_inf:
                 st.markdown(f'<div class="listai-profile-info"><h3>{html.escape(nome_usuario)}</h3><span>{html.escape(sub_p)}</span><span class="listai-foto-dica">👆 Toque na foto para trocar</span></div>', unsafe_allow_html=True)
-                if carregar_foto_perfil_base64(usuario_atual) is not None and st.button("🗑️ Remover foto", key="btn_remover_foto"):
-                    remover_foto_perfil(usuario_atual)
-                    st.session_state.pop("ultima_foto_hash", None)
-                    st.session_state.update({"foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_sucesso": "Foto removida."})
-                    st.rerun()
+                if carregar_foto_perfil_base64(usuario_atual) is not None and not st.session_state.get("editando_foto"):
+                    with st.container(key="foto_btns_row"):
+                        b_aj, b_rm = st.columns(2)
+                        if b_aj.button("✂️ Ajustar", key="btn_ajustar_foto", use_container_width=True):
+                            if orig := carregar_foto_original_bytes(usuario_atual):
+                                try:
+                                    if base_ed := preparar_imagem_base(orig):
+                                        for k_ed in ("foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot"):
+                                            st.session_state.pop(k_ed, None)
+                                        st.session_state.update({"foto_rascunho": base_ed, "editando_foto": True})
+                                        st.rerun()
+                                except ValueError:
+                                    pass
+                            st.warning("Para ajustar, envie a foto novamente tocando no círculo.")
+                        if b_rm.button("🗑️ Remover", key="btn_remover_foto", use_container_width=True):
+                            remover_foto_perfil(usuario_atual)
+                            st.session_state.pop("ultima_foto_hash", None)
+                            st.session_state.update({"foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_sucesso": "Foto removida."})
+                            st.rerun()
+
+        if st.session_state.get("editando_foto") and (rascunho := st.session_state.get("foto_rascunho")):
+            with st.container(border=True):
+                st.markdown("#### ✂️ Ajustar Foto do Perfil")
+                modo_f = st.radio("Como encaixar:", ["🔍 Preencher círculo", "🖼️ Caber inteira"], horizontal=True, key="foto_ed_modo")
+                if modo_f == "🔍 Preencher círculo":
+                    zoom_f = st.slider("🔎 Zoom", 1.0, 2.5, 1.0, 0.1, key="foto_ed_zoom")
+                    with st.container(key="foto_pos_row"):
+                        c_px, c_py = st.columns(2)
+                        pos_x = c_px.slider("⬅️ ➡️ Lado", -100, 100, 0, 5, key="foto_ed_px")
+                        pos_y = c_py.slider("⬆️ ⬇️ Altura", -100, 100, 0, 5, key="foto_ed_py")
+                else:
+                    zoom_f, pos_x, pos_y = 1.0, 0, 0
+                rot_f = st.radio("🔄 Girar:", [0, 90, 180, 270], horizontal=True, format_func=lambda g: f"{g}°", key="foto_ed_rot")
+
+                prev_bytes = gerar_foto_ajustada(rascunho, modo=("Encaixar inteira" if modo_f == "🖼️ Caber inteira" else "Preencher"), zoom=zoom_f, pos_x=pos_x, pos_y=pos_y, rotacao=rot_f)
+                prev_b64 = base64.b64encode(prev_bytes).decode("ascii")
+                st.markdown(f'<div class="listai-foto-preview"><img src="data:image/jpeg;base64,{prev_b64}" alt="Prévia"></div>', unsafe_allow_html=True)
+
+                with st.container(key="kpi_2cols"):
+                    s_col, c_col = st.columns(2)
+                    if s_col.button("✅ Salvar foto", type="primary", use_container_width=True, key="btn_salvar_foto_ed"):
+                        salvar_foto_perfil_final(usuario_atual, rascunho, prev_bytes)
+                        for k_ed in ("foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot"):
+                            st.session_state.pop(k_ed, None)
+                        st.session_state["msg_sucesso"] = "Foto de perfil salva!"
+                        st.rerun()
+                    if c_col.button("✖️ Cancelar", use_container_width=True, key="btn_cancelar_foto_ed"):
+                        for k_ed in ("foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot"):
+                            st.session_state.pop(k_ed, None)
+                        st.rerun()
 
         with st.container(key="kpi_2cols"):
             pm1, pm2 = st.columns(2)
