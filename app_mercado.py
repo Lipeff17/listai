@@ -65,7 +65,8 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-lista_chk_box [data-testid="stHorizontalBlock"], [class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"],
 [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"],
 .st-key-foto_btns_row [data-testid="stHorizontalBlock"], .st-key-foto_pos_row [data-testid="stHorizontalBlock"],
-[class*="st-key-mkt_card_"] [data-testid="stHorizontalBlock"], .st-key-fam_bar [data-testid="stHorizontalBlock"] {
+[class*="st-key-mkt_card_"] [data-testid="stHorizontalBlock"], .st-key-fam_bar [data-testid="stHorizontalBlock"],
+[class*="st-key-adm_ad_row_"] [data-testid="stHorizontalBlock"] {
     display: grid !important; gap: 0.45rem !important; align-items: center !important; width: 100% !important;
 }
 [class*="st-key-kpi_2cols"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"],
@@ -75,7 +76,7 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-add_lista_row [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 64px !important; align-items: end !important; }
 .st-key-lista_chk_box [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 40px 40px !important; gap: 0.25rem !important; }
 .st-key-fam_bar [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) auto !important; gap: 0.45rem !important; }
-[class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
+[class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"], [class*="st-key-adm_ad_row_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
 [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 [class*="st-key-kpi_4cols"] [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.5rem !important; width: 100% !important; }
 [class*="st-key-kpi_3cols"] [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 0.5rem !important; width: 100% !important; }
@@ -86,7 +87,7 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 [class*="st-key-compra_grp_"] [data-testid="stColumn"], [class*="st-key-edit_qp_"] [data-testid="stColumn"],
 [class*="st-key-edit_btns_"] [data-testid="stColumn"], .st-key-foto_btns_row [data-testid="stColumn"],
 .st-key-foto_pos_row [data-testid="stColumn"], [class*="st-key-mkt_card_"] [data-testid="stColumn"],
-.st-key-fam_bar [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
+.st-key-fam_bar [data-testid="stColumn"], [class*="st-key-adm_ad_row_"] [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
 
 /* Gravador de Áudio Nativo */
 .st-key-acao_add_voz .stButton > button { height: 44px !important; min-height: 44px !important; margin: 0 !important; }
@@ -168,7 +169,7 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-avatar_clicavel [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
 .st-key-foto_btns_row .stButton > button { padding: 0.28rem 0.5rem !important; min-height: 2.1rem !important; font-size: 0.80rem !important; margin-top: 0.35rem !important; }
 
-/* Cards Diversos */
+/* Cards Diversos & Anúncios Inteligentes */
 .listai-header { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%); padding: 1.05rem 1.2rem; border-radius: 16px; color: #FFFFFF !important; margin-bottom: 0.8rem; }
 .listai-header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
 .listai-brand { display: flex; align-items: center; gap: 0.7rem; }
@@ -183,7 +184,8 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .listai-profile-info h3 { margin: 0 !important; font-size: 1.15rem !important; }
 .listai-profile-info span { color: #475569; font-size: 0.84rem; display: block; margin-top: 2px; }
 .listai-foto-dica { color: #15803D !important; font-weight: 600; font-size: 0.78rem !important; }
-.listai-ad-badge { display: inline-block; background: #DCFCE7; color: #166534; font-size: 0.70rem; font-weight: 700; padding: 0.12rem 0.5rem; border-radius: 6px; margin-bottom: 0.2rem; }
+.listai-ad-badge { display: inline-block; background: #DCFCE7; color: #166534; font-size: 0.68rem; font-weight: 800; padding: 0.12rem 0.48rem; border-radius: 6px; margin-right: 0.3rem; }
+.listai-ad-cupom { display: inline-block; background: #FEF9C3; color: #854D0E; border: 1px dashed #CA8A04; font-size: 0.70rem; font-weight: 800; padding: 0.08rem 0.45rem; border-radius: 6px; margin-left: 0.35rem; font-family: monospace; }
 
 /* Histórico e Feed */
 .listai-hist-card { background: #FFFFFF; border: 1px solid #D1FAE5; border-left: 5px solid #16A34A; border-radius: 13px; padding: 0.75rem 0.9rem 0.55rem 0.9rem; margin-bottom: 0.35rem; }
@@ -245,7 +247,7 @@ unsafe_allow_html=True,
 LOGO_SVG = '<div class="listai-logo-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="lg" x1="0" y1="12" x2="24" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0077E6"/><stop offset="55%" stop-color="#00B8B0"/><stop offset="100%" stop-color="#16A34A"/></linearGradient></defs><path d="M2 4H5L7.4 14.5C7.6 15.4 8.4 16 9.3 16H17.5C18.4 16 19.2 15.4 19.4 14.5L21 7H6" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 10.2L12 12.6L19.5 4.8" stroke="url(#lg)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.6" fill="#0077E6"/><circle cx="17" cy="19.5" r="1.6" fill="#16A34A"/></svg></div>'
 
 # --- Constantes ---
-PASTA_DADOS_USUARIOS, ARQUIVO_COMUNIDADE, ARQUIVO_MERCADOS, ARQUIVO_USUARIOS = "dados_usuarios", "precos_comunidade.csv", "supermercados.json", "usuarios.json"
+PASTA_DADOS_USUARIOS, ARQUIVO_COMUNIDADE, ARQUIVO_MERCADOS, ARQUIVO_USUARIOS, ARQUIVO_ANUNCIOS = "dados_usuarios", "precos_comunidade.csv", "supermercados.json", "usuarios.json", "anuncios.json"
 NAV_ITENS = [("🛒", "Compra"), ("📝", "Lista"), ("📊", "Gráficos"), ("🧾", "Histórico"), ("🏆", "Preços"), ("🗺️", "Mercados")]
 PAGINAS = [f"{ico} {txt}" for ico, txt in NAV_ITENS]
 PAGINA_PERFIL = "👤 Perfil"
@@ -263,10 +265,11 @@ MAX_FOTO_BYTES = 8 * 1024 * 1024  # 8 MB
 CHAVES_EDITOR_FOTO = ("foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot")
 ALFABETO_CASA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
-ANUNCIOS = [
-    {"titulo": "🔥 Ofertas na Amazon", "descricao": "Descontos em limpeza, café, bebidas e despensa.", "texto_botao": "Ver Ofertas", "url": "https://www.amazon.com.br/"},
-    {"titulo": "🛒 Mercado Livre — Mês", "descricao": "Compare preços e aproveite cupons e frete grátis.", "texto_botao": "Abrir", "url": "https://www.mercadolivre.com.br/"},
-    {"titulo": "🏷️ Achadinhos na Shopee", "descricao": "Utilidades domésticas e itens para casa com desconto.", "texto_botao": "Conferir", "url": "https://shopee.com.br/"},
+ANUNCIOS_PADRAO = [
+    {"id": None, "titulo": "🔥 Ofertas de Mercado na Amazon", "descricao": "Descontos em café, bebidas, limpeza e despensa.", "texto_botao": "Ver Ofertas", "url": "https://www.amazon.com.br/", "categoria": "Geral", "regiao": "", "cupom": ""},
+    {"id": None, "titulo": "🧽 Economia em Limpeza e Casa", "descricao": "Sabão, amaciante e multiuso em promoção no Mercado Livre.", "texto_botao": "Conferir", "url": "https://www.mercadolivre.com.br/", "categoria": "Limpeza", "regiao": "", "cupom": ""},
+    {"id": None, "titulo": "🐾 Pet Shop com Desconto", "descricao": "Ração, petiscos e tapetes higiênicos na Shopee.", "texto_botao": "Aproveitar", "url": "https://shopee.com.br/", "categoria": "Pet Shop", "regiao": "", "cupom": ""},
+    {"id": None, "titulo": "☕ Café, Bebidas e Despensa", "descricao": "Compare kits econômicos com entrega rápida na Amazon.", "texto_botao": "Abrir", "url": "https://www.amazon.com.br/", "categoria": "Bebidas", "regiao": "", "cupom": ""},
 ]
 
 ICONES_CATEGORIA = {
@@ -611,7 +614,6 @@ def obter_grupo_lista_atual(usuario):
 
 
 def obter_dono_lista(usuario):
-    """Retorna chave isolada para a lista da família ('fam:CASA-...') ou o próprio usuário."""
     cod = obter_grupo_lista_atual(usuario)
     return f"fam:{cod}" if cod else usuario
 
@@ -628,6 +630,119 @@ def definir_grupo_lista(usuario, codigo):
         raise
     st.session_state.pop("_ss_pre_lista_df", None)
     st.session_state.pop("_ss_pre_lista_owner", None)
+
+
+# --- Anúncios Inteligentes (Afiliados & Parceiros Locais) ---
+@st.cache_data(ttl=300, show_spinner=False)
+def carregar_anuncios_cadastrados():
+    """Retorna (lista_anuncios, tabela_ok) sem quebrar se a tabela ainda não existir no Supabase."""
+    if supabase_ativo():
+        try:
+            rows = _sb_req("GET", "anuncios", params={"ativo": "is.true", "select": "id,titulo,descricao,texto_botao,url,categoria,regiao,cupom", "order": "id.desc"}) or []
+            return [
+                {
+                    "id": r.get("id"),
+                    "titulo": str(r.get("titulo") or ""),
+                    "descricao": str(r.get("descricao") or ""),
+                    "texto_botao": str(r.get("texto_botao") or "Ver Oferta"),
+                    "url": str(r.get("url") or ""),
+                    "categoria": str(r.get("categoria") or "Geral"),
+                    "regiao": str(r.get("regiao") or ""),
+                    "cupom": str(r.get("cupom") or ""),
+                }
+                for r in rows
+                if str(r.get("url") or "").startswith("https://")
+            ], True
+        except RuntimeError as e:
+            if "PGRST205" in str(e) or "404" in str(e):
+                return [], False
+            return [], False
+    dados = ler_json(ARQUIVO_ANUNCIOS, list)
+    return ([d for d in dados if isinstance(d, dict) and str(d.get("url", "")).startswith("https://")], True)
+
+
+def salvar_anuncio_admin(titulo, descricao, texto_botao, url, categoria, regiao, cupom):
+    url_ok = url.strip()
+    if not url_ok.startswith("https://"):
+        raise ValueError("O link precisa começar com https://")
+    payload = {
+        "titulo": titulo.strip(),
+        "descricao": descricao.strip(),
+        "texto_botao": texto_botao.strip() or "Ver Oferta",
+        "url": url_ok,
+        "categoria": categoria or "Geral",
+        "regiao": regiao.strip(),
+        "cupom": cupom.strip(),
+    }
+    if supabase_ativo():
+        _sb_req("POST", "anuncios", json_data={**payload, "ativo": True})
+    else:
+        lista = ler_json(ARQUIVO_ANUNCIOS, list)
+        payload["id"] = str(uuid.uuid4())
+        lista.insert(0, payload)
+        salvar_json(ARQUIVO_ANUNCIOS, lista)
+    carregar_anuncios_cadastrados.clear()
+
+
+def remover_anuncio_admin(ad_id):
+    if supabase_ativo():
+        _sb_req("DELETE", "anuncios", params={"id": f"eq.{int(ad_id)}"})
+    else:
+        lista = [d for d in ler_json(ARQUIVO_ANUNCIOS, list) if str(d.get("id")) != str(ad_id)]
+        salvar_json(ARQUIVO_ANUNCIOS, lista)
+    carregar_anuncios_cadastrados.clear()
+
+
+def selecionar_anuncio_inteligente(regiao_usuario, pagina_atual):
+    cadastrados, _ = carregar_anuncios_cadastrados()
+    pool = cadastrados if cadastrados else ANUNCIOS_PADRAO
+
+    # Coleta categorias de interesse direto do cache da sessão (0 chamadas ao banco)
+    pesos_cat = {}
+    df_pre_ss = st.session_state.get("_ss_pre_lista_df")
+    if isinstance(df_pre_ss, pd.DataFrame) and not df_pre_ss.empty:
+        pend = df_pre_ss[~df_pre_ss["Comprado"]] if "Comprado" in df_pre_ss else df_pre_ss
+        for cat in pend["Categoria"].dropna().tolist():
+            pesos_cat[str(cat)] = pesos_cat.get(str(cat), 0) + 3
+
+    df_cmp_ss = st.session_state.get("_ss_compras_df")
+    if isinstance(df_cmp_ss, pd.DataFrame) and not df_cmp_ss.empty:
+        for cat in df_cmp_ss["Categoria"].tail(12).dropna().tolist():
+            pesos_cat[str(cat)] = pesos_cat.get(str(cat), 0) + 1
+
+    reg_u = normalizar_texto(regiao_usuario)
+    candidatos = []
+    for ad in pool:
+        reg_ad = normalizar_texto(ad.get("regiao", ""))
+        cat_ad = str(ad.get("categoria") or "Geral")
+        score = 0
+        motivo = "OFERTA PARCEIRA"
+
+        if reg_ad:
+            if reg_u and (reg_ad in reg_u or reg_u in reg_ad):
+                score += 100
+                motivo = f"DESTAQUE EM {ad['regiao'].upper()}"
+            else:
+                continue  # Não exibe anúncio regional para outra cidade
+
+        if cat_ad != "Geral" and cat_ad in pesos_cat:
+            score += 20 + min(pesos_cat[cat_ad], 15)
+            if not reg_ad:
+                motivo = f"PARA SUA COMPRA · {cat_ad.upper()}"
+        elif cat_ad == "Geral":
+            score += 2
+
+        candidatos.append((score, motivo, ad))
+
+    if not candidatos:
+        candidatos = [(1, "OFERTA PARCEIRA", ad) for ad in ANUNCIOS_PADRAO]
+
+    max_score = max(c[0] for c in candidatos)
+    melhores = [c for c in candidatos if c[0] >= max_score - 2]
+    seed = st.session_state.setdefault("anuncio_seed", random.randrange(100))
+    idx = (seed + sum(ord(ch) for ch in str(pagina_atual))) % len(melhores)
+    _, motivo_final, ad_final = melhores[idx]
+    return ad_final, motivo_final
 
 
 # --- Foto de Perfil & Tratamento de Imagens ---
@@ -1507,7 +1622,6 @@ def adicionar_itens_pre_lista(texto, qtd, api_key, dono_lista):
 
 
 def copiar_itens_para_familia(usuario, dono_destino):
-    """Copia itens pendentes da lista pessoal ao criar uma lista compartilhada."""
     df_orig = carregar_pre_lista(usuario)
     df_pend = df_orig[~df_orig["Comprado"]] if not df_orig.empty else df_orig
     if df_pend.empty:
@@ -2018,11 +2132,16 @@ def renderizar_lista_geral_historico(df_tab, agrupar_por_data=True):
 
 
 def exibir_rodape_anuncio():
-    ad = ANUNCIOS[st.session_state.setdefault("anuncio_idx", random.randrange(len(ANUNCIOS)))]
+    ad, motivo = selecionar_anuncio_inteligente(gps_regiao, st.session_state.get("pagina_atual", ""))
     url = ad["url"] if str(ad["url"]).startswith("https://") else "https://"
+    cupom_html = f'<span class="listai-ad-cupom">🏷️ Cupom: {html.escape(ad["cupom"])}</span>' if ad.get("cupom") else ""
     with st.container(border=True):
         c1, c2 = st.columns([4, 1], vertical_alignment="center")
-        c1.markdown(f'<span class="listai-ad-badge">OFERTA PARCEIRA</span> <strong>{html.escape(ad["titulo"])}</strong> — {html.escape(ad["descricao"])}', unsafe_allow_html=True)
+        c1.markdown(
+            f'<span class="listai-ad-badge">{html.escape(motivo)}</span>'
+            f'<strong>{html.escape(ad["titulo"])}</strong> — {html.escape(ad["descricao"])}{cupom_html}',
+            unsafe_allow_html=True,
+        )
         c2.link_button(ad["texto_botao"], url, use_container_width=True)
 
 
@@ -2152,7 +2271,6 @@ def renderizar_bloco_lista_interativa():
                     if a2.button("🗑️ Limpar lista", use_container_width=True):
                         remover_pre_lista(dono_lista, tudo=True)
 
-                # --- Comparador Automático da Lista nos Mercados ---
                 df_pend = df_pre[~df_pre["Comprado"]]
                 if not df_pend.empty:
                     df_com = carregar_comunidade_ordenada()
@@ -2199,7 +2317,6 @@ def renderizar_bloco_lista_interativa():
         else:
             st.caption("Sua lista está vazia. Anote acima o que precisa comprar!")
 
-        # --- Configuração da Lista Compartilhada da Casa / Família ---
         with st.expander("👨‍👩‍👧‍👦 Lista da Família (Compartilhada)", expanded=False):
             if cod_fam:
                 st.success(f"Você está conectado à Lista da Família **`{cod_fam}`**.")
@@ -2379,7 +2496,6 @@ def pagina_compra():
             reg_esc = st.selectbox("📍 Região", op_reg, key="sel_reg_compra")
             reg_final = st.text_input("Nome da nova região", placeholder="Ex: Campinas - Centro", key="input_nova_regiao").strip() if reg_esc == "➕ Nova região..." else reg_esc
 
-        # --- Leitor de Etiqueta de Preço ou Cupom Fiscal por Foto ---
         lidos_foto = st.session_state.get("itens_foto_lidos")
         with st.expander("📸 Ler etiqueta de preço ou cupom fiscal", expanded=bool(lidos_foto)):
             f_cup = st.file_uploader("Foto da etiqueta ou nota fiscal", type=["jpg", "jpeg", "png", "webp"], key=f"up_cupom_{versao}")
@@ -3019,6 +3135,45 @@ def pagina_perfil():
                         st.rerun()
 
     if usuario_atual in USUARIOS_ADMIN:
+        with st.expander("👑 Admin — Anúncios e Links de Afiliado"):
+            ads_salvos, tab_ok = carregar_anuncios_cadastrados()
+            if supabase_ativo() and not tab_ok:
+                st.warning("Tabela `anuncios` ainda não criada no Supabase. Rode o SQL da tabela `anuncios` no SQL Editor para salvar seus links na nuvem.")
+            with st.form("form_admin_novo_anuncio", clear_on_submit=True, border=False):
+                ad_tit = st.text_input("Título *", placeholder="Ex: 🔥 Sabão Omo 2,4kg em Oferta")
+                ad_desc = st.text_input("Descrição *", placeholder="Ex: Desconto exclusivo na Amazon com frete grátis")
+                ad_url = st.text_input("Link de Afiliado / Parceiro *", placeholder="https://amzn.to/...")
+                a_c1, a_c2 = st.columns(2)
+                ad_cat = a_c1.selectbox("Categoria alvo", ["Geral"] + LISTA_CATEGORIAS)
+                ad_reg = a_c2.text_input("Região alvo (opcional)", placeholder="Ex: Itajaí (vazio = todas)")
+                b_c1, b_c2 = st.columns(2)
+                ad_btn = b_c1.text_input("Texto do botão", value="Ver Oferta")
+                ad_cup = b_c2.text_input("Cupom (opcional)", placeholder="Ex: LISTAI10")
+                if st.form_submit_button("➕ Publicar Anúncio", type="primary", use_container_width=True):
+                    if not ad_tit.strip() or not ad_url.strip():
+                        st.warning("Informe o título e o link (https://...).")
+                    else:
+                        try:
+                            salvar_anuncio_admin(ad_tit, ad_desc, ad_btn, ad_url, ad_cat, ad_reg, ad_cup)
+                            st.session_state["msg_sucesso"] = f"Anúncio **{ad_tit.strip()}** publicado!"
+                            st.rerun()
+                        except Exception as err_ad:
+                            st.error(str(err_ad))
+
+            if ads_salvos:
+                st.divider()
+                st.caption(f"**{len(ads_salvos)} anúncio(s) ativo(s):**")
+                for ad_i in ads_salvos:
+                    with st.container(key=f"adm_ad_row_{ad_i['id']}"):
+                        ca_i, ca_d = st.columns([6, 1])
+                        reg_lbl = f"📍 {ad_i['regiao']}" if ad_i.get("regiao") else "🌎 Todas"
+                        ca_i.markdown(f"**{html.escape(ad_i['titulo'])}** · `{ad_i['categoria']}` · {html.escape(reg_lbl)}")
+                        if ca_d.button("🗑️", key=f"btn_del_ad_{ad_i['id']}", help="Remover anúncio", use_container_width=True):
+                            remover_anuncio_admin(ad_i["id"])
+                            st.rerun()
+            else:
+                st.caption("Nenhum anúncio próprio cadastrado ainda — exibindo ofertas padrão no rodapé.")
+
         with st.expander("👑 Admin — Usuários"):
             lista_adm = listar_usuarios_admin()
             st.metric("Total", len(lista_adm))
