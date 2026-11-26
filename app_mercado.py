@@ -250,7 +250,7 @@ PERGUNTAS_SEGURANCA = ["Qual o nome do seu primeiro pet?", "Qual sua cidade nata
 COLUNAS = ["Data", "Região", "Supermercado", "Produto", "Categoria", "Quantidade", "Preço Unitário", "Total"]
 COLUNAS_PRE_LISTA = ["ID", "Produto", "Quantidade", "Categoria", "Comprado"]
 COLUNAS_COMUNIDADE = ["Data", "Região", "Supermercado", "Produto", "Categoria", "Preço Unitário", "Usuário"]
-OVERPASS_SERVERS = ["https://overpass.private.coffee/api/interpreter", "https://z.overpass-api.de/api/interpreter", "https://overpass-api.de/api/interpreter"]
+OVERPASS_SERVERS = ["https://overpass.private.coffee/api/interpreter", "https://z.overpass-api.de/api/interpreter"]
 TRADUCAO_LOJA = {"supermarket": "Supermercado", "wholesale": "Atacarejo", "convenience": "Mercearia / Minimercado", "greengrocer": "Hortifruti / Sacolão"}
 RAIO_OPCOES = [1, 3, 5, 10, 15]
 RAIO_LABELS = {1: "1 km · A pé", 3: "3 km · Bairro", 5: "5 km · Região", 10: "10 km · Cidade", 15: "15 km · Amplo"}
@@ -308,6 +308,7 @@ def _ler_segredo(nome):
     return ""
 
 
+@st.cache_resource
 def obter_config_supabase():
     url = _ler_segredo("SUPABASE_URL").rstrip("/")
     key = _ler_segredo("SUPABASE_KEY") or _ler_segredo("SUPABASE_ANON_KEY")
@@ -333,7 +334,7 @@ def _sb_req(method, tabela, params=None, json_data=None, extra_headers=None):
         headers["Authorization"] = f"Bearer {key}"
     if extra_headers:
         headers.update(extra_headers)
-    resp = obter_http_session().request(method, f"{url}/rest/v1/{tabela}", headers=headers, params=params, json=json_data, timeout=10)
+    resp = obter_http_session().request(method, f"{url}/rest/v1/{tabela}", headers=headers, params=params, json=json_data, timeout=8)
     resp.raise_for_status()
     return resp.json() if resp.text.strip() else None
 
@@ -433,7 +434,11 @@ def limpar_estado_usuario(incluir_auth=False):
         "gps_detalhes", "gps_raio_atual", "gps_usuario_owner", "sel_reg_compra", "sel_merc_compra",
         "regiao_para_selecionar", "merc_para_selecionar", "input_nova_regiao", "res_manual",
         "ultima_foto_hash", "foto_versao", "edit_compra_idx", "edit_hist_idx", "valor_categoria",
-        "compra_ativa", "compra_sessao_ids", *CHAVES_EDITOR_FOTO,
+        "compra_ativa", "compra_sessao_ids", "mkt_limite_exib", "db_limite_mercs",
+        "_ss_perfil", "_ss_perfil_owner", "_ss_compras_df", "_ss_compras_proc",
+        "_ss_compras_owner", "_ss_compras_ver", "_ss_compras_proc_ver",
+        "_ss_pre_lista_df", "_ss_pre_lista_owner",
+        *CHAVES_EDITOR_FOTO,
     }
     if incluir_auth:
         st.session_state.update({"autenticado": False, "usuario_logado": ""})
@@ -443,11 +448,136 @@ def limpar_estado_usuario(incluir_auth=False):
             st.session_state.pop(k, None)
 
 
-# --- Foto de Perfil ---
-@st.cache_data(show_spinner=False)
+# --- Autenticação & Perfil (Leve: consulta apenas 1 usuário por vez) ---
+def gerar_hash_senha(senha):
+    salt = secrets.token_hex(16)
+    dk = hashlib.pbkdf2_hmac("sha256", senha.encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
+    return f"pbkdf2${salt}${dk}"
+
+
+def verificar_senha(digitada, salva):
+    partes = str(salva or "").split("$")
+    if len(partes) == 3 and partes[0] == "pbkdf2":
+        dk = hashlib.pbkdf2_hmac("sha256", digitada.encode("utf-8"), partes[1].encode("utf-8"), 120_000).hex()
+        return secrets.compare_digest(dk, partes[2])
+    if len(partes) == 2:
+        legado = hashlib.sha256((partes[0] + digitada).encode("utf-8")).hexdigest()
+        return secrets.compare_digest(legado, partes[1])
+    return False
+
+
+def _normalizar_row_usuario_sb(r):
+    return {
+        "tipo": "senha",
+        "hash": r.get("senha_hash", ""),
+        "nome": r.get("nome", r.get("usuario", "")),
+        "email": r.get("email") or "",
+        "telefone": r.get("telefone") or "",
+        "cidade": r.get("cidade") or "",
+        "lembrete": r.get("lembrete") or "",
+        "pergunta_seg": r.get("pergunta_seg") or "",
+        "resposta_seg_hash": r.get("resposta_seg_hash") or "",
+        "limite_mensal": float(r.get("limite_mensal") or 0.0),
+        "bloquear_limite": bool(r.get("bloquear_limite") or False),
+        "gps_lat": r.get("gps_lat"),
+        "gps_lon": r.get("gps_lon"),
+        "gps_regiao": r.get("gps_regiao") or "",
+        "foto_url": r.get("foto_url") or "",
+        "criado_em": str(r.get("criado_em") or "")[:10],
+    }
+
+
+def _carregar_usuarios_local():
+    if dados := ler_json(ARQUIVO_USUARIOS, dict):
+        return dados
+    iniciais = {"teste": {"tipo": "senha", "hash": gerar_hash_senha("1234"), "nome": "Conta Teste", "lembrete": "Sequência numérica de 1 a 4", "criado_em": date.today().isoformat()}}
+    salvar_json(ARQUIVO_USUARIOS, iniciais)
+    return iniciais
+
+
+def buscar_usuario_unico(usuario, colunas="*"):
+    u = str(usuario or "").strip().lower()
+    if not u:
+        return None
+    if supabase_ativo():
+        rows = _sb_req("GET", "usuarios", params={"usuario": f"eq.{u}", "select": colunas, "limit": "1"}) or []
+        if not rows:
+            if u == "teste":
+                # Garante conta teste inicial apenas se tabela estiver vazia
+                existente = _sb_req("GET", "usuarios", params={"select": "usuario", "limit": "1"}) or []
+                if not existente:
+                    teste = {"usuario": "teste", "senha_hash": gerar_hash_senha("1234"), "nome": "Conta Teste", "lembrete": "Sequência numérica de 1 a 4"}
+                    _sb_req("POST", "usuarios", params={"on_conflict": "usuario"}, json_data=teste, extra_headers={"Prefer": "resolution=merge-duplicates"})
+                    return _normalizar_row_usuario_sb(teste)
+            return None
+        return _normalizar_row_usuario_sb(rows[0])
+    reg = _carregar_usuarios_local().get(u)
+    return (dict(reg) if isinstance(reg, dict) else {"tipo": "senha", "hash": reg, "nome": u}) if reg is not None else None
+
+
+def obter_perfil_atual(usuario):
+    if st.session_state.get("_ss_perfil_owner") == usuario and isinstance(st.session_state.get("_ss_perfil"), dict):
+        return st.session_state["_ss_perfil"]
+    reg = buscar_usuario_unico(usuario) or {"tipo": "senha", "hash": "", "nome": usuario}
+    st.session_state["_ss_perfil"] = reg
+    st.session_state["_ss_perfil_owner"] = usuario
+    return reg
+
+
+def atualizar_campos_perfil(usuario, **campos_sb_e_local):
+    if supabase_ativo():
+        _sb_req("PATCH", "usuarios", params={"usuario": f"eq.{usuario}"}, json_data=campos_sb_e_local)
+        if st.session_state.get("_ss_perfil_owner") == usuario and isinstance(st.session_state.get("_ss_perfil"), dict):
+            mapa = {"senha_hash": "hash", "limite_mensal": "limite_mensal", "bloquear_limite": "bloquear_limite"}
+            for k, v in campos_sb_e_local.items():
+                st.session_state["_ss_perfil"][mapa.get(k, k)] = v
+    else:
+        u_dict = _carregar_usuarios_local().copy()
+        reg = dict(u_dict.get(usuario, {"tipo": "senha", "nome": usuario}))
+        mapa_local = {"senha_hash": "hash", "limite_mensal": "limite_mensal", "bloquear_limite": "bloquear_limite"}
+        for k, v in campos_sb_e_local.items():
+            reg[mapa_local.get(k, k)] = v
+        u_dict[usuario] = reg
+        salvar_json(ARQUIVO_USUARIOS, u_dict)
+        if st.session_state.get("_ss_perfil_owner") == usuario:
+            st.session_state["_ss_perfil"] = reg
+
+
+def salvar_usuario_unico(usuario, reg):
+    if supabase_ativo():
+        payload = {
+            "usuario": usuario,
+            "senha_hash": reg.get("hash", ""),
+            "nome": reg.get("nome", usuario),
+            "email": reg.get("email", ""),
+            "telefone": reg.get("telefone", ""),
+            "cidade": reg.get("cidade", ""),
+            "lembrete": reg.get("lembrete", ""),
+            "pergunta_seg": reg.get("pergunta_seg", ""),
+            "resposta_seg_hash": reg.get("resposta_seg_hash", ""),
+        }
+        _sb_req("POST", "usuarios", params={"on_conflict": "usuario"}, json_data=payload, extra_headers={"Prefer": "resolution=merge-duplicates"})
+    else:
+        u_dict = _carregar_usuarios_local().copy()
+        u_dict[usuario] = reg
+        salvar_json(ARQUIVO_USUARIOS, u_dict)
+    if st.session_state.get("usuario_logado") == usuario:
+        st.session_state["_ss_perfil"] = dict(reg)
+        st.session_state["_ss_perfil_owner"] = usuario
+
+
+def listar_usuarios_admin():
+    if supabase_ativo():
+        rows = _sb_req("GET", "usuarios", params={"select": "usuario,nome,email,cidade", "order": "usuario.asc"}) or []
+        return [{"Usuário": r["usuario"], "Nome": r.get("nome") or r["usuario"], "E-mail": r.get("email") or "-", "Cidade": r.get("cidade") or "-"} for r in rows]
+    u_dict = _carregar_usuarios_local()
+    return [{"Usuário": k, "Nome": v.get("nome", k) if isinstance(v, dict) else k, "E-mail": v.get("email", "-") if isinstance(v, dict) else "-", "Cidade": v.get("cidade", "-") if isinstance(v, dict) else "-"} for k, v in sorted(u_dict.items())]
+
+
+# --- Foto de Perfil (lê da sessão em vez de baixar todas as fotos da base) ---
 def carregar_foto_perfil_base64(usuario):
     if supabase_ativo():
-        foto_url = (carregar_usuarios().get(usuario, {}) or {}).get("foto_url", "")
+        foto_url = str(obter_perfil_atual(usuario).get("foto_url") or "")
         if foto_url.startswith("data:image/") and ";base64," in foto_url:
             cab, b64 = foto_url.split(";base64,", 1)
             return b64, cab.replace("data:", "")
@@ -472,13 +602,11 @@ def carregar_foto_original_bytes(usuario):
 
 def remover_foto_perfil(usuario, incluir_original=True):
     if supabase_ativo():
-        _sb_req("PATCH", "usuarios", params={"usuario": f"eq.{usuario}"}, json_data={"foto_url": ""})
-        carregar_usuarios.clear()
+        atualizar_campos_perfil(usuario, foto_url="")
     alvos = [f"foto_perfil.{ext}" for ext in EXTENSOES_FOTO] + (["foto_original.jpg"] if incluir_original else [])
     for nome_arq in alvos:
         if os.path.exists(p := obter_arquivo_usuario(usuario, nome_arq)):
             os.remove(p)
-    carregar_foto_perfil_base64.clear()
 
 
 def preparar_imagem_base(raw_bytes):
@@ -525,7 +653,7 @@ def preparar_imagem_base(raw_bytes):
         raise ValueError("Não foi possível abrir essa foto. Tente outra imagem (JPG, PNG ou WEBP).")
 
 
-@st.cache_data(show_spinner=False, max_entries=8)
+@st.cache_data(show_spinner=False, max_entries=6)
 def gerar_foto_ajustada(orig_bytes, modo="Preencher", zoom=1.0, pos_x=0, pos_y=0, rotacao=0):
     from PIL import Image, ImageFilter
     with Image.open(io.BytesIO(orig_bytes)) as im:
@@ -562,13 +690,11 @@ def salvar_foto_perfil_final(usuario, orig_bytes, final_bytes):
         f.write(orig_bytes)
     if supabase_ativo():
         b64 = base64.b64encode(final_bytes).decode("ascii")
-        _sb_req("PATCH", "usuarios", params={"usuario": f"eq.{usuario}"}, json_data={"foto_url": f"data:image/jpeg;base64,{b64}"})
-        carregar_usuarios.clear()
+        atualizar_campos_perfil(usuario, foto_url=f"data:image/jpeg;base64,{b64}")
     else:
         remover_foto_perfil(usuario, incluir_original=False)
         with open(obter_arquivo_usuario(usuario, "foto_perfil.jpg"), "wb") as f:
             f.write(final_bytes)
-    carregar_foto_perfil_base64.clear()
 
 
 def avatar_html(nome, usuario, tamanho=48, solido=False):
@@ -585,88 +711,11 @@ def obter_gemini_client(api_key):
     return genai.Client(api_key=api_key)
 
 
-# --- Autenticação & Usuários (PBKDF2 + Compatibilidade SHA-256 legado) ---
-def gerar_hash_senha(senha):
-    salt = secrets.token_hex(16)
-    dk = hashlib.pbkdf2_hmac("sha256", senha.encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
-    return f"pbkdf2${salt}${dk}"
-
-
-def verificar_senha(digitada, salva):
-    partes = str(salva or "").split("$")
-    if len(partes) == 3 and partes[0] == "pbkdf2":
-        dk = hashlib.pbkdf2_hmac("sha256", digitada.encode("utf-8"), partes[1].encode("utf-8"), 120_000).hex()
-        return secrets.compare_digest(dk, partes[2])
-    if len(partes) == 2:
-        legado = hashlib.sha256((partes[0] + digitada).encode("utf-8")).hexdigest()
-        return secrets.compare_digest(legado, partes[1])
-    return False
-
-
-@st.cache_data(ttl=60, show_spinner=False)
-def carregar_usuarios():
-    if supabase_ativo():
-        rows = _sb_req("GET", "usuarios", params={"select": "*"}) or []
-        if not rows:
-            teste = {"usuario": "teste", "senha_hash": gerar_hash_senha("1234"), "nome": "Conta Teste", "lembrete": "Sequência numérica de 1 a 4"}
-            _sb_req("POST", "usuarios", params={"on_conflict": "usuario"}, json_data=teste, extra_headers={"Prefer": "resolution=merge-duplicates"})
-            rows = _sb_req("GET", "usuarios", params={"select": "*"}) or [teste]
-        return {
-            r["usuario"]: {
-                "tipo": "senha",
-                "hash": r.get("senha_hash", ""),
-                "nome": r.get("nome", r["usuario"]),
-                "email": r.get("email") or "",
-                "telefone": r.get("telefone") or "",
-                "cidade": r.get("cidade") or "",
-                "lembrete": r.get("lembrete") or "",
-                "pergunta_seg": r.get("pergunta_seg") or "",
-                "resposta_seg_hash": r.get("resposta_seg_hash") or "",
-                "limite_mensal": float(r.get("limite_mensal") or 0.0),
-                "bloquear_limite": bool(r.get("bloquear_limite") or False),
-                "gps_lat": r.get("gps_lat"),
-                "gps_lon": r.get("gps_lon"),
-                "gps_regiao": r.get("gps_regiao") or "",
-                "foto_url": r.get("foto_url") or "",
-                "criado_em": str(r.get("criado_em") or "")[:10],
-            }
-            for r in rows
-        }
-
-    if dados := ler_json(ARQUIVO_USUARIOS, dict):
-        return dados
-    iniciais = {"teste": {"tipo": "senha", "hash": gerar_hash_senha("1234"), "nome": "Conta Teste", "lembrete": "Sequência numérica de 1 a 4", "criado_em": date.today().isoformat()}}
-    salvar_json(ARQUIVO_USUARIOS, iniciais)
-    return iniciais
-
-
-def salvar_usuario_unico(usuario, reg, usuarios_atual=None):
-    if supabase_ativo():
-        payload = {
-            "usuario": usuario,
-            "senha_hash": reg.get("hash", ""),
-            "nome": reg.get("nome", usuario),
-            "email": reg.get("email", ""),
-            "telefone": reg.get("telefone", ""),
-            "cidade": reg.get("cidade", ""),
-            "lembrete": reg.get("lembrete", ""),
-            "pergunta_seg": reg.get("pergunta_seg", ""),
-            "resposta_seg_hash": reg.get("resposta_seg_hash", ""),
-        }
-        _sb_req("POST", "usuarios", params={"on_conflict": "usuario"}, json_data=payload, extra_headers={"Prefer": "resolution=merge-duplicates"})
-    else:
-        u_dict = (usuarios_atual if usuarios_atual is not None else carregar_usuarios()).copy()
-        u_dict[usuario] = reg
-        salvar_json(ARQUIVO_USUARIOS, u_dict)
-    carregar_usuarios.clear()
-
-
 def exibir_tela_login():
     st.session_state.setdefault("modo_login", "entrar")
     _, col_c, _ = st.columns([1, 1.8, 1])
     with col_c:
         st.markdown(f'<div class="listai-header"><div class="listai-header-top"><div class="listai-brand">{LOGO_SVG}<h1>Listaí</h1></div><span class="listai-pill">PREÇOS E COMPRAS</span></div><p>Sua lista inteligente e os melhores preços da região.</p></div>', unsafe_allow_html=True)
-        usuarios = carregar_usuarios()
 
         with st.container(border=True):
             modo = st.session_state["modo_login"]
@@ -679,10 +728,9 @@ def exibir_tela_login():
                     s_in = st.text_input("Senha", type="password", placeholder="Sua senha")
                     if st.form_submit_button("Entrar", type="primary", use_container_width=True):
                         u = u_in.strip().lower()
-                        reg = usuarios.get(u)
-                        h = reg.get("hash", "") if isinstance(reg, dict) else (reg or "")
-                        if reg is not None and verificar_senha(s_in, h):
-                            st.session_state.update({"autenticado": True, "usuario_logado": u, "nome_usuario": reg.get("nome", u) if isinstance(reg, dict) else u})
+                        reg = buscar_usuario_unico(u, colunas="usuario,senha_hash,nome")
+                        if reg is not None and verificar_senha(s_in, reg.get("hash", "")):
+                            st.session_state.update({"autenticado": True, "usuario_logado": u, "nome_usuario": reg.get("nome", u)})
                             st.session_state.pop("modo_login", None)
                             st.rerun()
                         else:
@@ -710,10 +758,10 @@ def exibir_tela_login():
                             st.rerun()
 
                 if rec_u := st.session_state.get("rec_usuario"):
-                    if (reg_raw := usuarios.get(rec_u)) is None:
+                    reg = buscar_usuario_unico(rec_u, colunas="usuario,senha_hash,nome,email,telefone,lembrete,pergunta_seg,resposta_seg_hash")
+                    if reg is None:
                         st.error(f"Usuário **@{html.escape(rec_u)}** não encontrado.")
                     else:
-                        reg = dict(reg_raw) if isinstance(reg_raw, dict) else {"tipo": "senha", "hash": reg_raw, "nome": rec_u}
                         if lembrete := str(reg.get("lembrete", "")).strip():
                             st.info(f"💡 **Lembrete da sua senha:** {lembrete}")
                         else:
@@ -757,8 +805,7 @@ def exibir_tela_login():
                                     elif nova_s != conf_s:
                                         st.error("As senhas não coincidem.")
                                     else:
-                                        reg["hash"] = gerar_hash_senha(nova_s)
-                                        salvar_usuario_unico(rec_u, reg, usuarios)
+                                        atualizar_campos_perfil(rec_u, senha_hash=gerar_hash_senha(nova_s))
                                         st.session_state.pop("rec_usuario", None)
                                         st.session_state.update({"modo_login": "entrar", "msg_login_ok": f"Senha de **{rec_u}** redefinida! Já pode entrar."})
                                         st.rerun()
@@ -793,7 +840,7 @@ def exibir_tela_login():
                             st.warning("Digite seu nome completo.")
                         elif len(nl) < 2 or nl != novo_u.strip().lower():
                             st.warning("Usuário deve ter pelo menos 2 caracteres (letras, números, . _ -).")
-                        elif nl in usuarios:
+                        elif buscar_usuario_unico(nl, colunas="usuario") is not None:
                             st.error("Esse usuário já existe. Escolha outro.")
                         elif len(nova_s) < 4:
                             st.warning("Senha deve ter pelo menos 4 caracteres.")
@@ -801,7 +848,7 @@ def exibir_tela_login():
                             novo_reg = {"tipo": "senha", "hash": gerar_hash_senha(nova_s), "nome": nome_ok, "email": email_p.strip(), "telefone": tel_p.strip(), "cidade": cid_p.strip(), "lembrete": lemb_p.strip(), "criado_em": date.today().isoformat()}
                             if resp_p.strip():
                                 novo_reg.update({"pergunta_seg": perg_p, "resposta_seg_hash": gerar_hash_senha(normalizar_texto(resp_p))})
-                            salvar_usuario_unico(nl, novo_reg, usuarios)
+                            salvar_usuario_unico(nl, novo_reg)
                             st.session_state.update({"autenticado": True, "usuario_logado": nl, "nome_usuario": nome_ok, "msg_sucesso": f"Conta criada! Bem-vindo(a), **{nome_ok}**."})
                             st.session_state.pop("modo_login", None)
                             st.rerun()
@@ -820,11 +867,10 @@ nome_usuario = st.session_state.get("nome_usuario", usuario_atual)
 USUARIOS_ADMIN = obter_usuarios_admin()
 
 
-# --- Localização, Orçamento e Supermercados ---
-@st.cache_data(show_spinner=False)
+# --- Localização, Orçamento e Supermercados (lê da sessão sem bater na rede) ---
 def carregar_preferencias_gps(usuario):
     if supabase_ativo():
-        u_reg = carregar_usuarios().get(usuario, {}) or {}
+        u_reg = obter_perfil_atual(usuario)
         if u_reg.get("gps_lat") is not None and u_reg.get("gps_lon") is not None:
             return {"lat": u_reg["gps_lat"], "lon": u_reg["gps_lon"], "regiao": u_reg.get("gps_regiao", "")}
         return {}
@@ -833,17 +879,14 @@ def carregar_preferencias_gps(usuario):
 
 def salvar_preferencias_gps(lat, lon, regiao, usuario):
     if supabase_ativo():
-        _sb_req("PATCH", "usuarios", params={"usuario": f"eq.{usuario}"}, json_data={"gps_lat": lat, "gps_lon": lon, "gps_regiao": regiao})
-        carregar_usuarios.clear()
+        atualizar_campos_perfil(usuario, gps_lat=lat, gps_lon=lon, gps_regiao=regiao)
     else:
         salvar_json(obter_arquivo_usuario(usuario, "preferencias_gps.json"), {"lat": lat, "lon": lon, "regiao": regiao})
-    carregar_preferencias_gps.clear()
 
 
-@st.cache_data(show_spinner=False)
 def carregar_orcamento_mensal(usuario):
     if supabase_ativo():
-        u_reg = carregar_usuarios().get(usuario, {}) or {}
+        u_reg = obter_perfil_atual(usuario)
         return {"limite": max(0.0, float(u_reg.get("limite_mensal") or 0.0)), "bloquear": bool(u_reg.get("bloquear_limite") or False)}
     dados = ler_json(obter_arquivo_usuario(usuario, "orcamento.json"), dict)
     try:
@@ -855,11 +898,9 @@ def carregar_orcamento_mensal(usuario):
 def salvar_orcamento_mensal(limite, bloquear, usuario):
     lim_f, bloq_b = max(0.0, float(limite)), bool(bloquear)
     if supabase_ativo():
-        _sb_req("PATCH", "usuarios", params={"usuario": f"eq.{usuario}"}, json_data={"limite_mensal": lim_f, "bloquear_limite": bloq_b})
-        carregar_usuarios.clear()
+        atualizar_campos_perfil(usuario, limite_mensal=lim_f, bloquear_limite=bloq_b)
     else:
         salvar_json(obter_arquivo_usuario(usuario, "orcamento.json"), {"limite": lim_f, "bloquear": bloq_b})
-    carregar_orcamento_mensal.clear()
     for k in list(st.session_state.keys()):
         if k.startswith(("num_lim_", "chk_bloq_")):
             st.session_state.pop(k, None)
@@ -881,9 +922,9 @@ def consultar_photon_mercados(lat, lon, raio):
     http = obter_http_session()
     d_lat, d_lon = raio / 111320.0, raio / (111320.0 * max(0.2, abs(math.cos(math.radians(lat)))))
     bbox, enc, ok = f"{lon - d_lon},{lat - d_lat},{lon + d_lon},{lat + d_lat}", {}, False
-    for termo in ("supermercado", "atacadao", "mercado"):
+    for termo in ("supermercado", "mercado"):
         try:
-            resp = http.get("https://photon.komoot.io/api/", params={"q": termo, "lat": lat, "lon": lon, "bbox": bbox, "limit": 25}, timeout=5)
+            resp = http.get("https://photon.komoot.io/api/", params={"q": termo, "lat": lat, "lon": lon, "bbox": bbox, "limit": 25}, timeout=3.5)
             if resp.status_code != 200:
                 continue
             ok = True
@@ -901,14 +942,14 @@ def consultar_photon_mercados(lat, lon, raio):
     return sorted(enc.values(), key=lambda x: x["Distância (m)"]) if ok else None
 
 
-@st.cache_data(ttl=600, show_spinner=False)
+@st.cache_data(ttl=900, show_spinner=False)
 def consultar_overpass_mercados(lat, lon, raio):
     http = obter_http_session()
     filtros = "".join(f'nw(around:{raio},{lat},{lon})["shop"="{s}"];' for s in TRADUCAO_LOJA)
-    query = f"[out:json][timeout:6];({filtros});out center tags;"
+    query = f"[out:json][timeout:4];({filtros});out center tags;"
     for srv in OVERPASS_SERVERS:
         try:
-            resp = http.post(srv, data={"data": query}, timeout=6)
+            resp = http.post(srv, data={"data": query}, timeout=4)
             if resp.status_code == 200:
                 enc = {}
                 for el in resp.json().get("elements", []):
@@ -935,11 +976,11 @@ def _resumir_mercados(lista):
     return out
 
 
-@st.cache_data(ttl=600, show_spinner=False)
+@st.cache_data(ttl=900, show_spinner=False)
 def buscar_regiao_e_mercados_proximos(lat, lon):
     regiao = ""
     try:
-        r = obter_http_session().get("https://nominatim.openstreetmap.org/reverse", params={"lat": lat, "lon": lon, "format": "json", "accept-language": "pt-BR"}, timeout=5)
+        r = obter_http_session().get("https://nominatim.openstreetmap.org/reverse", params={"lat": lat, "lon": lon, "format": "json", "accept-language": "pt-BR"}, timeout=4)
         if r.status_code == 200:
             a = r.json().get("address", {})
             cid = a.get("city") or a.get("town") or a.get("municipality") or a.get("village") or ""
@@ -951,16 +992,16 @@ def buscar_regiao_e_mercados_proximos(lat, lon):
     return (regiao or "Minha Região (GPS)"), _resumir_mercados(detalhes), detalhes
 
 
-@st.cache_data(ttl=600, show_spinner=False)
+@st.cache_data(ttl=900, show_spinner=False)
 def buscar_supermercados_por_regiao(texto, raio=3000):
-    r = obter_http_session().get("https://nominatim.openstreetmap.org/search", params={"q": texto, "countrycodes": "br", "format": "json", "limit": 1, "accept-language": "pt-BR"}, timeout=6)
+    r = obter_http_session().get("https://nominatim.openstreetmap.org/search", params={"q": texto, "countrycodes": "br", "format": "json", "limit": 1, "accept-language": "pt-BR"}, timeout=4)
     if r.status_code != 200 or not r.json():
         return None, []
     lugar = r.json()[0]
     return lugar.get("display_name", texto), consultar_overpass_mercados(float(lugar["lat"]), float(lugar["lon"]), raio)
 
 
-@st.cache_data(ttl=120, show_spinner=False)
+@st.cache_data(ttl=300, show_spinner=False)
 def carregar_mercados():
     if supabase_ativo():
         rows = _sb_req("GET", "supermercados", params={"select": "regiao,nome"}) or []
@@ -1009,7 +1050,7 @@ def processar_leitura_gps(loc, usuario):
                     if det_g:
                         registrar_varios_mercados(reg_g, [m["Supermercado"] for m in det_g])
                     salvar_preferencias_gps(lat, lon, reg_g, usuario)
-                    st.session_state.update({"gps_ultima_leitura": (lat, lon), "gps_coords": (lat, lon), "gps_regiao": reg_g, "gps_mercados": mercs_g, "gps_detalhes": det_g, "gps_raio_atual": 3, "regiao_para_selecionar": reg_g, "msg_sucesso": f"Localização atualizada: **{reg_g}**."})
+                    st.session_state.update({"gps_ultima_leitura": (lat, lon), "gps_coords": (lat, lon), "gps_regiao": reg_g, "gps_mercados": mercs_g, "gps_detalhes": det_g, "gps_raio_atual": 3, "mkt_limite_exib": 15, "regiao_para_selecionar": reg_g, "msg_sucesso": f"Localização atualizada: **{reg_g}**."})
                     st.rerun()
                 except Exception as erro:
                     st.warning(f"⚠️ {erro}")
@@ -1079,7 +1120,7 @@ def reconhecer_produto_por_voz(audio_bytes, api_key, mime_type="audio/wav"):
     return {"transcricao": str(d.get("transcricao", "")).strip(), "produto": prod_ok, "categoria": cat_ok, "quantidade": max(1, int(d.get("quantidade") or 1)), "preco_unitario": max(0.0, float(d.get("preco_unitario") or 0.0)), "supermercado": str(d.get("supermercado", "")).strip()}
 
 
-# --- Persistência (Supabase ou CSV local) ---
+# --- Persistência com Cache de Sessão (0 requisições extras entre cliques) ---
 def _ler_csv_seguro(caminho, colunas, cols_num):
     if not (os.path.exists(caminho) and os.path.getsize(caminho) > 0):
         return pd.DataFrame(columns=colunas)
@@ -1095,53 +1136,74 @@ def _ler_csv_seguro(caminho, colunas, cols_num):
     return df
 
 
-@st.cache_data(ttl=60, show_spinner=False)
 def carregar_dados(usuario):
+    if st.session_state.get("_ss_compras_owner") == usuario and isinstance(st.session_state.get("_ss_compras_df"), pd.DataFrame):
+        return st.session_state["_ss_compras_df"]
+
     if supabase_ativo():
-        rows = _sb_req("GET", "compras", params={"usuario": f"eq.{usuario}", "select": "*", "order": "id.asc"}) or []
+        rows = _sb_req("GET", "compras", params={"usuario": f"eq.{usuario}", "select": "id,data,regiao,supermercado,produto,categoria,quantidade,preco_unitario,total", "order": "id.asc"}) or []
         if not rows:
-            return pd.DataFrame(columns=COLUNAS)
-        df = pd.DataFrame([{
-            "Data": r.get("data", ""),
-            "Região": r.get("regiao", ""),
-            "Supermercado": r.get("supermercado", ""),
-            "Produto": r.get("produto", ""),
-            "Categoria": r.get("categoria", "Outros"),
-            "Quantidade": r.get("quantidade", 1),
-            "Preço Unitário": r.get("preco_unitario", 0.0),
-            "Total": r.get("total", 0.0),
-        } for r in rows], index=[r["id"] for r in rows])
-        for c in ("Quantidade", "Preço Unitário", "Total"):
-            df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
-        return df[COLUNAS]
-    return _ler_csv_seguro(obter_arquivo_usuario(usuario, "compras.csv"), COLUNAS, ["Quantidade", "Preço Unitário", "Total"])
+            df = pd.DataFrame(columns=COLUNAS)
+        else:
+            df = pd.DataFrame([{
+                "Data": r.get("data", ""),
+                "Região": r.get("regiao", ""),
+                "Supermercado": r.get("supermercado", ""),
+                "Produto": r.get("produto", ""),
+                "Categoria": r.get("categoria", "Outros"),
+                "Quantidade": r.get("quantidade", 1),
+                "Preço Unitário": r.get("preco_unitario", 0.0),
+                "Total": r.get("total", 0.0),
+            } for r in rows], index=[r["id"] for r in rows])
+            for c in ("Quantidade", "Preço Unitário", "Total"):
+                df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
+            df = df[COLUNAS]
+    else:
+        df = _ler_csv_seguro(obter_arquivo_usuario(usuario, "compras.csv"), COLUNAS, ["Quantidade", "Preço Unitário", "Total"])
+
+    st.session_state["_ss_compras_df"] = df
+    st.session_state["_ss_compras_owner"] = usuario
+    st.session_state["_ss_compras_ver"] = st.session_state.get("_ss_compras_ver", 0) + 1
+    return df
 
 
-@st.cache_data(ttl=60, show_spinner=False)
+def _invalidar_proc_compras():
+    st.session_state["_ss_compras_ver"] = st.session_state.get("_ss_compras_ver", 0) + 1
+    st.session_state.pop("_ss_compras_proc", None)
+
+
 def obter_compras_com_datas(usuario):
-    df = carregar_dados(usuario).copy()
+    df = carregar_dados(usuario)
+    ver = st.session_state.get("_ss_compras_ver", 0)
+    if (
+        st.session_state.get("_ss_compras_owner") == usuario
+        and st.session_state.get("_ss_compras_proc_ver") == ver
+        and isinstance(st.session_state.get("_ss_compras_proc"), tuple)
+    ):
+        return st.session_state["_ss_compras_proc"]
+
     if df.empty:
-        return df, pd.DataFrame(columns=COLUNAS)
-    df["Data_dt"] = pd.to_datetime(df["Data"], errors="coerce")
-    df_v = df.dropna(subset=["Data_dt"]).copy()
-    if not df_v.empty:
-        df_v["Mês"] = df_v["Data_dt"].dt.strftime("%Y-%m")
-    return df, df_v
+        res = (df, pd.DataFrame(columns=COLUNAS))
+    else:
+        df_c = df.copy()
+        df_c["Data_dt"] = pd.to_datetime(df_c["Data"], errors="coerce")
+        df_v = df_c.dropna(subset=["Data_dt"]).copy()
+        if not df_v.empty:
+            df_v["Mês"] = df_v["Data_dt"].dt.strftime("%Y-%m")
+        res = (df_c, df_v)
+
+    st.session_state["_ss_compras_proc"] = res
+    st.session_state["_ss_compras_proc_ver"] = ver
+    return res
 
 
-@st.cache_data(ttl=60, show_spinner=False)
 def obter_gasto_mes_atual(usuario, mes_ref):
     _, df_v = obter_compras_com_datas(usuario)
     return 0.0 if df_v.empty else float(df_v.loc[df_v["Mês"] == mes_ref, "Total"].sum())
 
 
-def limpar_cache_compras():
-    carregar_dados.clear()
-    obter_compras_com_datas.clear()
-    obter_gasto_mes_atual.clear()
-
-
 def salvar_compra_usuario(usuario, nova_df):
+    df_at = carregar_dados(usuario)
     if supabase_ativo():
         payload = [{
             "usuario": usuario,
@@ -1157,11 +1219,17 @@ def salvar_compra_usuario(usuario, nova_df):
         resp = _sb_req("POST", "compras", json_data=payload, extra_headers={"Prefer": "return=representation"}) or []
         novos_ids = [r["id"] for r in resp if "id" in r]
     else:
-        df_ant = carregar_dados(usuario)
-        inicio = len(df_ant)
-        pd.concat([df_ant, nova_df], ignore_index=True).to_csv(obter_arquivo_usuario(usuario, "compras.csv"), index=False)
+        inicio = len(df_at)
         novos_ids = list(range(inicio, inicio + len(nova_df)))
-    limpar_cache_compras()
+        pd.concat([df_at, nova_df], ignore_index=True).to_csv(obter_arquivo_usuario(usuario, "compras.csv"), index=False)
+
+    if len(novos_ids) == len(nova_df):
+        nova_cop = nova_df.copy()
+        nova_cop.index = novos_ids
+        st.session_state["_ss_compras_df"] = pd.concat([df_at, nova_cop]) if not df_at.empty else nova_cop
+    else:
+        st.session_state.pop("_ss_compras_df", None)
+    _invalidar_proc_compras()
     return novos_ids
 
 
@@ -1172,12 +1240,13 @@ def atualizar_compra_usuario(usuario, idx_edit, dt_iso, merc, prod, cat, qtd, pr
             "data": dt_iso, "supermercado": merc, "produto": prod, "categoria": cat,
             "quantidade": int(qtd), "preco_unitario": float(preco), "total": v_tot,
         })
-    else:
-        df_edit = carregar_dados(usuario).copy()
-        if idx_edit in df_edit.index:
-            df_edit.loc[idx_edit, ["Data", "Supermercado", "Produto", "Categoria", "Quantidade", "Preço Unitário", "Total"]] = [dt_iso, merc, prod, cat, int(qtd), float(preco), v_tot]
+    df_edit = carregar_dados(usuario).copy()
+    if idx_edit in df_edit.index:
+        df_edit.loc[idx_edit, ["Data", "Supermercado", "Produto", "Categoria", "Quantidade", "Preço Unitário", "Total"]] = [dt_iso, merc, prod, cat, int(qtd), float(preco), v_tot]
+        st.session_state["_ss_compras_df"] = df_edit
+        if not supabase_ativo():
             df_edit[COLUNAS].to_csv(obter_arquivo_usuario(usuario, "compras.csv"), index=False)
-    limpar_cache_compras()
+    _invalidar_proc_compras()
 
 
 def excluir_compras_usuario(usuario, ids=None, tudo=False):
@@ -1186,24 +1255,28 @@ def excluir_compras_usuario(usuario, ids=None, tudo=False):
             _sb_req("DELETE", "compras", params={"usuario": f"eq.{usuario}"})
         elif ids:
             _sb_req("DELETE", "compras", params={"usuario": f"eq.{usuario}", "id": f"in.({','.join(str(int(i)) for i in ids)})"})
-    else:
-        cam = obter_arquivo_usuario(usuario, "compras.csv")
-        if tudo:
-            if os.path.exists(cam):
-                os.remove(cam)
-        elif ids:
-            df_c = carregar_dados(usuario)
-            df_c.drop(index=[i for i in ids if i in df_c.index])[COLUNAS].to_csv(cam, index=False)
+    cam = obter_arquivo_usuario(usuario, "compras.csv")
+    if tudo:
+        if not supabase_ativo() and os.path.exists(cam):
+            os.remove(cam)
+        st.session_state["_ss_compras_df"] = pd.DataFrame(columns=COLUNAS)
+    elif ids:
+        df_c = carregar_dados(usuario)
+        df_novo = df_c.drop(index=[i for i in ids if i in df_c.index])[COLUNAS]
+        if not supabase_ativo():
+            df_novo.reset_index(drop=True, inplace=True)
+            df_novo.to_csv(cam, index=False)
             ids_set = set(ids)
             if sess_ids := st.session_state.get("compra_sessao_ids", []):
                 st.session_state["compra_sessao_ids"] = [sid - sum(1 for d in ids_set if d < sid) for sid in sess_ids if sid not in ids_set]
-    limpar_cache_compras()
+        st.session_state["_ss_compras_df"] = df_novo
+    _invalidar_proc_compras()
 
 
-@st.cache_data(ttl=60, show_spinner=False)
-def carregar_comunidade():
+@st.cache_data(ttl=300, show_spinner=False)
+def carregar_comunidade_ordenada():
     if supabase_ativo():
-        rows = _sb_req("GET", "precos_comunidade", params={"select": "*", "order": "preco_unitario.asc,id.desc", "limit": "500"}) or []
+        rows = _sb_req("GET", "precos_comunidade", params={"select": "data,regiao,supermercado,produto,categoria,preco_unitario,usuario_nome", "order": "preco_unitario.asc,id.desc", "limit": "500"}) or []
         if not rows:
             return pd.DataFrame(columns=COLUNAS_COMUNIDADE)
         df = pd.DataFrame([{
@@ -1216,15 +1289,13 @@ def carregar_comunidade():
             "Usuário": r.get("usuario_nome", ""),
         } for r in rows])
         df["Preço Unitário"] = pd.to_numeric(df["Preço Unitário"], errors="coerce").fillna(0.0)
-        return df[COLUNAS_COMUNIDADE]
-    return _ler_csv_seguro(ARQUIVO_COMUNIDADE, COLUNAS_COMUNIDADE, ["Preço Unitário"])
+        df = df[COLUNAS_COMUNIDADE]
+    else:
+        df = _ler_csv_seguro(ARQUIVO_COMUNIDADE, COLUNAS_COMUNIDADE, ["Preço Unitário"])
 
-
-@st.cache_data(ttl=60, show_spinner=False)
-def carregar_comunidade_ordenada():
-    df = carregar_comunidade().copy()
     if df.empty:
         return df
+    df = df.copy()
     df["Data_dt"] = pd.to_datetime(df["Data"], errors="coerce")
     df["Prod_norm"] = df["Produto"].map(normalizar_texto)
     df["Merc_norm"] = df["Supermercado"].map(normalizar_texto)
@@ -1244,8 +1315,8 @@ def salvar_preco_comunidade(nova_df):
         } for r in nova_df.to_dict("records")]
         _sb_req("POST", "precos_comunidade", json_data=payload)
     else:
-        pd.concat([carregar_comunidade(), nova_df], ignore_index=True).to_csv(ARQUIVO_COMUNIDADE, index=False)
-    carregar_comunidade.clear()
+        ant = _ler_csv_seguro(ARQUIVO_COMUNIDADE, COLUNAS_COMUNIDADE, ["Preço Unitário"])
+        pd.concat([ant, nova_df], ignore_index=True).to_csv(ARQUIVO_COMUNIDADE, index=False)
     carregar_comunidade_ordenada.clear()
 
 
@@ -1254,36 +1325,41 @@ def limpar_comunidade():
         _sb_req("DELETE", "precos_comunidade", params={"id": "gt.0"})
     elif os.path.exists(ARQUIVO_COMUNIDADE):
         os.remove(ARQUIVO_COMUNIDADE)
-    carregar_comunidade.clear()
     carregar_comunidade_ordenada.clear()
 
 
-@st.cache_data(ttl=60, show_spinner=False)
 def carregar_pre_lista(usuario):
-    if supabase_ativo():
-        rows = _sb_req("GET", "pre_lista", params={"usuario": f"eq.{usuario}", "select": "*", "order": "criado_em.asc"}) or []
-        if not rows:
-            return pd.DataFrame(columns=COLUNAS_PRE_LISTA)
-        df = pd.DataFrame([{
-            "ID": str(r["id"]),
-            "Produto": r.get("produto", ""),
-            "Quantidade": int(r.get("quantidade") or 1),
-            "Categoria": r.get("categoria") or "Outros",
-            "Comprado": bool(r.get("comprado") or False),
-        } for r in rows])
-        return df[COLUNAS_PRE_LISTA]
+    if st.session_state.get("_ss_pre_lista_owner") == usuario and isinstance(st.session_state.get("_ss_pre_lista_df"), pd.DataFrame):
+        return st.session_state["_ss_pre_lista_df"]
 
-    caminho = obter_arquivo_usuario(usuario, "pre_lista.csv")
-    if not (os.path.exists(caminho) and os.path.getsize(caminho) > 0):
-        return pd.DataFrame(columns=COLUNAS_PRE_LISTA)
-    df = pd.read_csv(caminho)
-    for col in COLUNAS_PRE_LISTA:
-        if col not in df.columns:
-            df[col] = 1 if col == "Quantidade" else (False if col == "Comprado" else ([str(uuid.uuid4()) for _ in range(len(df))] if col == "ID" else ""))
-    df = df[COLUNAS_PRE_LISTA]
-    df["Quantidade"] = pd.to_numeric(df["Quantidade"], errors="coerce").fillna(1).astype(int)
-    df["Comprado"] = df["Comprado"].map(lambda v: str(v).strip().lower() in ("true", "1", "sim"))
-    df["ID"] = df["ID"].astype(str)
+    if supabase_ativo():
+        rows = _sb_req("GET", "pre_lista", params={"usuario": f"eq.{usuario}", "select": "id,produto,quantidade,categoria,comprado", "order": "criado_em.asc"}) or []
+        if not rows:
+            df = pd.DataFrame(columns=COLUNAS_PRE_LISTA)
+        else:
+            df = pd.DataFrame([{
+                "ID": str(r["id"]),
+                "Produto": r.get("produto", ""),
+                "Quantidade": int(r.get("quantidade") or 1),
+                "Categoria": r.get("categoria") or "Outros",
+                "Comprado": bool(r.get("comprado") or False),
+            } for r in rows])[COLUNAS_PRE_LISTA]
+    else:
+        caminho = obter_arquivo_usuario(usuario, "pre_lista.csv")
+        if not (os.path.exists(caminho) and os.path.getsize(caminho) > 0):
+            df = pd.DataFrame(columns=COLUNAS_PRE_LISTA)
+        else:
+            df = pd.read_csv(caminho)
+            for col in COLUNAS_PRE_LISTA:
+                if col not in df.columns:
+                    df[col] = 1 if col == "Quantidade" else (False if col == "Comprado" else ([str(uuid.uuid4()) for _ in range(len(df))] if col == "ID" else ""))
+            df = df[COLUNAS_PRE_LISTA]
+            df["Quantidade"] = pd.to_numeric(df["Quantidade"], errors="coerce").fillna(1).astype(int)
+            df["Comprado"] = df["Comprado"].map(lambda v: str(v).strip().lower() in ("true", "1", "sim"))
+            df["ID"] = df["ID"].astype(str)
+
+    st.session_state["_ss_pre_lista_df"] = df
+    st.session_state["_ss_pre_lista_owner"] = usuario
     return df
 
 
@@ -1292,13 +1368,15 @@ def adicionar_itens_pre_lista(texto, qtd, api_key, usuario):
     if not itens:
         return 0
     cats = identificar_categorias_em_lote(itens, api_key)
+    novos_regs = [{"ID": str(uuid.uuid4()), "Produto": p, "Quantidade": max(1, int(qtd)), "Categoria": cat, "Comprado": False} for p, cat in zip(itens, cats)]
     if supabase_ativo():
-        payload = [{"id": str(uuid.uuid4()), "usuario": usuario, "produto": p, "quantidade": max(1, int(qtd)), "categoria": cat, "comprado": False} for p, cat in zip(itens, cats)]
+        payload = [{"id": r["ID"], "usuario": usuario, "produto": r["Produto"], "quantidade": r["Quantidade"], "categoria": r["Categoria"], "comprado": False} for r in novos_regs]
         _sb_req("POST", "pre_lista", json_data=payload)
-    else:
-        novas = [{"ID": str(uuid.uuid4()), "Produto": p, "Quantidade": max(1, int(qtd)), "Categoria": cat, "Comprado": False} for p, cat in zip(itens, cats)]
-        pd.concat([carregar_pre_lista(usuario), pd.DataFrame(novas, columns=COLUNAS_PRE_LISTA)], ignore_index=True)[COLUNAS_PRE_LISTA].to_csv(obter_arquivo_usuario(usuario, "pre_lista.csv"), index=False)
-    carregar_pre_lista.clear()
+    df_atual = carregar_pre_lista(usuario)
+    df_novo = pd.concat([df_atual, pd.DataFrame(novos_regs, columns=COLUNAS_PRE_LISTA)], ignore_index=True)[COLUNAS_PRE_LISTA]
+    st.session_state["_ss_pre_lista_df"] = df_novo
+    if not supabase_ativo():
+        df_novo.to_csv(obter_arquivo_usuario(usuario, "pre_lista.csv"), index=False)
     return len(itens)
 
 
@@ -1306,13 +1384,13 @@ def atualizar_item_pre_lista(usuario, item_id, **campos):
     if supabase_ativo():
         mapa = {"Produto": "produto", "Quantidade": "quantidade", "Categoria": "categoria", "Comprado": "comprado"}
         _sb_req("PATCH", "pre_lista", params={"id": f"eq.{item_id}", "usuario": f"eq.{usuario}"}, json_data={mapa[k]: v for k, v in campos.items() if k in mapa})
-    else:
-        df_pre = carregar_pre_lista(usuario).copy()
-        mask = df_pre["ID"] == str(item_id)
-        for k, v in campos.items():
-            df_pre.loc[mask, k] = v
+    df_pre = carregar_pre_lista(usuario).copy()
+    mask = df_pre["ID"] == str(item_id)
+    for k, v in campos.items():
+        df_pre.loc[mask, k] = v
+    st.session_state["_ss_pre_lista_df"] = df_pre
+    if not supabase_ativo():
         df_pre[COLUNAS_PRE_LISTA].to_csv(obter_arquivo_usuario(usuario, "pre_lista.csv"), index=False)
-    carregar_pre_lista.clear()
 
 
 def remover_pre_lista(usuario, item_id=None, apenas_marcados=False, tudo=False):
@@ -1323,16 +1401,17 @@ def remover_pre_lista(usuario, item_id=None, apenas_marcados=False, tudo=False):
             _sb_req("DELETE", "pre_lista", params={"usuario": f"eq.{usuario}", "comprado": "is.true"})
         elif item_id:
             _sb_req("DELETE", "pre_lista", params={"id": f"eq.{item_id}", "usuario": f"eq.{usuario}"})
+    cp = obter_arquivo_usuario(usuario, "pre_lista.csv")
+    if tudo:
+        if not supabase_ativo() and os.path.exists(cp):
+            os.remove(cp)
+        st.session_state["_ss_pre_lista_df"] = pd.DataFrame(columns=COLUNAS_PRE_LISTA)
     else:
-        cp = obter_arquivo_usuario(usuario, "pre_lista.csv")
-        if tudo:
-            if os.path.exists(cp):
-                os.remove(cp)
-        else:
-            df_pre = carregar_pre_lista(usuario)
-            df_novo = df_pre[~df_pre["Comprado"]] if apenas_marcados else df_pre[df_pre["ID"] != str(item_id)]
+        df_pre = carregar_pre_lista(usuario)
+        df_novo = (df_pre[~df_pre["Comprado"]] if apenas_marcados else df_pre[df_pre["ID"] != str(item_id)]).reset_index(drop=True)
+        st.session_state["_ss_pre_lista_df"] = df_novo
+        if not supabase_ativo():
             df_novo[COLUNAS_PRE_LISTA].to_csv(cp, index=False)
-    carregar_pre_lista.clear()
 
 
 # --- Inteligência de Preços por Supermercado ---
@@ -1402,7 +1481,6 @@ def _html_hist_card(ico, nome, qtd, pct, total, badge_extra=""):
 
 
 def renderizar_tabela_banco_precos(df_rows, min_por_prod, contar_merc_prod, mostrar_mercado=False):
-    """Renderiza uma tabela estilizada, compacta e responsiva no tema verde Listaí."""
     linhas_html = []
     for row in df_rows.to_dict("records"):
         prod = html.escape(str(row.get("Produto", "")))
@@ -1416,14 +1494,11 @@ def renderizar_tabela_banco_precos(df_rows, min_por_prod, contar_merc_prod, most
         diff = p_u - p_min
 
         if qtd_m <= 1:
-            st_html = '<span class="listai-st-only">Único</span>'
-            prc_cls = "listai-db-price"
+            st_html, prc_cls = '<span class="listai-st-only">Único</span>', "listai-db-price"
         elif diff <= 0.01:
-            st_html = '<span class="listai-st-best">🏆 Menor</span>'
-            prc_cls = "listai-db-price listai-db-price-best"
+            st_html, prc_cls = '<span class="listai-st-best">🏆 Menor</span>', "listai-db-price listai-db-price-best"
         else:
-            st_html = f'<span class="listai-st-up">+{formatar_reais(diff)}</span>'
-            prc_cls = "listai-db-price"
+            st_html, prc_cls = f'<span class="listai-st-up">+{formatar_reais(diff)}</span>', "listai-db-price"
 
         meta_itens = [f"{ico_r} {html.escape(cat_r)}", f"📅 {dt_r}"]
         if mostrar_mercado:
@@ -1432,11 +1507,9 @@ def renderizar_tabela_banco_precos(df_rows, min_por_prod, contar_merc_prod, most
             meta_itens.insert(0, f"🏪 <strong>{merc_s}</strong> ({reg_s})")
 
         linhas_html.append(
-            f'<tr>'
-            f'<td><div class="listai-db-prod">{prod}</div><div class="listai-db-meta">{" · ".join(meta_itens)}</div></td>'
+            f'<tr><td><div class="listai-db-prod">{prod}</div><div class="listai-db-meta">{" · ".join(meta_itens)}</div></td>'
             f'<td class="{prc_cls}">{formatar_reais(p_u)}</td>'
-            f'<td class="listai-db-status">{st_html}</td>'
-            f'</tr>'
+            f'<td class="listai-db-status">{st_html}</td></tr>'
         )
 
     st.markdown(
@@ -1701,7 +1774,7 @@ def _montar_row_feed(r, mostrar_data=False):
 
 
 def renderizar_lista_geral_historico(df_tab, agrupar_por_data=True):
-    regs = df_tab.to_dict("records")
+    regs = df_tab.head(100).to_dict("records")
     if not agrupar_por_data:
         st.markdown(f'<div class="listai-feed-box">{"".join(_montar_row_feed(r, True) for r in regs)}</div>', unsafe_allow_html=True)
         return
@@ -1764,6 +1837,90 @@ def renderizar_editor_foto_perfil(usuario, rascunho):
                 st.rerun()
 
 
+def _ao_alternar_item_lista(usuario, item_id, chk_key):
+    atualizar_item_pre_lista(usuario, item_id, Comprado=bool(st.session_state.get(chk_key, False)))
+
+
+@_st_fragment
+def renderizar_bloco_lista_interativa():
+    df_c, _ = obter_compras_com_datas(usuario_atual)
+    df_pre = carregar_pre_lista(usuario_atual).copy()
+    versao = st.session_state["form_versao"]
+
+    with st.container(border=True):
+        with st.container(key="add_lista_row"):
+            c_in, c_bt = st.columns([5, 1], vertical_alignment="bottom")
+            novo_item = c_in.text_input("Anotar na lista", placeholder="Ex: Arroz, Café, Leite...", key=f"in_lista_{st.session_state.get('lista_versao', 0)}", label_visibility="collapsed")
+            if c_bt.button("➕", key="btn_add_lista", type="primary", use_container_width=True, help="Adicionar na lista"):
+                if not novo_item.strip():
+                    st.warning("Digite um item.")
+                else:
+                    adicionar_itens_pre_lista(novo_item, 1, api_key, usuario_atual)
+                    st.session_state["lista_versao"] = st.session_state.get("lista_versao", 0) + 1
+
+        if not df_c.empty:
+            with st.expander("⚡ Adicionar rápido dos itens mais comprados"):
+                esc = st.multiselect("Escolha os itens:", df_c["Produto"].value_counts().head(8).index.tolist(), key="ms_mais_comprados")
+                if st.button("Adicionar selecionados na lista", disabled=not esc, use_container_width=True):
+                    adicionar_itens_pre_lista(", ".join(esc), 1, api_key, usuario_atual)
+
+        df_pre = carregar_pre_lista(usuario_atual)
+        if df_pre.empty:
+            st.caption("Sua lista está vazia. Anote acima o que precisa comprar!")
+            return
+
+        tot_l, pegos = len(df_pre), int(df_pre["Comprado"].sum())
+        st.progress(pegos / tot_l, text=f"✅ {pegos} de {tot_l} no carrinho ({int((pegos / tot_l) * 100)}%)")
+
+        with st.container(key="lista_chk_box"):
+            for _, row in df_pre.sort_values(by="Comprado", ascending=True).iterrows():
+                iid, nome_i, qtd_i, cat_i, pego = row["ID"], row["Produto"], int(row["Quantidade"]), row["Categoria"] or "Outros", bool(row["Comprado"])
+                ico_i = ICONES_CATEGORIA.get(cat_i, "📦")
+                c_chk, c_lnc, c_del = st.columns([6, 1, 1])
+                lbl = f"~~{ico_i} {nome_i} (x{qtd_i})~~" if pego else f"**{ico_i} {nome_i}** (x{qtd_i}) · *{cat_i}*"
+                c_chk.checkbox(lbl, value=pego, key=f"chk_pre_{iid}", on_change=_ao_alternar_item_lista, args=(usuario_atual, iid, f"chk_pre_{iid}"))
+
+                if c_lnc.button("💰", key=f"btn_lancar_{iid}", help="Lançar preço em Compra", use_container_width=True):
+                    atualizar_item_pre_lista(usuario_atual, iid, Comprado=True)
+                    st.session_state.pop("aviso_voz", None)
+                    st.session_state.update({
+                        "compra_ativa": True,
+                        "valor_produto": nome_i,
+                        "valor_quantidade": qtd_i,
+                        "valor_categoria": cat_i if cat_i in LISTA_CATEGORIAS else "✨ Automática",
+                        "form_versao": versao + 1,
+                        "pagina_atual": PAGINAS[0],
+                        "rolar_topo": True,
+                    })
+                    st.rerun()
+                if c_del.button("🗑️", key=f"btn_del_pre_{iid}", help="Remover", use_container_width=True):
+                    remover_pre_lista(usuario_atual, item_id=iid)
+
+        df_pre = carregar_pre_lista(usuario_atual)
+        if not df_pre.empty:
+            with st.expander("✏️ Ajustar item ou categoria da lista"):
+                ops_l = {idx: f"{r['Produto']} (x{int(r['Quantidade'])}) — {r['Categoria'] or 'Outros'}" for idx, r in df_pre.iterrows()}
+                idx_l = st.selectbox("Item da lista", list(ops_l.keys()), format_func=lambda i: ops_l[i], key="sel_aj_lista")
+                row_l = df_pre.loc[idx_l]
+                cat_l = row_l["Categoria"] if row_l["Categoria"] in LISTA_CATEGORIAS else "Outros"
+                with st.form("form_aj_lista", border=False):
+                    aj_nome = st.text_input("Produto", value=str(row_l["Produto"]))
+                    with st.container(key="edit_qp_lista"):
+                        cq_l, cc_l = st.columns(2)
+                        aj_qtd = cq_l.number_input("Qtd", min_value=1, value=max(1, int(row_l["Quantidade"])), step=1)
+                        aj_cat = cc_l.selectbox("Categoria", LISTA_CATEGORIAS, index=LISTA_CATEGORIAS.index(cat_l))
+                    if st.form_submit_button("💾 Atualizar item da lista", use_container_width=True) and aj_nome.strip():
+                        atualizar_item_pre_lista(usuario_atual, row_l["ID"], Produto=aj_nome.strip(), Quantidade=int(aj_qtd), Categoria=aj_cat)
+
+            pegos_atual = int(df_pre["Comprado"].sum())
+            with st.container(key="kpi_2cols_lista"):
+                a1, a2 = st.columns(2)
+                if a1.button("🧹 Limpar marcados", disabled=(pegos_atual == 0), use_container_width=True):
+                    remover_pre_lista(usuario_atual, apenas_marcados=True)
+                if a2.button("🗑️ Limpar lista", use_container_width=True):
+                    remover_pre_lista(usuario_atual, tudo=True)
+
+
 # --- Páginas ---
 def pagina_compra():
     mes_hoje = date.today().strftime("%Y-%m")
@@ -1803,7 +1960,6 @@ def pagina_compra():
     if st.session_state.get("sel_merc_compra") not in op_merc:
         st.session_state["sel_merc_compra"] = op_merc[0]
 
-    # --- Tela inicial limpa quando NÃO há compra iniciada ---
     if not st.session_state.get("compra_ativa", False):
         with st.container(border=True):
             st.markdown(
@@ -1836,7 +1992,6 @@ def pagina_compra():
                     st.rerun()
         return
 
-    # --- Compra Ativa ---
     with st.container(border=True):
         st.markdown("#### 🛒 Adicionar Produto")
         merc_esc = st.selectbox("🏪 Supermercado", op_merc, key="sel_merc_compra", format_func=(lambda m: f"{m} ({formatar_distancia(dist_gps[m])})" if reg_ativa == gps_regiao and dist_gps.get(m) is not None else m))
@@ -1936,89 +2091,7 @@ def pagina_compra():
 
 def pagina_lista():
     st.subheader("📝 Lista de Compras")
-    df_c, _ = obter_compras_com_datas(usuario_atual)
-    df_pre = carregar_pre_lista(usuario_atual).copy()
-    versao = st.session_state["form_versao"]
-
-    with st.container(border=True):
-        with st.container(key="add_lista_row"):
-            c_in, c_bt = st.columns([5, 1], vertical_alignment="bottom")
-            novo_item = c_in.text_input("Anotar na lista", placeholder="Ex: Arroz, Café, Leite...", key=f"in_lista_{st.session_state.get('lista_versao', 0)}", label_visibility="collapsed")
-            if c_bt.button("➕", key="btn_add_lista", type="primary", use_container_width=True, help="Adicionar na lista"):
-                if not novo_item.strip():
-                    st.warning("Digite um item.")
-                else:
-                    adicionar_itens_pre_lista(novo_item, 1, api_key, usuario_atual)
-                    st.session_state["lista_versao"] = st.session_state.get("lista_versao", 0) + 1
-                    st.rerun()
-
-        if not df_c.empty:
-            with st.expander("⚡ Adicionar rápido dos itens mais comprados"):
-                esc = st.multiselect("Escolha os itens:", df_c["Produto"].value_counts().head(8).index.tolist(), key="ms_mais_comprados")
-                if st.button("Adicionar selecionados na lista", disabled=not esc, use_container_width=True):
-                    adicionar_itens_pre_lista(", ".join(esc), 1, api_key, usuario_atual)
-                    st.rerun()
-
-        if df_pre.empty:
-            st.caption("Sua lista está vazia. Anote acima o que precisa comprar!")
-            return
-
-        tot_l, pegos = len(df_pre), int(df_pre["Comprado"].sum())
-        st.progress(pegos / tot_l, text=f"✅ {pegos} de {tot_l} no carrinho ({int((pegos / tot_l) * 100)}%)")
-
-        alt_chk = False
-        with st.container(key="lista_chk_box"):
-            for _, row in df_pre.sort_values(by="Comprado", ascending=True).iterrows():
-                iid, nome_i, qtd_i, cat_i, pego = row["ID"], row["Produto"], int(row["Quantidade"]), row["Categoria"] or "Outros", bool(row["Comprado"])
-                ico_i = ICONES_CATEGORIA.get(cat_i, "📦")
-                c_chk, c_lnc, c_del = st.columns([6, 1, 1])
-                lbl = f"~~{ico_i} {nome_i} (x{qtd_i})~~" if pego else f"**{ico_i} {nome_i}** (x{qtd_i}) · *{cat_i}*"
-                if (mk := c_chk.checkbox(lbl, value=pego, key=f"chk_pre_{iid}")) != pego:
-                    atualizar_item_pre_lista(usuario_atual, iid, Comprado=mk)
-                    alt_chk = True
-                if c_lnc.button("💰", key=f"btn_lancar_{iid}", help="Lançar preço em Compra", use_container_width=True):
-                    atualizar_item_pre_lista(usuario_atual, iid, Comprado=True)
-                    st.session_state.pop("aviso_voz", None)
-                    st.session_state.update({
-                        "compra_ativa": True,
-                        "valor_produto": nome_i,
-                        "valor_quantidade": qtd_i,
-                        "valor_categoria": cat_i if cat_i in LISTA_CATEGORIAS else "✨ Automática",
-                        "form_versao": versao + 1,
-                        "pagina_atual": PAGINAS[0],
-                        "rolar_topo": True,
-                    })
-                    st.rerun()
-                if c_del.button("🗑️", key=f"btn_del_pre_{iid}", help="Remover", use_container_width=True):
-                    remover_pre_lista(usuario_atual, item_id=iid)
-                    st.rerun()
-
-        if alt_chk:
-            st.rerun()
-
-        with st.expander("✏️ Ajustar item ou categoria da lista"):
-            ops_l = {idx: f"{r['Produto']} (x{int(r['Quantidade'])}) — {r['Categoria'] or 'Outros'}" for idx, r in df_pre.iterrows()}
-            idx_l = st.selectbox("Item da lista", list(ops_l.keys()), format_func=lambda i: ops_l[i], key="sel_aj_lista")
-            row_l = df_pre.loc[idx_l]
-            cat_l = row_l["Categoria"] if row_l["Categoria"] in LISTA_CATEGORIAS else "Outros"
-            with st.form("form_aj_lista", border=False):
-                aj_nome = st.text_input("Produto", value=str(row_l["Produto"]))
-                with st.container(key="edit_qp_lista"):
-                    cq_l, cc_l = st.columns(2)
-                    aj_qtd = cq_l.number_input("Qtd", min_value=1, value=max(1, int(row_l["Quantidade"])), step=1)
-                    aj_cat = cc_l.selectbox("Categoria", LISTA_CATEGORIAS, index=LISTA_CATEGORIAS.index(cat_l))
-                if st.form_submit_button("💾 Atualizar item da lista", use_container_width=True) and aj_nome.strip():
-                    atualizar_item_pre_lista(usuario_atual, row_l["ID"], Produto=aj_nome.strip(), Quantidade=int(aj_qtd), Categoria=aj_cat)
-                    st.rerun()
-
-        with st.container(key="kpi_2cols_lista"):
-            a1, a2 = st.columns(2)
-            if a1.button("🧹 Limpar marcados", disabled=(pegos == 0), use_container_width=True):
-                remover_pre_lista(usuario_atual, apenas_marcados=True)
-                st.rerun()
-            if a2.button("🗑️ Limpar lista", use_container_width=True):
-                remover_pre_lista(usuario_atual, tudo=True)
-                st.rerun()
+    renderizar_bloco_lista_interativa()
 
 
 def pagina_graficos():
@@ -2189,9 +2262,10 @@ def pagina_precos():
             })
 
         grupos.sort(key=lambda g: (0 if g["info"] and g["info"].get("tem_comparacao") else 1, g["indice"], -g["wins"], -g["qtd"]))
+        lim_db = st.session_state.setdefault("db_limite_mercs", 10)
         abrir_auto = len(grupos) <= 3 or bool(busca)
 
-        for idx, g in enumerate(grupos):
+        for idx, g in enumerate(grupos[:lim_db]):
             selo_txt, selo_cls = classificar_selo_preco(g["info"])
             wins_badge = f'<span class="listai-pill-best">🏆 {g["wins"]} menor(es)</span>' if g["wins"] > 0 else ""
             st.markdown(
@@ -2204,7 +2278,12 @@ def pagina_precos():
             )
 
             with st.expander(f"Abrir banco de preços — {g['mercado']} ({g['qtd']})", expanded=(abrir_auto or idx == 0)):
-                renderizar_tabela_banco_precos(g["grp"], min_por_prod, contar_merc_prod, mostrar_mercado=False)
+                renderizar_tabela_banco_precos(g["grp"].head(60), min_por_prod, contar_merc_prod, mostrar_mercado=False)
+
+        if len(grupos) > lim_db:
+            if st.button(f"🏪 Mostrar mais supermercados ({len(grupos) - lim_db} restantes)", use_container_width=True, key="btn_mais_db_mercs"):
+                st.session_state["db_limite_mercs"] = lim_db + 10
+                st.rerun()
 
     with aba_geral:
         co, ce = st.columns([3, 1.3], vertical_alignment="bottom")
@@ -2292,12 +2371,11 @@ def pagina_mercados():
         )
         st.caption(f"Buscando estabelecimentos em até **{raio} km** de distância.")
 
-        aba_gps, aba_busca = st.tabs(["📍 Meu GPS", "🔎 Buscar Cidade / Bairro / CEP"])
-        with aba_gps:
+        with st.expander("📍 Ativar ou atualizar GPS", expanded=not bool(gps_coords)):
             if streamlit_geolocation:
                 c_geo, c_ref = st.columns([1.2, 2], vertical_alignment="center")
                 with c_geo:
-                    st.caption("Ativar / atualizar GPS:")
+                    st.caption("Toque para localizar:")
                     processar_leitura_gps(streamlit_geolocation(), usuario_atual)
                 with c_ref:
                     if gps_coords:
@@ -2308,16 +2386,16 @@ def pagina_mercados():
                                     if nova:
                                         registrar_varios_mercados(gps_regiao, [m["Supermercado"] for m in nova])
                                     salvar_preferencias_gps(gps_coords[0], gps_coords[1], gps_regiao, usuario_atual)
-                                    st.session_state.update({"gps_detalhes": nova, "gps_mercados": _resumir_mercados(nova), "gps_raio_atual": raio})
+                                    st.session_state.update({"gps_detalhes": nova, "gps_mercados": _resumir_mercados(nova), "gps_raio_atual": raio, "mkt_limite_exib": 15})
                                     st.rerun()
                                 except Exception as e:
                                     st.warning(f"⚠️ {e}")
                     else:
-                        st.info("Toque no ícone de localização ao lado para descobrir os mercados perto de você.")
+                        st.info("Toque no ícone ao lado para descobrir os mercados perto de você.")
             else:
                 st.warning("Pacote `streamlit-geolocation` não instalado.")
 
-        with aba_busca:
+        with st.expander("🔎 Buscar Cidade / Bairro / CEP"):
             c1, c2 = st.columns([3, 1], vertical_alignment="bottom")
             reg_b = c1.text_input("Cidade, Bairro ou CEP", placeholder="Ex: Campinas - Taquaral, 01310-100").strip()
             if c2.button("Buscar", type="primary", use_container_width=True) and reg_b:
@@ -2328,6 +2406,7 @@ def pagina_mercados():
                             "regiao": reg_b, "nome_local": loc, "lista": lm,
                             "novos": registrar_varios_mercados(reg_b, [m["Supermercado"] for m in lm]) if (loc and lm) else 0,
                         }
+                        st.session_state["mkt_limite_exib"] = 15
                         st.rerun()
                     except Exception as e:
                         st.warning(f"⚠️ {e}")
@@ -2361,7 +2440,8 @@ def pagina_mercados():
 
     with aba_lista:
         medalhas = {0: "🥇", 1: "🥈", 2: "🥉"}
-        for idx, m in enumerate(lista_rank):
+        lim_mkt = st.session_state.setdefault("mkt_limite_exib", 15)
+        for idx, m in enumerate(lista_rank[:lim_mkt]):
             info = m.get("preco_info")
             selo_txt, selo_cls = classificar_selo_preco(info)
             pos_txt = medalhas.get(idx, f"{idx + 1}º") if info else "📍"
@@ -2401,18 +2481,21 @@ def pagina_mercados():
                         })
                         st.rerun()
 
+        if len(lista_rank) > lim_mkt:
+            if st.button(f"📋 Mostrar mais mercados ({len(lista_rank) - lim_mkt} restantes)", use_container_width=True, key="btn_mais_mkts"):
+                st.session_state["mkt_limite_exib"] = lim_mkt + 15
+                st.rerun()
+
     with aba_mapa:
         if com_mapa:
             st.map(pd.DataFrame(com_mapa), latitude="lat", longitude="lon")
         else:
-            st.info("Use **📍 Meu GPS** ou **🔎 Buscar Cidade / Bairro / CEP** para visualizar os pinos no mapa.")
+            st.info("Use **📍 Ativar ou atualizar GPS** ou **🔎 Buscar Cidade / Bairro / CEP** para visualizar os pinos no mapa.")
 
 
 def pagina_perfil():
     st.subheader("👤 Meu Perfil")
-    u_dict = carregar_usuarios().copy()
-    raw_u = u_dict.get(usuario_atual, {})
-    reg_u = dict(raw_u) if isinstance(raw_u, dict) else {"tipo": "senha", "hash": raw_u, "nome": nome_usuario}
+    reg_u = dict(obter_perfil_atual(usuario_atual))
     df_p, _ = obter_compras_com_datas(usuario_atual)
     sub_p = f"@{usuario_atual}" + (f" • Desde {reg_u['criado_em']}" if reg_u.get("criado_em") else "")
 
@@ -2444,7 +2527,6 @@ def pagina_perfil():
                                     remover_foto_perfil(usuario_atual)
                                     with open(obter_arquivo_usuario(usuario_atual, f"foto_perfil.{ext}"), "wb") as f:
                                         f.write(raw)
-                                    carregar_foto_perfil_base64.clear()
                                     st.session_state.update({"foto_versao": st.session_state.get("foto_versao", 0) + 1, "msg_sucesso": "Foto atualizada!"})
                                 else:
                                     limpar_estado_editor_foto()
@@ -2495,7 +2577,7 @@ def pagina_perfil():
                         st.warning("Informe seu nome completo.")
                     else:
                         reg_u.update({"nome": nome_ok, "email": p_email.strip(), "telefone": p_tel.strip(), "cidade": p_cid.strip()})
-                        salvar_usuario_unico(usuario_atual, reg_u, u_dict)
+                        salvar_usuario_unico(usuario_atual, reg_u)
                         st.session_state.update({"nome_usuario": nome_ok, "msg_sucesso": "Informações salvas!"})
                         st.rerun()
 
@@ -2509,7 +2591,7 @@ def pagina_perfil():
                     reg_u.update({"lembrete": r_lemb.strip(), "pergunta_seg": r_perg})
                     if r_resp.strip():
                         reg_u["resposta_seg_hash"] = gerar_hash_senha(normalizar_texto(r_resp))
-                    salvar_usuario_unico(usuario_atual, reg_u, u_dict)
+                    salvar_usuario_unico(usuario_atual, reg_u)
                     st.session_state["msg_sucesso"] = "Configurações de recuperação salvas!"
                     st.rerun()
 
@@ -2526,8 +2608,7 @@ def pagina_perfil():
                     elif s_nv != s_cf:
                         st.error("As senhas não coincidem.")
                     else:
-                        reg_u["hash"] = gerar_hash_senha(s_nv)
-                        salvar_usuario_unico(usuario_atual, reg_u, u_dict)
+                        atualizar_campos_perfil(usuario_atual, senha_hash=gerar_hash_senha(s_nv))
                         st.session_state["msg_sucesso"] = "Senha atualizada!"
                         st.rerun()
 
@@ -2535,9 +2616,10 @@ def pagina_perfil():
         renderizar_painel_limite_mensal(usuario_atual, "perfil", expandir_config=True)
         with st.container(border=True):
             st.markdown("#### 📍 Localização GPS")
-            processar_leitura_gps(streamlit_geolocation(), usuario_atual) if streamlit_geolocation else st.warning("Pacote `streamlit-geolocation` não instalado.")
             if gps_coords:
                 st.success(f"📌 **{gps_regiao}** · Mais próximo: **{gps_mercados[0][0]} ({formatar_distancia(gps_mercados[0][1])})**") if (gps_mercados and gps_mercados[0][1] is not None) else st.info(f"📌 Região: **{gps_regiao}**")
+            with st.expander("📡 Atualizar localização GPS", expanded=not bool(gps_coords)):
+                processar_leitura_gps(streamlit_geolocation(), usuario_atual) if streamlit_geolocation else st.warning("Pacote `streamlit-geolocation` não instalado.")
 
         with st.expander("⚙️ Inteligência Artificial (API Gemini)", expanded=not bool(api_key)):
             if api_key and origem_api == "secrets":
@@ -2553,20 +2635,20 @@ def pagina_perfil():
 
     if usuario_atual in USUARIOS_ADMIN:
         with st.expander("👑 Admin — Usuários"):
-            st.metric("Total", len(u_dict))
-            st.dataframe(pd.DataFrame([{"Usuário": k, "Nome": v.get("nome", k) if isinstance(v, dict) else k, "E-mail": v.get("email", "-") if isinstance(v, dict) else "-", "Cidade": v.get("cidade", "-") if isinstance(v, dict) else "-"} for k, v in sorted(u_dict.items())]), hide_index=True, use_container_width=True)
-            with st.form("form_admin_reset_senha", border=False):
-                adm_u = st.selectbox("Redefinir senha do usuário", sorted(u_dict.keys()))
-                adm_s = st.text_input("Nova senha provisória", type="password")
-                if st.form_submit_button("Redefinir senha", use_container_width=True):
-                    if len(adm_s) < 4:
-                        st.warning("Mínimo 4 caracteres.")
-                    else:
-                        reg_adm = dict(u_dict[adm_u]) if isinstance(u_dict[adm_u], dict) else {"tipo": "senha", "nome": adm_u}
-                        reg_adm["hash"] = gerar_hash_senha(adm_s)
-                        salvar_usuario_unico(adm_u, reg_adm, u_dict)
-                        st.session_state["msg_sucesso"] = f"Senha de **@{adm_u}** redefinida!"
-                        st.rerun()
+            lista_adm = listar_usuarios_admin()
+            st.metric("Total", len(lista_adm))
+            st.dataframe(pd.DataFrame(lista_adm), hide_index=True, use_container_width=True)
+            if lista_adm:
+                with st.form("form_admin_reset_senha", border=False):
+                    adm_u = st.selectbox("Redefinir senha do usuário", [u["Usuário"] for u in lista_adm])
+                    adm_s = st.text_input("Nova senha provisória", type="password")
+                    if st.form_submit_button("Redefinir senha", use_container_width=True):
+                        if len(adm_s) < 4:
+                            st.warning("Mínimo 4 caracteres.")
+                        else:
+                            atualizar_campos_perfil(adm_u, senha_hash=gerar_hash_senha(adm_s))
+                            st.session_state["msg_sucesso"] = f"Senha de **@{adm_u}** redefinida!"
+                            st.rerun()
 
     if st.button("🚪 Sair da conta", type="secondary", use_container_width=True, key="perfil_logout"):
         limpar_estado_usuario(incluir_auth=True)
