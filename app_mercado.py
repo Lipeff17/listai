@@ -28,7 +28,7 @@ st.set_page_config(page_title="Listaí — Preços e Compras", page_icon="🛒",
 st.markdown(
 """<style>
 html, body, .stApp { background-color: #F3F8F5 !important; color: #132A1E !important; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important; overflow-x: clip !important; }
-.block-container { padding: 3rem 1rem 3.2rem 1rem !important; max-width: 1080px; }
+.block-container { padding: 3.7rem 1rem 3.2rem 1rem !important; max-width: 1080px; }
 h1, h2, h3, h4 { color: #064E3B !important; font-weight: 800 !important; letter-spacing: -0.3px; }
 label, .stMarkdown p, .stCheckbox p, .stRadio p { color: #132A1E !important; }
 [data-testid="stCaptionContainer"] p, small { color: #475569 !important; font-size: 0.82rem !important; }
@@ -218,7 +218,7 @@ div[data-testid="stMetricValue"] { color: #064E3B !important; font-weight: 800 !
 div[data-testid="stProgress"] > div > div > div > div { background-color: #16A34A !important; }
 
 @media (max-width: 680px) {
-    .block-container { padding: 2.8rem 0.65rem 4.5rem 0.65rem !important; }
+    .block-container { padding: 3.9rem 0.65rem 4.5rem 0.65rem !important; }
     .st-key-topo_nubank { padding: 0.82rem 0.85rem !important; margin-bottom: 0.5rem !important; }
     .listai-nu-hello { font-size: 1.05rem !important; }
     .st-key-topo_nubank .stButton > button { padding: 0.3rem 0.7rem !important; font-size: 0.76rem !important; }
@@ -296,7 +296,7 @@ _REGRAS_CATEGORIA = sorted(
 )
 
 
-# --- Conexão Supabase (REST API via requests) ---
+# --- Conexão Supabase (REST API via requests, com tratamento claro de erros) ---
 def _ler_segredo(nome):
     if v := os.getenv(nome):
         return v.strip()
@@ -310,7 +310,7 @@ def _ler_segredo(nome):
 
 @st.cache_resource
 def obter_config_supabase():
-    url = _ler_segredo("SUPABASE_URL").rstrip("/")
+    url = re.sub(r"/rest/v1/?$", "", _ler_segredo("SUPABASE_URL").rstrip("/"))
     key = _ler_segredo("SUPABASE_KEY") or _ler_segredo("SUPABASE_ANON_KEY")
     return (url, key) if (url.startswith("https://") and key) else (None, None)
 
@@ -335,7 +335,22 @@ def _sb_req(method, tabela, params=None, json_data=None, extra_headers=None):
     if extra_headers:
         headers.update(extra_headers)
     resp = obter_http_session().request(method, f"{url}/rest/v1/{tabela}", headers=headers, params=params, json=json_data, timeout=8)
-    resp.raise_for_status()
+    if not resp.ok:
+        detalhe = ""
+        try:
+            err = resp.json()
+            cod = err.get("code") or ""
+            msg = err.get("message") or err.get("error") or ""
+            detalhe = f"[{cod}] {msg}".strip() if cod else msg
+        except Exception:
+            detalhe = f"HTTP {resp.status_code}"
+        if resp.status_code in (401, 403):
+            raise RuntimeError(f"Chave do Supabase recusada (HTTP {resp.status_code}). Use a Secret key (sb_secret_...) ou service_role nos Secrets. {detalhe}")
+        if resp.status_code == 404 or "PGRST205" in detalhe:
+            raise RuntimeError(f"Tabela '{tabela}' não encontrada no Supabase. Execute o Script SQL no SQL Editor do Supabase. ({detalhe})")
+        if "PGRST204" in detalhe or resp.status_code == 400:
+            raise RuntimeError(f"Coluna ou regra faltando na tabela '{tabela}'. Execute o SQL de criação/atualização no Supabase. ({detalhe})")
+        raise RuntimeError(f"Erro no Supabase (HTTP {resp.status_code}): {detalhe}")
     return resp.json() if resp.text.strip() else None
 
 
@@ -448,7 +463,7 @@ def limpar_estado_usuario(incluir_auth=False):
             st.session_state.pop(k, None)
 
 
-# --- Autenticação & Perfil (Leve: consulta apenas 1 usuário por vez) ---
+# --- Autenticação & Perfil ---
 def gerar_hash_senha(senha):
     salt = secrets.token_hex(16)
     dk = hashlib.pbkdf2_hmac("sha256", senha.encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
@@ -503,7 +518,6 @@ def buscar_usuario_unico(usuario, colunas="*"):
         rows = _sb_req("GET", "usuarios", params={"usuario": f"eq.{u}", "select": colunas, "limit": "1"}) or []
         if not rows:
             if u == "teste":
-                # Garante conta teste inicial apenas se tabela estiver vazia
                 existente = _sb_req("GET", "usuarios", params={"select": "usuario", "limit": "1"}) or []
                 if not existente:
                     teste = {"usuario": "teste", "senha_hash": gerar_hash_senha("1234"), "nome": "Conta Teste", "lembrete": "Sequência numérica de 1 a 4"}
@@ -574,7 +588,7 @@ def listar_usuarios_admin():
     return [{"Usuário": k, "Nome": v.get("nome", k) if isinstance(v, dict) else k, "E-mail": v.get("email", "-") if isinstance(v, dict) else "-", "Cidade": v.get("cidade", "-") if isinstance(v, dict) else "-"} for k, v in sorted(u_dict.items())]
 
 
-# --- Foto de Perfil (lê da sessão em vez de baixar todas as fotos da base) ---
+# --- Foto de Perfil ---
 def carregar_foto_perfil_base64(usuario):
     if supabase_ativo():
         foto_url = str(obter_perfil_atual(usuario).get("foto_url") or "")
@@ -728,8 +742,14 @@ def exibir_tela_login():
                     s_in = st.text_input("Senha", type="password", placeholder="Sua senha")
                     if st.form_submit_button("Entrar", type="primary", use_container_width=True):
                         u = u_in.strip().lower()
-                        reg = buscar_usuario_unico(u, colunas="usuario,senha_hash,nome")
-                        if reg is not None and verificar_senha(s_in, reg.get("hash", "")):
+                        try:
+                            reg = buscar_usuario_unico(u, colunas="usuario,senha_hash,nome")
+                        except Exception as erro_sb:
+                            st.error(f"⚠️ {erro_sb}")
+                            reg = False
+                        if reg is False:
+                            pass
+                        elif reg is not None and verificar_senha(s_in, reg.get("hash", "")):
                             st.session_state.update({"autenticado": True, "usuario_logado": u, "nome_usuario": reg.get("nome", u)})
                             st.session_state.pop("modo_login", None)
                             st.rerun()
@@ -758,8 +778,14 @@ def exibir_tela_login():
                             st.rerun()
 
                 if rec_u := st.session_state.get("rec_usuario"):
-                    reg = buscar_usuario_unico(rec_u, colunas="usuario,senha_hash,nome,email,telefone,lembrete,pergunta_seg,resposta_seg_hash")
-                    if reg is None:
+                    try:
+                        reg = buscar_usuario_unico(rec_u, colunas="usuario,senha_hash,nome,email,telefone,lembrete,pergunta_seg,resposta_seg_hash")
+                    except Exception as erro_sb:
+                        st.error(f"⚠️ {erro_sb}")
+                        reg = False
+                    if reg is False:
+                        pass
+                    elif reg is None:
                         st.error(f"Usuário **@{html.escape(rec_u)}** não encontrado.")
                     else:
                         if lembrete := str(reg.get("lembrete", "")).strip():
@@ -805,10 +831,13 @@ def exibir_tela_login():
                                     elif nova_s != conf_s:
                                         st.error("As senhas não coincidem.")
                                     else:
-                                        atualizar_campos_perfil(rec_u, senha_hash=gerar_hash_senha(nova_s))
-                                        st.session_state.pop("rec_usuario", None)
-                                        st.session_state.update({"modo_login": "entrar", "msg_login_ok": f"Senha de **{rec_u}** redefinida! Já pode entrar."})
-                                        st.rerun()
+                                        try:
+                                            atualizar_campos_perfil(rec_u, senha_hash=gerar_hash_senha(nova_s))
+                                            st.session_state.pop("rec_usuario", None)
+                                            st.session_state.update({"modo_login": "entrar", "msg_login_ok": f"Senha de **{rec_u}** redefinida! Já pode entrar."})
+                                            st.rerun()
+                                        except Exception as erro_sb:
+                                            st.error(f"⚠️ {erro_sb}")
 
                 st.divider()
                 if st.button("← Voltar para Entrar", use_container_width=True):
@@ -840,18 +869,22 @@ def exibir_tela_login():
                             st.warning("Digite seu nome completo.")
                         elif len(nl) < 2 or nl != novo_u.strip().lower():
                             st.warning("Usuário deve ter pelo menos 2 caracteres (letras, números, . _ -).")
-                        elif buscar_usuario_unico(nl, colunas="usuario") is not None:
-                            st.error("Esse usuário já existe. Escolha outro.")
                         elif len(nova_s) < 4:
                             st.warning("Senha deve ter pelo menos 4 caracteres.")
                         else:
-                            novo_reg = {"tipo": "senha", "hash": gerar_hash_senha(nova_s), "nome": nome_ok, "email": email_p.strip(), "telefone": tel_p.strip(), "cidade": cid_p.strip(), "lembrete": lemb_p.strip(), "criado_em": date.today().isoformat()}
-                            if resp_p.strip():
-                                novo_reg.update({"pergunta_seg": perg_p, "resposta_seg_hash": gerar_hash_senha(normalizar_texto(resp_p))})
-                            salvar_usuario_unico(nl, novo_reg)
-                            st.session_state.update({"autenticado": True, "usuario_logado": nl, "nome_usuario": nome_ok, "msg_sucesso": f"Conta criada! Bem-vindo(a), **{nome_ok}**."})
-                            st.session_state.pop("modo_login", None)
-                            st.rerun()
+                            try:
+                                if buscar_usuario_unico(nl, colunas="usuario") is not None:
+                                    st.error("Esse usuário já existe. Escolha outro.")
+                                else:
+                                    novo_reg = {"tipo": "senha", "hash": gerar_hash_senha(nova_s), "nome": nome_ok, "email": email_p.strip(), "telefone": tel_p.strip(), "cidade": cid_p.strip(), "lembrete": lemb_p.strip(), "criado_em": date.today().isoformat()}
+                                    if resp_p.strip():
+                                        novo_reg.update({"pergunta_seg": perg_p, "resposta_seg_hash": gerar_hash_senha(normalizar_texto(resp_p))})
+                                    salvar_usuario_unico(nl, novo_reg)
+                                    st.session_state.update({"autenticado": True, "usuario_logado": nl, "nome_usuario": nome_ok, "msg_sucesso": f"Conta criada! Bem-vindo(a), **{nome_ok}**."})
+                                    st.session_state.pop("modo_login", None)
+                                    st.rerun()
+                            except Exception as erro_sb:
+                                st.error(f"⚠️ {erro_sb}")
                 st.divider()
                 if st.button("← Já tenho conta (Voltar)", use_container_width=True):
                     st.session_state["modo_login"] = "entrar"
@@ -867,7 +900,7 @@ nome_usuario = st.session_state.get("nome_usuario", usuario_atual)
 USUARIOS_ADMIN = obter_usuarios_admin()
 
 
-# --- Localização, Orçamento e Supermercados (lê da sessão sem bater na rede) ---
+# --- Localização, Orçamento e Supermercados ---
 def carregar_preferencias_gps(usuario):
     if supabase_ativo():
         u_reg = obter_perfil_atual(usuario)
@@ -1120,7 +1153,7 @@ def reconhecer_produto_por_voz(audio_bytes, api_key, mime_type="audio/wav"):
     return {"transcricao": str(d.get("transcricao", "")).strip(), "produto": prod_ok, "categoria": cat_ok, "quantidade": max(1, int(d.get("quantidade") or 1)), "preco_unitario": max(0.0, float(d.get("preco_unitario") or 0.0)), "supermercado": str(d.get("supermercado", "")).strip()}
 
 
-# --- Persistência com Cache de Sessão (0 requisições extras entre cliques) ---
+# --- Persistência com Cache de Sessão ---
 def _ler_csv_seguro(caminho, colunas, cols_num):
     if not (os.path.exists(caminho) and os.path.getsize(caminho) > 0):
         return pd.DataFrame(columns=colunas)
