@@ -294,6 +294,7 @@ div[data-testid="stProgress"] > div > div > div > div { background: linear-gradi
 </style>"""
 
 LOGO_SVG = '<div class="listai-logo-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="lg" x1="0" y1="12" x2="24" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D91E2A"/><stop offset="55%" stop-color="#0B4EA2"/><stop offset="100%" stop-color="#1D4ED8"/></linearGradient></defs><path d="M2 4H5L7.4 14.5C7.6 15.4 8.4 16 9.3 16H17.5C18.4 16 19.2 15.4 19.4 14.5L21 7H6" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 10.2L12 12.6L19.5 4.8" stroke="url(#lg)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.6" fill="#D91E2A"/><circle cx="17" cy="19.5" r="1.6" fill="#0B4EA2"/></svg></div>'
+
 # --- Constantes ---
 PASTA_DADOS_USUARIOS = "dados_usuarios"
 ARQUIVO_COMUNIDADE = "precos_comunidade.csv"
@@ -549,7 +550,7 @@ def limpar_estado_editor_foto():
 
 def limpar_estado_usuario(incluir_auth=False):
     chaves = {
-        "aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "ultimo_cupom_hash", "itens_foto_lidos",
+        "aviso_voz", "aviso_voz_erro", "aviso_barcode", "ultimo_audio_hash", "ultimo_cupom_hash", "itens_foto_lidos",
         "msg_sucesso", "msg_foto_erro", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords",
         "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner",
         "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar",
@@ -565,7 +566,7 @@ def limpar_estado_usuario(incluir_auth=False):
         st.session_state.update({"autenticado": False, "usuario_logado": ""})
         chaves.update({"modo_login", "rec_usuario", "msg_login_ok", "gemini_api_key_usuario", "pagina_atual", "pagina_anterior"})
     for k in list(st.session_state.keys()):
-        if k.startswith(("num_lim_", "chk_bloq_", "up_foto_", "audio_zap_", "up_cupom_", "cam_cupom_", "chk_foto_item_", "nfce_in_")) or k in chaves:
+        if k.startswith(("num_lim_", "chk_bloq_", "up_foto_", "audio_zap_", "up_cupom_", "cam_cupom_", "chk_foto_item_", "nfce_in_", "ean_in_")) or k in chaves:
             st.session_state.pop(k, None)
 
 
@@ -648,4 +649,3 @@ def gerar_foto_ajustada(orig_bytes, modo="Preencher", zoom=1.0, pos_x=0, pos_y=0
     buf = io.BytesIO()
     final.save(buf, format="JPEG", quality=84)
     return buf.getvalue()
-
