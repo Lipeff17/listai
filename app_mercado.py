@@ -144,7 +144,7 @@ def exibir_tela_login():
     with col_c:
         st.markdown(
             f'<div class="listai-header"><div class="listai-header-top"><div class="listai-brand">{LOGO_SVG}<h1>Listaí</h1></div>'
-            '<span class="listai-pill">v2.0 • PARÁ</span></div><p>Sua lista inteligente e os melhores preços da região.</p></div>',
+            '<span class="listai-pill">v2.0 • PREÇOS E COMPRAS</span></div><p>Sua lista inteligente e os melhores preços da região.</p></div>',
             unsafe_allow_html=True,
         )
         st.info("ℹ️ **Versão Beta gratuita:** o app é gratuito nos primeiros meses e poderá ter cobrança futura (você será avisado antes).")
@@ -268,8 +268,8 @@ def exibir_tela_login():
                     nome_p = st.text_input("Nome completo *", placeholder="Ex: Maria Silva")
                     c1, c2 = st.columns(2)
                     email_p = c1.text_input("E-mail (opcional)", placeholder="maria@email.com")
-                    tel_p = c2.text_input("WhatsApp (opcional)", placeholder="(91) 99999-9999")
-                    cid_p = st.text_input("Cidade / Bairro (opcional)", placeholder="Ex: Belém - Nazaré")
+                    tel_p = c2.text_input("WhatsApp (opcional)", placeholder="(11) 99999-9999")
+                    cid_p = st.text_input("Cidade / Bairro (opcional)", placeholder="Ex: Campinas - Centro")
                     a1, a2 = st.columns(2)
                     novo_u = a1.text_input("Usuário *", placeholder="Ex: maria")
                     nova_s = a2.text_input("Senha *", type="password", placeholder="Mín. 4 caracteres")
@@ -322,7 +322,7 @@ if not st.session_state.get("autenticado", False):
 # --- Componentes Compartilhados ---
 def avatar_html(nome, usuario, tamanho=48, solido=False):
     if foto := carregar_foto_perfil_base64(usuario):
-        borda = "border: 2px solid #FCA5A5;" if solido else ""
+        borda = "border: 2px solid #86EFAC;" if solido else ""
         return f'<img src="data:{foto[1]};base64,{foto[0]}" class="listai-avatar-img" style="width:{tamanho}px;height:{tamanho}px;{borda}" alt="Foto">'
     classe = "listai-avatar-solid" if solido else "listai-avatar"
     return f'<div class="{classe}" style="width:{tamanho}px;height:{tamanho}px;font-size:{max(14, int(tamanho * 0.36))}px;">{html.escape(obter_iniciais(nome))}</div>'
@@ -379,7 +379,7 @@ def renderizar_topo_nubank(nome_usuario, usuario_atual, gps_regiao):
         c_user, c_btn = st.columns([5, 1])
         c_user.markdown(
             f'<div class="listai-nu-user">{avatar_html(nome_usuario, usuario_atual, 44)}'
-            f'<div class="listai-nu-texts"><div class="listai-nu-brand">Listaí • v2.0 Pará</div>'
+            f'<div class="listai-nu-texts"><div class="listai-nu-brand">Listaí • v2.0</div>'
             f'<div class="listai-nu-hello">Olá, {html.escape(p_nome)}</div>'
             f'<div class="listai-nu-sub">{html.escape(sub_reg)}</div></div></div>',
             unsafe_allow_html=True,
@@ -791,7 +791,7 @@ def renderizar_graficos_compras(df, df_validos, limite_mensal=0.0):
     import altair as alt
 
     visao = st.radio("Agrupar evolução mensal por:", ["Total do Mês", "Por Categoria", "Por Supermercado"], horizontal=True)
-    paleta = ["#881322", "#D91E2A", "#0B4EA2", "#1D4ED8", "#EF4444", "#60A5FA", "#F87171", "#93C5FD"]
+    paleta = ["#064E3B", "#15803D", "#16A34A", "#22C55E", "#10B981", "#0D9488", "#4ADE80", "#86EFAC"]
     col_g, col_c = st.columns([3, 2])
 
     with col_g:
@@ -807,27 +807,27 @@ def renderizar_graficos_compras(df, df_validos, limite_mensal=0.0):
             g = df_v.groupby(["Mês", "Mês_Label", col_cor], as_index=False)["Total"].sum()
             g["Valor_fmt"] = g["Total"].apply(formatar_reais)
             chart_m = alt.Chart(g).mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
-                x=alt.X("Mês_Label:N", sort=ord_lbls, title=None, axis=alt.Axis(labelAngle=0, labelColor="#1E1B24")),
-                y=alt.Y("Total:Q", title="Gasto (R$)", axis=alt.Axis(labelColor="#1E1B24", titleColor="#881322")),
-                color=alt.Color(f"{col_cor}:N", scale=alt.Scale(range=paleta), legend=alt.Legend(orient="bottom", columns=2, title=None, labelColor="#1E1B24")),
+                x=alt.X("Mês_Label:N", sort=ord_lbls, title=None, axis=alt.Axis(labelAngle=0, labelColor="#132A1E")),
+                y=alt.Y("Total:Q", title="Gasto (R$)", axis=alt.Axis(labelColor="#132A1E", titleColor="#064E3B")),
+                color=alt.Color(f"{col_cor}:N", scale=alt.Scale(range=paleta), legend=alt.Legend(orient="bottom", columns=2, title=None, labelColor="#132A1E")),
                 tooltip=[alt.Tooltip("Mês_Label:N", title="Mês"), alt.Tooltip(f"{col_cor}:N", title=col_cor), alt.Tooltip("Valor_fmt:N", title="Total")],
             ).properties(height=270, title=f"Gastos Mensais ({visao})")
         else:
             g = df_v.groupby(["Mês", "Mês_Label"], as_index=False)["Total"].sum()
             g["Valor_fmt"] = g["Total"].apply(formatar_reais)
             teto_y = max(g["Total"].max() * 1.18, limite_mensal * 1.12 if limite_mensal > 0 else 0.0, 10.0)
-            barras = alt.Chart(g).mark_bar(cornerRadiusTopLeft=7, cornerRadiusTopRight=7, color="#0B4EA2", size=34).encode(
-                x=alt.X("Mês_Label:N", sort=ord_lbls, title=None, axis=alt.Axis(labelAngle=0, labelColor="#1E1B24")),
-                y=alt.Y("Total:Q", title="Gasto (R$)", scale=alt.Scale(domain=[0, teto_y]), axis=alt.Axis(labelColor="#1E1B24", titleColor="#881322")),
+            barras = alt.Chart(g).mark_bar(cornerRadiusTopLeft=7, cornerRadiusTopRight=7, color="#16A34A", size=34).encode(
+                x=alt.X("Mês_Label:N", sort=ord_lbls, title=None, axis=alt.Axis(labelAngle=0, labelColor="#132A1E")),
+                y=alt.Y("Total:Q", title="Gasto (R$)", scale=alt.Scale(domain=[0, teto_y]), axis=alt.Axis(labelColor="#132A1E", titleColor="#064E3B")),
                 tooltip=[alt.Tooltip("Mês_Label:N", title="Mês"), alt.Tooltip("Valor_fmt:N", title="Total Gasto")],
             )
-            camadas, tit = [barras, barras.mark_text(align="center", baseline="bottom", dy=-5, fontWeight="bold", color="#881322").encode(text="Valor_fmt:N")], []
+            camadas, tit = [barras, barras.mark_text(align="center", baseline="bottom", dy=-5, fontWeight="bold", color="#064E3B").encode(text="Valor_fmt:N")], []
             if len(g) >= 2:
                 media = g["Total"].mean()
-                camadas.append(alt.Chart(pd.DataFrame({"Media": [media]})).mark_rule(strokeDash=[5, 4], color="#881322", size=2).encode(y="Media:Q"))
+                camadas.append(alt.Chart(pd.DataFrame({"Media": [media]})).mark_rule(strokeDash=[5, 4], color="#064E3B", size=2).encode(y="Media:Q"))
                 tit.append(f"média: {formatar_reais(media)}")
             if limite_mensal > 0:
-                camadas.append(alt.Chart(pd.DataFrame({"Limite": [limite_mensal]})).mark_rule(strokeDash=[3, 3], color="#D91E2A", size=2).encode(y="Limite:Q"))
+                camadas.append(alt.Chart(pd.DataFrame({"Limite": [limite_mensal]})).mark_rule(strokeDash=[3, 3], color="#DC2626", size=2).encode(y="Limite:Q"))
                 tit.append(f"limite: {formatar_reais(limite_mensal)}")
             chart_m = alt.layer(*camadas).properties(height=270, title=f"Evolução Mensal ({' • '.join(tit)})" if tit else "Evolução Mensal")
         st.altair_chart(chart_m.configure(background="#FFFFFF"), use_container_width=True)
@@ -836,12 +836,12 @@ def renderizar_graficos_compras(df, df_validos, limite_mensal=0.0):
         rc = df.groupby("Categoria", as_index=False)["Total"].sum().sort_values("Total", ascending=False)
         rc["Label"] = rc.apply(lambda r: f"{formatar_reais(r['Total'])} ({(r['Total'] / max(rc['Total'].sum(), 0.01)) * 100:.0f}%)", axis=1)
         bc = alt.Chart(rc).mark_bar(cornerRadiusTopRight=6, cornerRadiusBottomRight=6).encode(
-            y=alt.Y("Categoria:N", sort="-x", title=None, axis=alt.Axis(labelColor="#1E1B24")),
+            y=alt.Y("Categoria:N", sort="-x", title=None, axis=alt.Axis(labelColor="#132A1E")),
             x=alt.X("Total:Q", title=None, axis=None, scale=alt.Scale(domain=[0, max(rc["Total"].max() * 1.55, 10)])),
-            color=alt.Color("Total:Q", scale=alt.Scale(range=["#60A5FA", "#0B4EA2", "#D91E2A"]), legend=None),
+            color=alt.Color("Total:Q", scale=alt.Scale(range=["#4ADE80", "#16A34A", "#064E3B"]), legend=None),
             tooltip=[alt.Tooltip("Categoria:N", title="Categoria"), alt.Tooltip("Label:N", title="Gasto")],
         )
-        st.altair_chart((bc + bc.mark_text(align="left", baseline="middle", dx=6, fontSize=11, fontWeight="bold", color="#881322").encode(text="Label:N")).properties(height=270, title="Onde você gastou mais").configure(background="#FFFFFF"), use_container_width=True)
+        st.altair_chart((bc + bc.mark_text(align="left", baseline="middle", dx=6, fontSize=11, fontWeight="bold", color="#064E3B").encode(text="Label:N")).properties(height=270, title="Onde você gastou mais").configure(background="#FFFFFF"), use_container_width=True)
 
 
 def renderizar_grupos_historico(df_exib, col_grupo, total_geral, modo="categoria"):
@@ -952,12 +952,12 @@ def pagina_compra(ctx):
                 "🏪 Onde você vai comprar?", op_merc, key="sel_merc_compra",
                 format_func=(lambda m: f"{m} ({formatar_distancia(dist_gps[m])})" if reg_ativa == gps_regiao and dist_gps.get(m) is not None else m),
             )
-            merc_ini_final = st.text_input("Nome do Supermercado", placeholder="Ex: Atacadão, Líder, Mateus", key="in_merc_inicio").strip() if merc_ini == "➕ Novo supermercado..." else merc_ini
+            merc_ini_final = st.text_input("Nome do Supermercado", placeholder="Ex: Atacadão, Mercado Central", key="in_merc_inicio").strip() if merc_ini == "➕ Novo supermercado..." else merc_ini
 
             with st.expander(f"📍 Região: {reg_ativa or 'Selecionar'}", expanded=(reg_sel == "➕ Nova região...")):
                 reg_esc = st.selectbox("📍 Região", op_reg, key="sel_reg_compra")
                 if reg_esc == "➕ Nova região...":
-                    st.text_input("Nome da nova região", placeholder="Ex: Belém - Batista Campos", key="input_nova_regiao")
+                    st.text_input("Nome da nova região", placeholder="Ex: Campinas - Centro", key="input_nova_regiao")
 
             if pend > 0:
                 st.caption(f"📝 Você tem **{pend}** {'item pendente' if pend == 1 else 'itens pendentes'} na sua **Lista**.")
@@ -977,7 +977,7 @@ def pagina_compra(ctx):
     with st.container(border=True):
         st.markdown("#### 🛒 Adicionar Produto")
         merc_esc = st.selectbox("🏪 Supermercado", op_merc, key="sel_merc_compra", format_func=(lambda m: f"{m} ({formatar_distancia(dist_gps[m])})" if reg_ativa == gps_regiao and dist_gps.get(m) is not None else m))
-        merc_final = st.text_input("Nome do Supermercado", placeholder="Ex: Atacadão, Líder, Mateus").strip() if merc_esc == "➕ Novo supermercado..." else merc_esc
+        merc_final = st.text_input("Nome do Supermercado", placeholder="Ex: Atacadão, Mercado Central").strip() if merc_esc == "➕ Novo supermercado..." else merc_esc
 
         if aviso := st.session_state.get("aviso_voz"):
             txt_v = f'🎤 **Ouvi:** *"{aviso["transcricao"]}"* • **{aviso["categoria"]}**' + (f" • **{aviso['supermercado']}**" if aviso.get("supermercado") else "")
@@ -987,7 +987,7 @@ def pagina_compra(ctx):
         if aviso_bc := st.session_state.pop("aviso_barcode", None):
             st.success(f"🏷️ **Código `{aviso_bc['codigo']}` identificado:** {aviso_bc['produto']} — digite o preço abaixo e toque em **✅ Adicionar**!")
 
-        prod = st.text_input("Produto", value=st.session_state["valor_produto"], placeholder="Ex: Arroz 5kg, Farinha, Açaí, Café...", key=f"input_produto_{versao}")
+        prod = st.text_input("Produto", value=st.session_state["valor_produto"], placeholder="Ex: Arroz 5kg, Sabão Omo, Café...", key=f"input_produto_{versao}")
         with st.container(key="row_qtd_preco"):
             c_qtd, c_prc = st.columns(2)
             qtd = c_qtd.number_input("Qtd", min_value=1, value=int(st.session_state["valor_quantidade"]), step=1, key=f"input_qtd_{versao}")
@@ -1037,7 +1037,7 @@ def pagina_compra(ctx):
             data_c = cd1.date_input("Data da compra", value=date.today(), format="DD/MM/YYYY", key=f"input_dt_{versao}")
             comp = cd2.checkbox("📢 Compartilhar preço", value=True, key=f"input_comp_{versao}")
             reg_esc = st.selectbox("📍 Região", op_reg, key="sel_reg_compra")
-            reg_final = st.text_input("Nome da nova região", placeholder="Ex: Belém - Nazaré", key="input_nova_regiao").strip() if reg_esc == "➕ Nova região..." else reg_esc
+            reg_final = st.text_input("Nome da nova região", placeholder="Ex: Campinas - Centro", key="input_nova_regiao").strip() if reg_esc == "➕ Nova região..." else reg_esc
 
         if res_pix := renderizar_leitor_pix(api_key, merc_final, versao):
             selecionados, merc_usar = res_pix
@@ -1161,10 +1161,10 @@ def pagina_graficos(ctx):
                 df_ev["Preco_fmt"] = df_ev["Preço"].apply(formatar_reais)
                 ch_ev = (
                     alt.Chart(df_ev)
-                    .mark_line(point=True, strokeWidth=2.5, color="#0B4EA2")
+                    .mark_line(point=True, strokeWidth=2.5, color="#16A34A")
                     .encode(
-                        x=alt.X("Data_dt:T", title=None, axis=alt.Axis(format="%d/%m", labelColor="#1E1B24")),
-                        y=alt.Y("Preço:Q", title="Preço (R$)", scale=alt.Scale(zero=False), axis=alt.Axis(labelColor="#1E1B24", titleColor="#881322")),
+                        x=alt.X("Data_dt:T", title=None, axis=alt.Axis(format="%d/%m", labelColor="#132A1E")),
+                        y=alt.Y("Preço:Q", title="Preço (R$)", scale=alt.Scale(zero=False), axis=alt.Axis(labelColor="#132A1E", titleColor="#064E3B")),
                         tooltip=[
                             alt.Tooltip("Data_fmt:N", title="Data"),
                             alt.Tooltip("Produto:N", title="Produto"),
@@ -1442,7 +1442,7 @@ def pagina_mercados(ctx):
 
         with st.expander("🔎 Buscar Cidade / Bairro / CEP"):
             c1, c2 = st.columns([3, 1], vertical_alignment="bottom")
-            reg_b = c1.text_input("Cidade, Bairro ou CEP", placeholder="Ex: Belém - Nazaré, 66035-145").strip()
+            reg_b = c1.text_input("Cidade, Bairro ou CEP", placeholder="Ex: Campinas - Taquaral, 01310-100").strip()
             if c2.button("Buscar", type="primary", use_container_width=True) and reg_b:
                 with st.spinner(f"Procurando em até {raio} km..."):
                     try:
@@ -1651,9 +1651,15 @@ def pagina_perfil(ctx):
         with st.container(border=True):
             st.markdown("#### 📍 Localização GPS")
             if gps_coords:
-                st.success(f"📌 **{gps_regiao}** · Mais próximo: **{gps_mercados[0][0]} ({formatar_distancia(gps_mercados[0][1])})**") if (gps_mercados and gps_mercados[0][1] is not None) else st.info(f"📌 Região: **{gps_regiao}**")
+                if gps_mercados and gps_mercados[0][1] is not None:
+                    st.success(f"📌 **{gps_regiao}** · Mais próximo: **{gps_mercados[0][0]} ({formatar_distancia(gps_mercados[0][1])})**")
+                else:
+                    st.info(f"📌 Região: **{gps_regiao}**")
             with st.expander("📡 Atualizar localização GPS", expanded=not bool(gps_coords)):
-                processar_leitura_gps(streamlit_geolocation(), usuario_atual) if streamlit_geolocation else st.warning("Pacote `streamlit-geolocation` não instalado.")
+                if streamlit_geolocation:
+                    processar_leitura_gps(streamlit_geolocation(), usuario_atual)
+                else:
+                    st.warning("Pacote `streamlit-geolocation` não instalado.")
 
         with st.expander("⚙️ Inteligência Artificial (API Gemini)", expanded=not bool(api_key)):
             if api_key and origem_api == "secrets":
@@ -1678,7 +1684,7 @@ def pagina_perfil(ctx):
                 ad_url = st.text_input("Link de Afiliado / Parceiro *", placeholder="https://amzn.to/...")
                 a_c1, a_c2 = st.columns(2)
                 ad_cat = a_c1.selectbox("Categoria alvo", ["Geral"] + LISTA_CATEGORIAS)
-                ad_reg = a_c2.text_input("Região alvo (opcional)", placeholder="Ex: Belém (vazio = todas)")
+                ad_reg = a_c2.text_input("Região alvo (opcional)", placeholder="Ex: Itajaí (vazio = todas)")
                 b_c1, b_c2 = st.columns(2)
                 ad_btn = b_c1.text_input("Nome da Loja / Botão", value="Ver Oferta")
                 ad_cup = b_c2.text_input("Cupom (opcional)", placeholder="Ex: LISTAI10")
