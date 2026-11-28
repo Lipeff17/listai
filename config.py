@@ -17,8 +17,7 @@ html, body, .stApp { background-color: #FDF7F7 !important; color: #1E1B24 !impor
 @keyframes listaiFadeIn { from { opacity: 0.92; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
 [data-testid="stHeader"] { background: rgba(253, 247, 247, 0.88) !important; backdrop-filter: blur(8px); }
 [data-stale="true"] { opacity: 0.9 !important; transition: opacity 0.14s ease !important; }
-.stElementContainer:has(iframe[height="0"]) { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
-button, a, input, select, textarea, [role="button"] { touch-action: manipulation; }
+.stElementContainer:has(iframe[height="0"][srcdoc]) { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
 
 h1, h2, h3, h4 { color: #881322 !important; font-weight: 800 !important; letter-spacing: -0.3px; }
 label, .stMarkdown p, .stCheckbox p, .stRadio p { color: #1E1B24 !important; }
