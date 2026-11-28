@@ -2,16 +2,9 @@ import base64
 from datetime import date
 import hashlib
 import html
-import io
-import json
-import math
 import os
-import random
 import re
-import secrets
-import unicodedata
 import urllib.parse
-import uuid
 
 import pandas as pd
 import streamlit as st
@@ -24,870 +17,111 @@ except ImportError:
 
 st.set_page_config(page_title="Listaí — Preços e Compras", page_icon="🛒", layout="wide", initial_sidebar_state="collapsed")
 
-# --- Tema Verde Listaí + Layout Mobile Compacto ---
-st.markdown(
-"""<style>
-html, body, .stApp { background-color: #F3F8F5 !important; color: #132A1E !important; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important; overflow-x: clip !important; }
-.block-container { padding: 3.7rem 1rem 3.2rem 1rem !important; max-width: 1080px; }
-h1, h2, h3, h4 { color: #064E3B !important; font-weight: 800 !important; letter-spacing: -0.3px; }
-label, .stMarkdown p, .stCheckbox p, .stRadio p { color: #132A1E !important; }
-[data-testid="stCaptionContainer"] p, small { color: #475569 !important; font-size: 0.82rem !important; }
-section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] { display: none !important; }
-
-/* Topo Estilo Nubank */
-.st-key-topo_nubank { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%) !important; border-radius: 16px !important; padding: 0.9rem 1rem !important; margin-bottom: 0.65rem !important; box-shadow: 0 6px 20px rgba(21, 128, 61, 0.22) !important; }
-.st-key-topo_nubank [data-testid="stVerticalBlock"] { background: transparent !important; gap: 0 !important; }
-.st-key-topo_nubank [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: minmax(0, 1fr) auto !important; align-items: center !important; gap: 0.65rem !important; width: 100% !important; }
-.st-key-topo_nubank [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
-.st-key-topo_nubank [data-testid="stColumn"]:last-child { width: auto !important; justify-self: end !important; }
-.listai-nu-user { display: flex; align-items: center; gap: 0.7rem; width: 100%; min-width: 0; }
-.listai-nu-texts { flex: 1 1 auto; min-width: 0; }
-.listai-nu-brand { font-size: 0.68rem; font-weight: 700; color: #BBF7D0; text-transform: uppercase; letter-spacing: 0.7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.listai-nu-hello { font-size: 1.2rem; font-weight: 800; color: #FFFFFF; line-height: 1.18; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.listai-nu-sub { font-size: 0.76rem; color: #DCFCE7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.st-key-topo_nubank .stButton > button { background: #FFFFFF !important; border: 2px solid #DCFCE7 !important; color: #064E3B !important; border-radius: 999px !important; padding: 0.36rem 0.85rem !important; font-size: 0.80rem !important; font-weight: 800 !important; white-space: nowrap !important; width: auto !important; }
-.st-key-topo_nubank .stButton > button p { color: #064E3B !important; font-weight: 800 !important; white-space: nowrap !important; }
-
-/* Barra de Navegação Superior */
-.st-key-barra_navegacao { background: #FFFFFF !important; border: 1px solid #86EFAC !important; border-radius: 14px !important; padding: 0.28rem 0.32rem !important; margin-bottom: 0.75rem !important; box-shadow: 0 3px 12px rgba(6, 78, 59, 0.08) !important; }
-.st-key-barra_navegacao [data-testid="stVerticalBlock"] { gap: 0 !important; }
-.st-key-barra_navegacao [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 0.18rem !important; width: 100% !important; }
-.st-key-barra_navegacao [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
-.st-key-barra_navegacao .stButton > button { border-radius: 10px !important; padding: 0.32rem 0.06rem !important; min-height: 2.6rem !important; line-height: 1.1 !important; box-shadow: none !important; width: 100% !important; }
-.st-key-barra_navegacao .stButton > button p { font-size: 0.72rem !important; font-weight: 700 !important; line-height: 1.12 !important; margin: 0 !important; white-space: pre-line !important; }
-.st-key-barra_navegacao .stButton > button[kind="secondary"] { background: transparent !important; border: none !important; color: #334155 !important; }
-.st-key-barra_navegacao .stButton > button[kind="primary"] { background: linear-gradient(135deg, #15803D, #16A34A) !important; color: #FFFFFF !important; }
-.st-key-barra_navegacao .stButton > button[kind="primary"] p { color: #FFFFFF !important; }
-
-/* Grids Fixos */
-[class*="st-key-kpi_2cols"] [data-testid="stHorizontalBlock"], .st-key-row_qtd_preco [data-testid="stHorizontalBlock"],
-.st-key-acao_add_voz [data-testid="stHorizontalBlock"], .st-key-add_lista_row [data-testid="stHorizontalBlock"],
-.st-key-lista_chk_box [data-testid="stHorizontalBlock"], [class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"],
-[class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"],
-.st-key-foto_btns_row [data-testid="stHorizontalBlock"], .st-key-foto_pos_row [data-testid="stHorizontalBlock"],
-[class*="st-key-mkt_card_"] [data-testid="stHorizontalBlock"], .st-key-fam_bar [data-testid="stHorizontalBlock"],
-[class*="st-key-adm_ad_row_"] [data-testid="stHorizontalBlock"] {
-    display: grid !important; gap: 0.45rem !important; align-items: center !important; width: 100% !important;
-}
-[class*="st-key-kpi_2cols"] [data-testid="stHorizontalBlock"], [class*="st-key-edit_qp_"] [data-testid="stHorizontalBlock"],
-.st-key-foto_btns_row [data-testid="stHorizontalBlock"], .st-key-foto_pos_row [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-.st-key-row_qtd_preco [data-testid="stHorizontalBlock"] { grid-template-columns: 0.85fr 1.15fr !important; align-items: end !important; }
-.st-key-acao_add_voz [data-testid="stHorizontalBlock"] { grid-template-columns: 1fr 1.35fr !important; align-items: center !important; }
-.st-key-add_lista_row [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 64px !important; align-items: end !important; }
-.st-key-lista_chk_box [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 40px 40px !important; gap: 0.25rem !important; }
-.st-key-fam_bar [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) auto !important; gap: 0.45rem !important; }
-[class*="st-key-compra_grp_"] [data-testid="stHorizontalBlock"], [class*="st-key-adm_ad_row_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) 42px !important; gap: 0.35rem !important; }
-[class*="st-key-edit_btns_"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-[class*="st-key-kpi_4cols"] [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.5rem !important; width: 100% !important; }
-[class*="st-key-kpi_3cols"] [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 0.5rem !important; width: 100% !important; }
-[class*="st-key-mkt_card_"] [data-testid="stHorizontalBlock"] { grid-template-columns: minmax(0, 1fr) auto !important; align-items: center !important; }
-[class*="st-key-kpi_2cols"] [data-testid="stColumn"], [class*="st-key-kpi_3cols"] [data-testid="stColumn"],
-[class*="st-key-kpi_4cols"] [data-testid="stColumn"], .st-key-row_qtd_preco [data-testid="stColumn"],
-.st-key-acao_add_voz [data-testid="stColumn"], .st-key-add_lista_row [data-testid="stColumn"], .st-key-lista_chk_box [data-testid="stColumn"],
-[class*="st-key-compra_grp_"] [data-testid="stColumn"], [class*="st-key-edit_qp_"] [data-testid="stColumn"],
-[class*="st-key-edit_btns_"] [data-testid="stColumn"], .st-key-foto_btns_row [data-testid="stColumn"],
-.st-key-foto_pos_row [data-testid="stColumn"], [class*="st-key-mkt_card_"] [data-testid="stColumn"],
-.st-key-fam_bar [data-testid="stColumn"], [class*="st-key-adm_ad_row_"] [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
-
-/* Gravador de Áudio Nativo */
-.st-key-acao_add_voz .stButton > button { height: 44px !important; min-height: 44px !important; margin: 0 !important; }
-.st-key-acao_add_voz [data-testid="stAudioInput"] { width: 100% !important; margin: 0 !important; }
-.st-key-acao_add_voz [data-testid="stAudioInput"] > div { background: #ECFDF5 !important; border: 1.5px solid #10B981 !important; border-radius: 10px !important; min-height: 44px !important; }
-.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Stop" i],
-.st-key-acao_add_voz [data-testid="stAudioInput"] button[aria-label*="Parar" i] { background: #EF4444 !important; color: #FFFFFF !important; border-radius: 8px !important; }
-
-/* Compra Ativa, Lista & Família */
-.st-key-lista_chk_box .stButton > button, [class*="st-key-compra_grp_"] .stButton > button { padding: 0.25rem 0.2rem !important; min-height: 2.1rem !important; font-size: 0.85rem !important; }
-.st-key-lista_chk_box .stCheckbox { margin: 0 !important; }
-.st-key-lista_chk_box .stCheckbox label p { font-size: 0.88rem !important; line-height: 1.25 !important; word-break: break-word !important; }
-.listai-fam-badge { background: linear-gradient(135deg, #ECFDF5, #DCFCE7); border: 1px solid #86EFAC; border-radius: 11px; padding: 0.45rem 0.72rem; font-size: 0.82rem; font-weight: 700; color: #064E3B; }
-.listai-fam-code { background: #FFFFFF; border: 1px dashed #16A34A; color: #15803D; padding: 0.08rem 0.45rem; border-radius: 6px; font-family: monospace; font-size: 0.86rem; font-weight: 800; }
-.listai-start-hero { background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%); border: 1px solid #86EFAC; border-radius: 14px; padding: 1rem 1.05rem; margin-bottom: 0.7rem; }
-.listai-start-hero h3 { margin: 0 0 0.25rem 0 !important; font-size: 1.08rem !important; color: #064E3B !important; }
-.listai-start-hero p { margin: 0 !important; font-size: 0.85rem !important; color: #475569 !important; }
-.listai-compra-banner { background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%); border: 1px solid #86EFAC; border-left: 5px solid #16A34A; border-radius: 13px; padding: 0.8rem 0.95rem; margin-bottom: 0.65rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
-.listai-compra-eyebrow { font-size: 0.72rem; font-weight: 800; color: #15803D; text-transform: uppercase; letter-spacing: 0.5px; }
-.listai-compra-merc { font-size: 1.08rem; font-weight: 800; color: #064E3B; margin-top: 2px; }
-.listai-compra-data { font-size: 0.80rem; color: #475569; margin-top: 2px; }
-.listai-compra-total-box { text-align: right; }
-.listai-compra-total-lbl { font-size: 0.72rem; color: #475569; font-weight: 600; }
-.listai-compra-total-val { font-size: 1.28rem; font-weight: 800; color: #15803D; line-height: 1.1; }
-.listai-rec-row { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 0.45rem 0.65rem; min-width: 0; }
-.listai-rec-nome { font-weight: 700; font-size: 0.88rem; color: #064E3B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.listai-rec-meta { font-size: 0.76rem; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* Banco de Dados de Preços & Tabelas Estilizadas */
-.listai-db-head { background: linear-gradient(135deg, #FFFFFF 0%, #F0FDF4 100%); border: 1px solid #BBF7D0; border-left: 5px solid #16A34A; border-radius: 13px; padding: 0.75rem 0.9rem; margin: 0.45rem 0 0.35rem 0; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
-.listai-db-title { font-size: 0.98rem; font-weight: 800; color: #064E3B; }
-.listai-db-sub { font-size: 0.77rem; color: #475569; margin-top: 2px; }
-.listai-db-badges { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
-.listai-db-wrap { background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 12px; overflow: hidden; margin: 0.2rem 0 0.55rem 0; box-shadow: 0 2px 8px rgba(6, 78, 59, 0.05); }
-.listai-db-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; table-layout: auto; }
-.listai-db-table thead th { background: #ECFDF5; color: #064E3B; font-weight: 800; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.45px; padding: 0.58rem 0.75rem; border-bottom: 1.5px solid #BBF7D0; text-align: left; white-space: nowrap; }
-.listai-db-table thead th.num { text-align: right; }
-.listai-db-table tbody tr { border-bottom: 1px solid #F1F5F9; transition: background 0.15s ease; }
-.listai-db-table tbody tr:nth-child(even) { background: #FAFDFB; }
-.listai-db-table tbody tr:hover { background: #F0FDF4; }
-.listai-db-table tbody tr:last-child { border-bottom: none; }
-.listai-db-table tbody td { padding: 0.56rem 0.75rem; vertical-align: middle; color: #132A1E; }
-.listai-db-prod { font-weight: 700; color: #064E3B; font-size: 0.89rem; word-break: break-word; line-height: 1.25; }
-.listai-db-meta { font-size: 0.74rem; color: #64748B; margin-top: 2px; line-height: 1.25; }
-.listai-db-price { text-align: right; font-weight: 800; color: #064E3B; font-size: 0.92rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.listai-db-price-best { color: #15803D; }
-.listai-db-status { text-align: right; white-space: nowrap; }
-.listai-st-best { display: inline-block; background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; font-size: 0.71rem; font-weight: 800; padding: 0.12rem 0.48rem; border-radius: 999px; }
-.listai-st-up { display: inline-block; background: #FFF7ED; color: #B45309; border: 1px solid #FED7AA; font-size: 0.71rem; font-weight: 700; padding: 0.12rem 0.48rem; border-radius: 999px; }
-.listai-st-only { display: inline-block; background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; font-size: 0.71rem; font-weight: 600; padding: 0.12rem 0.48rem; border-radius: 999px; }
-
-.listai-pill-best { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; font-size: 0.72rem; font-weight: 800; padding: 0.14rem 0.52rem; border-radius: 999px; }
-.listai-pill-mid { background: #FEF9C3; color: #854D0E; border: 1px solid #FDE047; font-size: 0.72rem; font-weight: 800; padding: 0.14rem 0.52rem; border-radius: 999px; }
-.listai-pill-high { background: #FFEDD5; color: #9A3412; border: 1px solid #FDBA74; font-size: 0.72rem; font-weight: 800; padding: 0.14rem 0.52rem; border-radius: 999px; }
-.listai-pill-muted { background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; font-size: 0.72rem; font-weight: 700; padding: 0.14rem 0.52rem; border-radius: 999px; }
-
-.listai-mkt-item { display: flex; align-items: flex-start; gap: 0.65rem; min-width: 0; }
-.listai-mkt-rank { width: 36px; height: 36px; border-radius: 10px; background: #ECFDF5; border: 1px solid #86EFAC; color: #064E3B; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.listai-mkt-rank-top { background: linear-gradient(135deg, #15803D, #16A34A); color: #FFFFFF; border-color: #15803D; }
-.listai-mkt-info { min-width: 0; flex: 1; }
-.listai-mkt-name { font-size: 0.96rem; font-weight: 800; color: #064E3B; word-break: break-word; }
-.listai-mkt-meta { font-size: 0.77rem; color: #475569; margin-top: 2px; word-break: break-word; }
-.listai-mkt-tags { display: flex; flex-wrap: wrap; gap: 0.28rem; margin-top: 0.32rem; }
-
-/* Avatares, Foto Clicável e Prévia */
-.listai-avatar, .listai-avatar-solid { border-radius: 50%; color: #FFFFFF; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.listai-avatar { background: rgba(255, 255, 255, 0.22); border: 2px solid rgba(255, 255, 255, 0.88); }
-.listai-avatar-solid { background: linear-gradient(135deg, #064E3B, #16A34A); border: 2px solid #86EFAC; }
-.listai-avatar-img { border-radius: 50%; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.92); flex-shrink: 0; display: block; }
-.listai-foto-preview { display: flex; flex-direction: column; align-items: center; margin: 0.35rem 0 0.6rem 0; }
-.listai-foto-preview img { width: 132px; height: 132px; border-radius: 50%; object-fit: cover; border: 3px solid #16A34A; box-shadow: 0 4px 16px rgba(6, 78, 59, 0.20); }
-.st-key-perfil_hero_top [data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: 78px minmax(0, 1fr) !important; align-items: center !important; gap: 0.85rem !important; width: 100% !important; }
-.st-key-perfil_hero_top [data-testid="stColumn"] { width: 100% !important; min-width: 0 !important; flex: none !important; }
-.st-key-avatar_clicavel, .st-key-avatar_clicavel [data-testid="stVerticalBlock"], .listai-avatar-wrap { position: relative !important; width: 78px !important; height: 78px !important; border-radius: 50% !important; gap: 0 !important; }
-.st-key-avatar_clicavel { cursor: pointer !important; }
-.listai-cam-badge { position: absolute; right: 0; bottom: 0; width: 26px; height: 26px; border-radius: 50%; background: #16A34A; border: 2px solid #FFFFFF; color: #FFFFFF; font-size: 12px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-.st-key-avatar_clicavel [data-testid="stFileUploader"] { position: absolute !important; inset: 0 !important; width: 78px !important; height: 78px !important; opacity: 0.001 !important; z-index: 20 !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; border-radius: 50% !important; }
-.st-key-avatar_clicavel [data-testid="stFileUploaderDropzone"], .st-key-avatar_clicavel [data-testid="stFileUploaderDropzone"] button { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; min-height: 78px !important; padding: 0 !important; border: none !important; border-radius: 50% !important; }
-.st-key-avatar_clicavel [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
-.st-key-foto_btns_row .stButton > button { padding: 0.28rem 0.5rem !important; min-height: 2.1rem !important; font-size: 0.80rem !important; margin-top: 0.35rem !important; }
-
-/* Cards Diversos & Anúncios Inteligentes */
-.listai-header { background: linear-gradient(135deg, #064E3B 0%, #15803D 55%, #16A34A 100%); padding: 1.05rem 1.2rem; border-radius: 16px; color: #FFFFFF !important; margin-bottom: 0.8rem; }
-.listai-header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
-.listai-brand { display: flex; align-items: center; gap: 0.7rem; }
-.listai-logo-badge { background: #FFFFFF; width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.listai-header h1 { margin: 0 !important; font-size: 1.55rem !important; color: #FFFFFF !important; }
-.listai-header p { margin: 0.25rem 0 0 0 !important; font-size: 0.88rem !important; color: #DCFCE7 !important; }
-.listai-pill { background: rgba(255, 255, 255, 0.2); color: #FFFFFF !important; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
-.listai-winner-card { background: linear-gradient(135deg, #ECFDF5 0%, #DCFCE7 100%); border: 1px solid #86EFAC; border-left: 6px solid #16A34A; border-radius: 14px; padding: 0.9rem 1.05rem; color: #064E3B; margin-bottom: 0.8rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.listai-winner-card h3 { margin: 0 0 0.2rem 0 !important; font-size: 1.05rem !important; color: #064E3B !important; }
-.listai-winner-price { font-size: 1.35rem; font-weight: 800; color: #15803D; }
-.listai-eco-pill { display: inline-block; background: #16A34A; color: #FFFFFF; font-size: 0.72rem; font-weight: 700; padding: 0.16rem 0.55rem; border-radius: 999px; margin-top: 4px; }
-.listai-profile-info h3 { margin: 0 !important; font-size: 1.15rem !important; }
-.listai-profile-info span { color: #475569; font-size: 0.84rem; display: block; margin-top: 2px; }
-.listai-foto-dica { color: #15803D !important; font-weight: 600; font-size: 0.78rem !important; }
-.listai-ad-badge { display: inline-block; background: #DCFCE7; color: #166534; font-size: 0.68rem; font-weight: 800; padding: 0.12rem 0.48rem; border-radius: 6px; margin-right: 0.3rem; }
-.listai-ad-cupom { display: inline-block; background: #FEF9C3; color: #854D0E; border: 1px dashed #CA8A04; font-size: 0.70rem; font-weight: 800; padding: 0.08rem 0.45rem; border-radius: 6px; margin-left: 0.35rem; font-family: monospace; }
-
-/* Histórico e Feed */
-.listai-hist-card { background: #FFFFFF; border: 1px solid #D1FAE5; border-left: 5px solid #16A34A; border-radius: 13px; padding: 0.75rem 0.9rem 0.55rem 0.9rem; margin-bottom: 0.35rem; }
-.listai-hist-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-.listai-hist-title { font-size: 0.96rem; font-weight: 800; color: #064E3B; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-.listai-hist-badge { background: #ECFDF5; color: #15803D; border: 1px solid #BBF7D0; font-size: 0.71rem; font-weight: 700; padding: 0.1rem 0.48rem; border-radius: 999px; }
-.listai-hist-total { font-size: 1rem; font-weight: 800; color: #15803D; }
-.listai-hist-track { width: 100%; height: 5px; background: #ECFDF5; border-radius: 999px; overflow: hidden; margin-top: 0.45rem; }
-.listai-hist-fill { height: 100%; background: linear-gradient(90deg, #22C55E, #15803D); border-radius: 999px; }
-.listai-hist-item { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; padding: 0.45rem 0.15rem; border-bottom: 1px solid #F1F5F9; }
-.listai-hist-item:last-child, .listai-feed-row:last-child { border-bottom: none; }
-.listai-hist-prod, .listai-feed-name { font-weight: 700; color: #132A1E; font-size: 0.90rem; word-break: break-word; }
-.listai-hist-meta { font-size: 0.77rem; color: #64748B; margin-top: 2px; }
-.listai-hist-right { text-align: right; flex-shrink: 0; }
-.listai-hist-val { font-weight: 800; color: #064E3B; font-size: 0.90rem; }
-.listai-hist-unit { font-size: 0.74rem; color: #64748B; }
-.listai-feed-day { display: flex; justify-content: space-between; align-items: center; margin: 0.7rem 0 0.3rem 0; padding: 0 0.2rem; font-size: 0.81rem; font-weight: 800; color: #064E3B; }
-.listai-feed-day span:last-child { color: #15803D; }
-.listai-feed-box { background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 14px; padding: 0.2rem 0.8rem; margin-bottom: 0.55rem; }
-.listai-feed-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.58rem 0; border-bottom: 1px solid #F1F5F9; }
-.listai-feed-left { display: flex; align-items: center; gap: 0.6rem; min-width: 0; flex: 1; }
-.listai-feed-info { min-width: 0; }
-.listai-feed-ico { width: 34px; height: 34px; border-radius: 10px; background: #ECFDF5; border: 1px solid #BBF7D0; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 800; color: #064E3B; flex-shrink: 0; }
-.listai-feed-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 3px; }
-.listai-feed-tag { background: #F1F5F9; color: #334155; font-size: 0.70rem; font-weight: 600; padding: 0.08rem 0.42rem; border-radius: 6px; }
-.listai-feed-tag-cat { background: #ECFDF5; color: #15803D; }
-
-/* Botões, DataFrames e Métricas */
-[data-testid="stDataFrame"] { border: 1px solid #BBF7D0 !important; border-radius: 12px !important; overflow: hidden !important; background: #FFFFFF !important; }
-div[data-testid="stMetric"] { background-color: #FFFFFF !important; border: 1px solid #D1FAE5 !important; border-left: 5px solid #16A34A !important; padding: 10px 14px; border-radius: 12px; }
-div[data-testid="stMetricLabel"] p { color: #334155 !important; font-weight: 600 !important; font-size: 0.82rem !important; }
-div[data-testid="stMetricValue"] { color: #064E3B !important; font-weight: 800 !important; font-size: 1.35rem !important; }
-.stButton > button, .stLinkButton > a, .stFormSubmitButton > button { border-radius: 10px !important; font-weight: 600 !important; font-size: 0.90rem !important; }
-.stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primary"] { background-color: #16A34A !important; border: none !important; color: #FFFFFF !important; }
-.stButton > button[kind="secondary"] { background-color: #FFFFFF !important; border: 1px solid #BBF7D0 !important; color: #064E3B !important; }
-div[data-testid="stProgress"] > div > div > div > div { background-color: #16A34A !important; }
-
-@media (max-width: 680px) {
-    .block-container { padding: 3.9rem 0.65rem 4.5rem 0.65rem !important; }
-    .st-key-topo_nubank { padding: 0.82rem 0.85rem !important; margin-bottom: 0.5rem !important; }
-    .listai-nu-hello { font-size: 1.05rem !important; }
-    .st-key-topo_nubank .stButton > button { padding: 0.3rem 0.7rem !important; font-size: 0.76rem !important; }
-    div[data-testid="stMetric"] { padding: 8px 11px !important; }
-    div[data-testid="stMetricValue"] { font-size: 1.15rem !important; }
-    [class*="st-key-kpi_4cols"] [data-testid="stHorizontalBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-    [class*="st-key-mkt_card_"] [data-testid="stHorizontalBlock"] { grid-template-columns: 1fr !important; }
-    .st-key-barra_navegacao { padding: 0.22rem 0.22rem !important; margin-bottom: 0.55rem !important; }
-    .st-key-barra_navegacao [data-testid="stHorizontalBlock"] { gap: 0.1rem !important; }
-    .st-key-barra_navegacao .stButton > button { min-height: 2.38rem !important; padding: 0.2rem 0.02rem !important; }
-    .st-key-barra_navegacao .stButton > button p { font-size: 0.59rem !important; }
-    .listai-db-table thead th, .listai-db-table tbody td { padding: 0.48rem 0.52rem; }
-    .listai-db-prod { font-size: 0.84rem; }
-    .listai-db-price { font-size: 0.86rem; }
-}
-</style>""",
-unsafe_allow_html=True,
+from config import (
+    ANUNCIOS_PADRAO,
+    COLUNAS,
+    COLUNAS_COMUNIDADE,
+    ESTILO_CSS,
+    EXTENSOES_FOTO,
+    ICONES_CATEGORIA,
+    LISTA_CATEGORIAS,
+    LOGO_SVG,
+    NAV_ITENS,
+    PAGINAS,
+    PAGINA_PERFIL,
+    PERGUNTAS_SEGURANCA,
+    RAIO_LABELS,
+    RAIO_OPCOES,
+    fmt_dt,
+    fmt_qtd,
+    formatar_delta_reais,
+    formatar_distancia,
+    formatar_reais,
+    gerar_foto_ajustada,
+    ler_segredo,
+    limpar_estado_editor_foto,
+    limpar_estado_usuario,
+    mascarar_email,
+    mascarar_telefone,
+    normalizar_texto,
+    obter_api_key_gemini,
+    obter_arquivo_usuario,
+    obter_iniciais,
+    obter_usuarios_admin,
+    preparar_imagem_base,
+    rerun_fragmento,
+    rolar_para_topo,
+    supabase_ativo,
+)
+from dados import (
+    adicionar_itens_pre_lista,
+    atualizar_campos_perfil,
+    atualizar_compra_usuario,
+    atualizar_item_pre_lista,
+    buscar_supermercados_por_regiao,
+    buscar_usuario_unico,
+    calcular_ranking_precos_mercados,
+    carregar_anuncios_cadastrados,
+    carregar_comunidade_ordenada,
+    carregar_foto_original_bytes,
+    carregar_foto_perfil_base64,
+    carregar_mercados,
+    carregar_orcamento_mensal,
+    carregar_pre_lista,
+    carregar_preferencias_gps,
+    classificar_selo_preco,
+    comparar_lista_nos_mercados,
+    consultar_overpass_mercados,
+    copiar_itens_para_familia,
+    definir_grupo_lista,
+    excluir_compras_usuario,
+    gerar_codigo_familia,
+    gerar_hash_senha,
+    limpar_comunidade,
+    listar_usuarios_admin,
+    montar_lista_mercados_classificada,
+    obter_compras_com_datas,
+    obter_dono_lista,
+    obter_gasto_mes_atual,
+    obter_grupo_lista_atual,
+    obter_perfil_atual,
+    processar_leitura_gps,
+    registrar_varios_mercados,
+    remover_anuncio_admin,
+    remover_foto_perfil,
+    remover_pre_lista,
+    resumir_mercados,
+    salvar_anuncio_admin,
+    salvar_compra_usuario,
+    salvar_foto_perfil_final,
+    salvar_orcamento_mensal,
+    salvar_preco_comunidade,
+    salvar_preferencias_gps,
+    salvar_usuario_unico,
+    selecionar_anuncio_inteligente,
+    validar_codigo_familia,
+    verificar_senha,
+)
+from ia_leitor import (
+    identificar_categoria,
+    reconhecer_produto_por_voz,
+    renderizar_leitor_pix,
 )
 
-LOGO_SVG = '<div class="listai-logo-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="lg" x1="0" y1="12" x2="24" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0077E6"/><stop offset="55%" stop-color="#00B8B0"/><stop offset="100%" stop-color="#16A34A"/></linearGradient></defs><path d="M2 4H5L7.4 14.5C7.6 15.4 8.4 16 9.3 16H17.5C18.4 16 19.2 15.4 19.4 14.5L21 7H6" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 10.2L12 12.6L19.5 4.8" stroke="url(#lg)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.6" fill="#0077E6"/><circle cx="17" cy="19.5" r="1.6" fill="#16A34A"/></svg></div>'
+st.markdown(ESTILO_CSS, unsafe_allow_html=True)
+_st_fragment = getattr(st, "fragment", lambda f: f)
 
-# --- Constantes ---
-PASTA_DADOS_USUARIOS, ARQUIVO_COMUNIDADE, ARQUIVO_MERCADOS, ARQUIVO_USUARIOS, ARQUIVO_ANUNCIOS = "dados_usuarios", "precos_comunidade.csv", "supermercados.json", "usuarios.json", "anuncios.json"
-NAV_ITENS = [("🛒", "Compra"), ("📝", "Lista"), ("📊", "Gráficos"), ("🧾", "Histórico"), ("🏆", "Preços"), ("🗺️", "Mercados")]
-PAGINAS = [f"{ico} {txt}" for ico, txt in NAV_ITENS]
-PAGINA_PERFIL = "👤 Perfil"
-PERGUNTAS_SEGURANCA = ["Qual o nome do seu primeiro pet?", "Qual sua cidade natal?", "Qual o nome da sua mãe?", "Qual sua comida favorita?", "Qual o nome da sua escola de infância?"]
 
-COLUNAS = ["Data", "Região", "Supermercado", "Produto", "Categoria", "Quantidade", "Preço Unitário", "Total"]
-COLUNAS_PRE_LISTA = ["ID", "Produto", "Quantidade", "Categoria", "Comprado"]
-COLUNAS_COMUNIDADE = ["Data", "Região", "Supermercado", "Produto", "Categoria", "Preço Unitário", "Usuário"]
-OVERPASS_SERVERS = ["https://overpass.private.coffee/api/interpreter", "https://z.overpass-api.de/api/interpreter"]
-TRADUCAO_LOJA = {"supermarket": "Supermercado", "wholesale": "Atacarejo", "convenience": "Mercearia / Minimercado", "greengrocer": "Hortifruti / Sacolão"}
-RAIO_OPCOES = [1, 3, 5, 10, 15]
-RAIO_LABELS = {1: "1 km · A pé", 3: "3 km · Bairro", 5: "5 km · Região", 10: "10 km · Cidade", 15: "15 km · Amplo"}
-EXTENSOES_FOTO = ("jpg", "png", "webp")
-MAX_FOTO_BYTES = 8 * 1024 * 1024  # 8 MB
-CHAVES_EDITOR_FOTO = ("foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed_zoom", "foto_ed_px", "foto_ed_py", "foto_ed_rot")
-ALFABETO_CASA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-
-ANUNCIOS_PADRAO = [
-    {"id": None, "titulo": "🔥 Ofertas de Mercado na Amazon", "descricao": "Descontos em café, bebidas, limpeza e despensa.", "texto_botao": "Ver Ofertas", "url": "https://www.amazon.com.br/", "categoria": "Geral", "regiao": "", "cupom": ""},
-    {"id": None, "titulo": "🧽 Economia em Limpeza e Casa", "descricao": "Sabão, amaciante e multiuso em promoção no Mercado Livre.", "texto_botao": "Conferir", "url": "https://www.mercadolivre.com.br/", "categoria": "Limpeza", "regiao": "", "cupom": ""},
-    {"id": None, "titulo": "🐾 Pet Shop com Desconto", "descricao": "Ração, petiscos e tapetes higiênicos na Shopee.", "texto_botao": "Aproveitar", "url": "https://shopee.com.br/", "categoria": "Pet Shop", "regiao": "", "cupom": ""},
-    {"id": None, "titulo": "☕ Café, Bebidas e Despensa", "descricao": "Compare kits econômicos com entrega rápida na Amazon.", "texto_botao": "Abrir", "url": "https://www.amazon.com.br/", "categoria": "Bebidas", "regiao": "", "cupom": ""},
-]
-
-ICONES_CATEGORIA = {
-    "Alimentos": "🍚", "Bebidas": "🥤", "Hortifruti": "🥬", "Açougue e Peixaria": "🥩",
-    "Frios e Laticínios": "🧀", "Padaria": "🥖", "Limpeza": "🧽", "Higiene Pessoal": "🧴",
-    "Pet Shop": "🐾", "Utilidades Domésticas": "🏠", "Outros": "📦",
-}
-LISTA_CATEGORIAS = list(ICONES_CATEGORIA.keys())
-
-CATEGORIAS_FALLBACK = {
-    "Açougue e Peixaria": ["carne", "carne moida", "picanha", "alcatra", "patinho", "acem", "coxao", "maminha", "fraldinha", "contrafile", "bisteca", "costela", "lombo", "pernil", "linguica", "salsicha", "frango", "peito de frango", "sobrecoxa", "peixe", "tilapia", "salmao", "camarao", "bacalhau"],
-    "Frios e Laticínios": ["queijo", "mussarela", "requeijao", "cream cheese", "presunto", "peito de peru", "mortadela", "salame", "manteiga", "margarina", "iogurte", "danone", "creme de leite", "leite condensado", "nata", "ricota"],
-    "Padaria": ["pao", "pao de forma", "pao frances", "bisnaguinha", "bolo", "torta", "croissant", "broa", "rosquinha", "torrada", "panetone"],
-    "Higiene Pessoal": ["papel higienico", "sabonete", "shampoo", "xampu", "condicionador", "creme dental", "pasta de dente", "escova de dente", "fio dental", "desodorante", "absorvente", "fralda", "barbeador", "lenco umedecido", "cotonete", "hidratante"],
-    "Limpeza": ["agua sanitaria", "detergente", "sabao", "sabao em po", "sabao liquido", "desinfetante", "amaciante", "esponja", "palha de aco", "bombril", "alvejante", "limpador", "multiuso", "saco de lixo", "vassoura", "rodo", "pano de chao", "alcool"],
-    "Pet Shop": ["racao", "petisco", "sache", "areia higienica", "tapete higienico", "coleira"],
-    "Utilidades Domésticas": ["papel aluminio", "papel toalha", "filme pvc", "guardanapo", "vela", "fosforo", "lampada", "pilha", "copo descartavel"],
-    "Bebidas": ["agua", "agua mineral", "refrigerante", "coca", "guarana", "suco", "cerveja", "vinho", "leite", "cafe", "cha", "energetico", "achocolatado", "nescau", "toddy", "agua de coco"],
-    "Hortifruti": ["banana", "maca", "pera", "laranja", "tangerina", "uva", "mamao", "melancia", "melao", "abacaxi", "limao", "morango", "manga", "tomate", "cebola", "batata", "mandioca", "cenoura", "beterraba", "alface", "couve", "rucula", "pepino", "abobora", "chuchu", "pimentao", "alho", "brocolis"],
-    "Alimentos": ["arroz", "feijao", "macarrao", "espaguete", "ovo", "ovos", "farinha", "trigo", "fuba", "acucar", "sal", "biscoito", "bolacha", "oleo", "azeite", "vinagre", "molho", "molho de tomate", "extrato de tomate", "ketchup", "maionese", "mostarda", "milho", "ervilha", "atum", "sardinha", "aveia", "granola", "chocolate", "pipoca"],
-}
-
-
-def normalizar_texto(texto):
-    return "".join(c for c in unicodedata.normalize("NFD", str(texto).lower().strip()) if unicodedata.category(c) != "Mn")
-
-
-_REGRAS_CATEGORIA = sorted(
-    [(re.compile(rf"\b{re.escape(normalizar_texto(p))}\b"), cat, len(normalizar_texto(p))) for cat, ps in CATEGORIAS_FALLBACK.items() for p in ps],
-    key=lambda x: x[2],
-    reverse=True,
-)
-
-
-# --- Conexão Supabase ---
-def _ler_segredo(nome):
-    if v := os.getenv(nome):
-        return v.strip()
-    try:
-        if v := st.secrets.get(nome):
-            return str(v).strip()
-    except Exception:
-        pass
-    return ""
-
-
-@st.cache_resource
-def obter_config_supabase():
-    url = re.sub(r"/rest/v1/?$", "", _ler_segredo("SUPABASE_URL").rstrip("/"))
-    key = _ler_segredo("SUPABASE_KEY") or _ler_segredo("SUPABASE_ANON_KEY")
-    return (url, key) if (url.startswith("https://") and key) else (None, None)
-
-
-def supabase_ativo():
-    return obter_config_supabase()[0] is not None
-
-
-@st.cache_resource
-def obter_http_session():
-    import requests
-    sess = requests.Session()
-    sess.headers.update({"User-Agent": "ListaiApp/1.0"})
-    return sess
-
-
-def _sb_req(method, tabela, params=None, json_data=None, extra_headers=None):
-    url, key = obter_config_supabase()
-    headers = {"apikey": key, "Content-Type": "application/json"}
-    if key.startswith("eyJ"):
-        headers["Authorization"] = f"Bearer {key}"
-    if extra_headers:
-        headers.update(extra_headers)
-    resp = obter_http_session().request(method, f"{url}/rest/v1/{tabela}", headers=headers, params=params, json=json_data, timeout=8)
-    if not resp.ok:
-        detalhe = ""
-        try:
-            err = resp.json()
-            cod = err.get("code") or ""
-            msg = err.get("message") or err.get("error") or ""
-            detalhe = f"[{cod}] {msg}".strip() if cod else msg
-        except Exception:
-            detalhe = f"HTTP {resp.status_code}"
-        if resp.status_code in (401, 403):
-            raise RuntimeError(f"Chave do Supabase recusada (HTTP {resp.status_code}). Use a Secret key (sb_secret_...) ou service_role nos Secrets. {detalhe}")
-        if resp.status_code == 404 or "PGRST205" in detalhe:
-            raise RuntimeError(f"Tabela '{tabela}' não encontrada no Supabase. Execute o Script SQL no SQL Editor do Supabase. ({detalhe})")
-        if "PGRST204" in detalhe or resp.status_code == 400:
-            raise RuntimeError(f"Coluna ou regra faltando na tabela '{tabela}'. Execute o SQL de atualização no Supabase. ({detalhe})")
-        raise RuntimeError(f"Erro no Supabase (HTTP {resp.status_code}): {detalhe}")
-    return resp.json() if resp.text.strip() else None
-
-
-# --- Utilitários ---
-def ler_json(caminho, padrao):
-    if os.path.exists(caminho) and os.path.getsize(caminho) > 0:
-        try:
-            with open(caminho, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            pass
-    return padrao() if callable(padrao) else padrao
-
-
-def salvar_json(caminho, dados):
-    with open(caminho, "w", encoding="utf-8") as f:
-        json.dump(dados, f, ensure_ascii=False, indent=2)
-
-
-def obter_arquivo_usuario(usuario, nome_arquivo):
-    u_norm = str(usuario or "usuario").strip().lower()
-    slug = re.sub(r"[^a-z0-9_-]", "_", u_norm).strip("_") or "usuario"
-    pasta = os.path.join(PASTA_DADOS_USUARIOS, f"{slug[:32]}_{hashlib.sha256(u_norm.encode()).hexdigest()[:8]}")
-    os.makedirs(pasta, exist_ok=True)
-    return os.path.join(pasta, nome_arquivo)
-
-
-def formatar_reais(valor):
-    return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-
-def formatar_delta_reais(valor):
-    return f"{'+' if valor >= 0 else '-'}{formatar_reais(abs(valor))}"
-
-
-def formatar_distancia(metros):
-    if metros is None:
-        return ""
-    m = int(metros)
-    return f"{m} m" if m < 1000 else f"{m / 1000:.1f} km".replace(".", ",")
-
-
-def obter_iniciais(nome):
-    p = [x for x in str(nome or "").strip().split() if x]
-    return "US" if not p else (p[0][:2].upper() if len(p) == 1 else (p[0][0] + p[-1][0]).upper())
-
-
-def mascarar_email(email):
-    e = str(email or "").strip()
-    if "@" not in e:
-        return "***"
-    local, dom = e.split("@", 1)
-    return f"{local[:2] if len(local) > 2 else local[:1]}***@{dom}"
-
-
-def mascarar_telefone(tel):
-    dig = re.sub(r"\D", "", str(tel or ""))
-    return f"***-{dig[-4:]}" if len(dig) >= 4 else "***"
-
-
-def rolar_para_topo():
-    components.html("<script>setTimeout(()=>{const d=window.parent.document,m=d.querySelector('[data-testid=\"stMain\"]')||d.querySelector('section.main');if(m)m.scrollTo({top:0,behavior:'smooth'});window.parent.scrollTo({top:0,behavior:'smooth'});},40);</script>", height=0)
-
-
-def obter_usuarios_admin():
-    admins = {"admin"}
-    if env := _ler_segredo("LISTAI_ADMINS"):
-        admins.update(a.strip().lower() for a in env.split(",") if a.strip())
-    try:
-        sec = st.secrets.get("ADMIN_USERS", [])
-        if isinstance(sec, str):
-            admins.update(a.strip().lower() for a in sec.split(",") if a.strip())
-        elif isinstance(sec, (list, tuple, set)):
-            admins.update(str(a).strip().lower() for a in sec if str(a).strip())
-    except Exception:
-        pass
-    return admins
-
-
-def obter_api_key_gemini():
-    if chave := _ler_segredo("GEMINI_API_KEY"):
-        return chave, "secrets"
-    chave = st.session_state.get("gemini_api_key_usuario", "").strip()
-    return (chave or None), ("perfil" if chave else "")
-
-
-def limpar_estado_editor_foto():
-    for k_ed in CHAVES_EDITOR_FOTO:
-        st.session_state.pop(k_ed, None)
-
-
-def limpar_estado_usuario(incluir_auth=False):
-    chaves = {
-        "aviso_voz", "aviso_voz_erro", "ultimo_audio_hash", "ultimo_cupom_hash", "itens_foto_lidos",
-        "msg_sucesso", "msg_foto_erro", "msg_limite_alerta", "gps_ultima_leitura", "gps_coords",
-        "gps_regiao", "gps_mercados", "gps_detalhes", "gps_raio_atual", "gps_usuario_owner",
-        "sel_reg_compra", "sel_merc_compra", "regiao_para_selecionar", "merc_para_selecionar",
-        "input_nova_regiao", "res_manual", "ultima_foto_hash", "foto_versao", "edit_compra_idx",
-        "edit_hist_idx", "valor_categoria", "compra_ativa", "compra_sessao_ids",
-        "mkt_limite_exib", "db_limite_mercs",
-        "_ss_perfil", "_ss_perfil_owner", "_ss_compras_df", "_ss_compras_proc",
-        "_ss_compras_owner", "_ss_compras_ver", "_ss_compras_proc_ver",
-        "_ss_pre_lista_df", "_ss_pre_lista_owner",
-        *CHAVES_EDITOR_FOTO,
-    }
-    if incluir_auth:
-        st.session_state.update({"autenticado": False, "usuario_logado": ""})
-        chaves.update({"modo_login", "rec_usuario", "msg_login_ok", "gemini_api_key_usuario", "pagina_atual", "pagina_anterior"})
-    for k in list(st.session_state.keys()):
-        if k.startswith(("num_lim_", "chk_bloq_", "up_foto_", "audio_zap_", "up_cupom_", "chk_foto_item_")) or k in chaves:
-            st.session_state.pop(k, None)
-
-
-# --- Autenticação & Perfil ---
-def gerar_hash_senha(senha):
-    salt = secrets.token_hex(16)
-    dk = hashlib.pbkdf2_hmac("sha256", senha.encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
-    return f"pbkdf2${salt}${dk}"
-
-
-def verificar_senha(digitada, salva):
-    partes = str(salva or "").split("$")
-    if len(partes) == 3 and partes[0] == "pbkdf2":
-        dk = hashlib.pbkdf2_hmac("sha256", digitada.encode("utf-8"), partes[1].encode("utf-8"), 120_000).hex()
-        return secrets.compare_digest(dk, partes[2])
-    if len(partes) == 2:
-        legado = hashlib.sha256((partes[0] + digitada).encode("utf-8")).hexdigest()
-        return secrets.compare_digest(legado, partes[1])
-    return False
-
-
-def _normalizar_row_usuario_sb(r):
-    return {
-        "tipo": "senha",
-        "hash": r.get("senha_hash", ""),
-        "nome": r.get("nome", r.get("usuario", "")),
-        "email": r.get("email") or "",
-        "telefone": r.get("telefone") or "",
-        "cidade": r.get("cidade") or "",
-        "lembrete": r.get("lembrete") or "",
-        "pergunta_seg": r.get("pergunta_seg") or "",
-        "resposta_seg_hash": r.get("resposta_seg_hash") or "",
-        "limite_mensal": float(r.get("limite_mensal") or 0.0),
-        "bloquear_limite": bool(r.get("bloquear_limite") or False),
-        "gps_lat": r.get("gps_lat"),
-        "gps_lon": r.get("gps_lon"),
-        "gps_regiao": r.get("gps_regiao") or "",
-        "grupo_lista": str(r.get("grupo_lista") or "").strip().upper(),
-        "foto_url": r.get("foto_url") or "",
-        "criado_em": str(r.get("criado_em") or "")[:10],
-    }
-
-
-def _carregar_usuarios_local():
-    if dados := ler_json(ARQUIVO_USUARIOS, dict):
-        return dados
-    iniciais = {"teste": {"tipo": "senha", "hash": gerar_hash_senha("1234"), "nome": "Conta Teste", "lembrete": "Sequência numérica de 1 a 4", "criado_em": date.today().isoformat()}}
-    salvar_json(ARQUIVO_USUARIOS, iniciais)
-    return iniciais
-
-
-def buscar_usuario_unico(usuario, colunas="*"):
-    u = str(usuario or "").strip().lower()
-    if not u:
-        return None
-    if supabase_ativo():
-        rows = _sb_req("GET", "usuarios", params={"usuario": f"eq.{u}", "select": colunas, "limit": "1"}) or []
-        if not rows:
-            if u == "teste":
-                existente = _sb_req("GET", "usuarios", params={"select": "usuario", "limit": "1"}) or []
-                if not existente:
-                    teste = {"usuario": "teste", "senha_hash": gerar_hash_senha("1234"), "nome": "Conta Teste", "lembrete": "Sequência numérica de 1 a 4"}
-                    _sb_req("POST", "usuarios", params={"on_conflict": "usuario"}, json_data=teste, extra_headers={"Prefer": "resolution=merge-duplicates"})
-                    return _normalizar_row_usuario_sb(teste)
-            return None
-        return _normalizar_row_usuario_sb(rows[0])
-    reg = _carregar_usuarios_local().get(u)
-    return (dict(reg) if isinstance(reg, dict) else {"tipo": "senha", "hash": reg, "nome": u}) if reg is not None else None
-
-
-def obter_perfil_atual(usuario):
-    if st.session_state.get("_ss_perfil_owner") == usuario and isinstance(st.session_state.get("_ss_perfil"), dict):
-        return st.session_state["_ss_perfil"]
-    reg = buscar_usuario_unico(usuario) or {"tipo": "senha", "hash": "", "nome": usuario}
-    st.session_state["_ss_perfil"] = reg
-    st.session_state["_ss_perfil_owner"] = usuario
-    return reg
-
-
-def atualizar_campos_perfil(usuario, **campos_sb_e_local):
-    if supabase_ativo():
-        _sb_req("PATCH", "usuarios", params={"usuario": f"eq.{usuario}"}, json_data=campos_sb_e_local)
-        if st.session_state.get("_ss_perfil_owner") == usuario and isinstance(st.session_state.get("_ss_perfil"), dict):
-            mapa = {"senha_hash": "hash", "limite_mensal": "limite_mensal", "bloquear_limite": "bloquear_limite"}
-            for k, v in campos_sb_e_local.items():
-                st.session_state["_ss_perfil"][mapa.get(k, k)] = v
-    else:
-        u_dict = _carregar_usuarios_local().copy()
-        reg = dict(u_dict.get(usuario, {"tipo": "senha", "nome": usuario}))
-        mapa_local = {"senha_hash": "hash", "limite_mensal": "limite_mensal", "bloquear_limite": "bloquear_limite"}
-        for k, v in campos_sb_e_local.items():
-            reg[mapa_local.get(k, k)] = v
-        u_dict[usuario] = reg
-        salvar_json(ARQUIVO_USUARIOS, u_dict)
-        if st.session_state.get("_ss_perfil_owner") == usuario:
-            st.session_state["_ss_perfil"] = reg
-
-
-def salvar_usuario_unico(usuario, reg):
-    if supabase_ativo():
-        payload = {
-            "usuario": usuario,
-            "senha_hash": reg.get("hash", ""),
-            "nome": reg.get("nome", usuario),
-            "email": reg.get("email", ""),
-            "telefone": reg.get("telefone", ""),
-            "cidade": reg.get("cidade", ""),
-            "lembrete": reg.get("lembrete", ""),
-            "pergunta_seg": reg.get("pergunta_seg", ""),
-            "resposta_seg_hash": reg.get("resposta_seg_hash", ""),
-        }
-        _sb_req("POST", "usuarios", params={"on_conflict": "usuario"}, json_data=payload, extra_headers={"Prefer": "resolution=merge-duplicates"})
-    else:
-        u_dict = _carregar_usuarios_local().copy()
-        u_dict[usuario] = reg
-        salvar_json(ARQUIVO_USUARIOS, u_dict)
-    if st.session_state.get("usuario_logado") == usuario:
-        st.session_state["_ss_perfil"] = dict(reg)
-        st.session_state["_ss_perfil_owner"] = usuario
-
-
-def listar_usuarios_admin():
-    if supabase_ativo():
-        rows = _sb_req("GET", "usuarios", params={"select": "usuario,nome,email,cidade", "order": "usuario.asc"}) or []
-        return [{"Usuário": r["usuario"], "Nome": r.get("nome") or r["usuario"], "E-mail": r.get("email") or "-", "Cidade": r.get("cidade") or "-"} for r in rows]
-    u_dict = _carregar_usuarios_local()
-    return [{"Usuário": k, "Nome": v.get("nome", k) if isinstance(v, dict) else k, "E-mail": v.get("email", "-") if isinstance(v, dict) else "-", "Cidade": v.get("cidade", "-") if isinstance(v, dict) else "-"} for k, v in sorted(u_dict.items())]
-
-
-# --- Lista Compartilhada da Casa / Família ---
-def validar_codigo_familia(codigo):
-    cod = str(codigo or "").strip().upper()
-    return cod if re.fullmatch(r"CASA-[A-Z0-9]{4,12}", cod) else None
-
-
-def gerar_codigo_familia():
-    return "CASA-" + "".join(secrets.choice(ALFABETO_CASA) for _ in range(6))
-
-
-def obter_grupo_lista_atual(usuario):
-    cod = str(obter_perfil_atual(usuario).get("grupo_lista") or "").strip().upper()
-    return validar_codigo_familia(cod)
-
-
-def obter_dono_lista(usuario):
-    cod = obter_grupo_lista_atual(usuario)
-    return f"fam:{cod}" if cod else usuario
-
-
-def definir_grupo_lista(usuario, codigo):
-    cod_ok = (validar_codigo_familia(codigo) or "") if codigo else ""
-    try:
-        atualizar_campos_perfil(usuario, grupo_lista=cod_ok)
-    except RuntimeError as e:
-        if "PGRST204" in str(e) or "grupo_lista" in str(e):
-            if st.session_state.get("_ss_perfil_owner") == usuario and isinstance(st.session_state.get("_ss_perfil"), dict):
-                st.session_state["_ss_perfil"]["grupo_lista"] = cod_ok
-            raise RuntimeError("Falta a coluna 'grupo_lista' no Supabase. Rode no SQL Editor: ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS grupo_lista text NOT NULL DEFAULT '';")
-        raise
-    st.session_state.pop("_ss_pre_lista_df", None)
-    st.session_state.pop("_ss_pre_lista_owner", None)
-
-
-# --- Anúncios Inteligentes (Afiliados & Parceiros Locais) ---
-@st.cache_data(ttl=300, show_spinner=False)
-def carregar_anuncios_cadastrados():
-    """Retorna (lista_anuncios, tabela_ok) sem quebrar se a tabela ainda não existir no Supabase."""
-    if supabase_ativo():
-        try:
-            rows = _sb_req("GET", "anuncios", params={"ativo": "is.true", "select": "id,titulo,descricao,texto_botao,url,categoria,regiao,cupom", "order": "id.desc"}) or []
-            return [
-                {
-                    "id": r.get("id"),
-                    "titulo": str(r.get("titulo") or ""),
-                    "descricao": str(r.get("descricao") or ""),
-                    "texto_botao": str(r.get("texto_botao") or "Ver Oferta"),
-                    "url": str(r.get("url") or ""),
-                    "categoria": str(r.get("categoria") or "Geral"),
-                    "regiao": str(r.get("regiao") or ""),
-                    "cupom": str(r.get("cupom") or ""),
-                }
-                for r in rows
-                if str(r.get("url") or "").startswith("https://")
-            ], True
-        except RuntimeError as e:
-            if "PGRST205" in str(e) or "404" in str(e):
-                return [], False
-            return [], False
-    dados = ler_json(ARQUIVO_ANUNCIOS, list)
-    return ([d for d in dados if isinstance(d, dict) and str(d.get("url", "")).startswith("https://")], True)
-
-
-def salvar_anuncio_admin(titulo, descricao, texto_botao, url, categoria, regiao, cupom):
-    url_ok = url.strip()
-    if not url_ok.startswith("https://"):
-        raise ValueError("O link precisa começar com https://")
-    payload = {
-        "titulo": titulo.strip(),
-        "descricao": descricao.strip(),
-        "texto_botao": texto_botao.strip() or "Ver Oferta",
-        "url": url_ok,
-        "categoria": categoria or "Geral",
-        "regiao": regiao.strip(),
-        "cupom": cupom.strip(),
-    }
-    if supabase_ativo():
-        _sb_req("POST", "anuncios", json_data={**payload, "ativo": True})
-    else:
-        lista = ler_json(ARQUIVO_ANUNCIOS, list)
-        payload["id"] = str(uuid.uuid4())
-        lista.insert(0, payload)
-        salvar_json(ARQUIVO_ANUNCIOS, lista)
-    carregar_anuncios_cadastrados.clear()
-
-
-def remover_anuncio_admin(ad_id):
-    if supabase_ativo():
-        _sb_req("DELETE", "anuncios", params={"id": f"eq.{int(ad_id)}"})
-    else:
-        lista = [d for d in ler_json(ARQUIVO_ANUNCIOS, list) if str(d.get("id")) != str(ad_id)]
-        salvar_json(ARQUIVO_ANUNCIOS, lista)
-    carregar_anuncios_cadastrados.clear()
-
-
-def selecionar_anuncio_inteligente(regiao_usuario, pagina_atual):
-    cadastrados, _ = carregar_anuncios_cadastrados()
-    pool = cadastrados if cadastrados else ANUNCIOS_PADRAO
-
-    # Coleta categorias de interesse direto do cache da sessão (0 chamadas ao banco)
-    pesos_cat = {}
-    df_pre_ss = st.session_state.get("_ss_pre_lista_df")
-    if isinstance(df_pre_ss, pd.DataFrame) and not df_pre_ss.empty:
-        pend = df_pre_ss[~df_pre_ss["Comprado"]] if "Comprado" in df_pre_ss else df_pre_ss
-        for cat in pend["Categoria"].dropna().tolist():
-            pesos_cat[str(cat)] = pesos_cat.get(str(cat), 0) + 3
-
-    df_cmp_ss = st.session_state.get("_ss_compras_df")
-    if isinstance(df_cmp_ss, pd.DataFrame) and not df_cmp_ss.empty:
-        for cat in df_cmp_ss["Categoria"].tail(12).dropna().tolist():
-            pesos_cat[str(cat)] = pesos_cat.get(str(cat), 0) + 1
-
-    reg_u = normalizar_texto(regiao_usuario)
-    candidatos = []
-    for ad in pool:
-        reg_ad = normalizar_texto(ad.get("regiao", ""))
-        cat_ad = str(ad.get("categoria") or "Geral")
-        score = 0
-        motivo = "OFERTA PARCEIRA"
-
-        if reg_ad:
-            if reg_u and (reg_ad in reg_u or reg_u in reg_ad):
-                score += 100
-                motivo = f"DESTAQUE EM {ad['regiao'].upper()}"
-            else:
-                continue  # Não exibe anúncio regional para outra cidade
-
-        if cat_ad != "Geral" and cat_ad in pesos_cat:
-            score += 20 + min(pesos_cat[cat_ad], 15)
-            if not reg_ad:
-                motivo = f"PARA SUA COMPRA · {cat_ad.upper()}"
-        elif cat_ad == "Geral":
-            score += 2
-
-        candidatos.append((score, motivo, ad))
-
-    if not candidatos:
-        candidatos = [(1, "OFERTA PARCEIRA", ad) for ad in ANUNCIOS_PADRAO]
-
-    max_score = max(c[0] for c in candidatos)
-    melhores = [c for c in candidatos if c[0] >= max_score - 2]
-    seed = st.session_state.setdefault("anuncio_seed", random.randrange(100))
-    idx = (seed + sum(ord(ch) for ch in str(pagina_atual))) % len(melhores)
-    _, motivo_final, ad_final = melhores[idx]
-    return ad_final, motivo_final
-
-
-# --- Foto de Perfil & Tratamento de Imagens ---
-def carregar_foto_perfil_base64(usuario):
-    if supabase_ativo():
-        foto_url = str(obter_perfil_atual(usuario).get("foto_url") or "")
-        if foto_url.startswith("data:image/") and ";base64," in foto_url:
-            cab, b64 = foto_url.split(";base64,", 1)
-            return b64, cab.replace("data:", "")
-        return None
-    for ext in EXTENSOES_FOTO:
-        p = obter_arquivo_usuario(usuario, f"foto_perfil.{ext}")
-        if os.path.exists(p) and os.path.getsize(p) > 0:
-            with open(p, "rb") as f:
-                return base64.b64encode(f.read()).decode("ascii"), f"image/{'jpeg' if ext == 'jpg' else ext}"
-    return None
-
-
-def carregar_foto_original_bytes(usuario):
-    p_orig = obter_arquivo_usuario(usuario, "foto_original.jpg")
-    if os.path.exists(p_orig) and os.path.getsize(p_orig) > 0:
-        with open(p_orig, "rb") as f:
-            return f.read()
-    if foto := carregar_foto_perfil_base64(usuario):
-        return base64.b64decode(foto[0])
-    return None
-
-
-def remover_foto_perfil(usuario, incluir_original=True):
-    if supabase_ativo():
-        atualizar_campos_perfil(usuario, foto_url="")
-    alvos = [f"foto_perfil.{ext}" for ext in EXTENSOES_FOTO] + (["foto_original.jpg"] if incluir_original else [])
-    for nome_arq in alvos:
-        if os.path.exists(p := obter_arquivo_usuario(usuario, nome_arq)):
-            os.remove(p)
-
-
-def preparar_imagem_base(raw_bytes, max_lado=640):
-    if len(raw_bytes) > MAX_FOTO_BYTES:
-        raise ValueError("Imagem muito grande (máximo 8 MB).")
-    try:
-        from PIL import Image, ImageFile, ImageOps
-        Image.MAX_IMAGE_PIXELS = 25_000_000
-        ImageFile.LOAD_TRUNCATED_IMAGES = True
-        try:
-            import pillow_heif
-            pillow_heif.register_heif_opener()
-        except ImportError:
-            pass
-
-        with Image.open(io.BytesIO(raw_bytes)) as img_aberta:
-            if getattr(img_aberta, "format", "") == "JPEG":
-                try:
-                    img_aberta.draft("RGB", (max_lado, max_lado))
-                except Exception:
-                    pass
-            img_aberta.load()
-            try:
-                img = ImageOps.exif_transpose(img_aberta)
-            except Exception:
-                img = img_aberta.copy()
-
-            if img.mode in ("RGBA", "LA", "PA", "RGBa") or (img.mode == "P" and "transparency" in img.info):
-                rgba = img.convert("RGBA")
-                fundo = Image.new("RGB", rgba.size, (255, 255, 255))
-                fundo.paste(rgba, mask=rgba.split()[-1])
-                img = fundo
-            elif img.mode != "RGB":
-                img = img.convert("RGB")
-
-            resample = getattr(getattr(Image, "Resampling", Image), "BILINEAR", Image.BICUBIC)
-            img.thumbnail((max_lado, max_lado), resample)
-            buf = io.BytesIO()
-            img.save(buf, format="JPEG", quality=86)
-            return buf.getvalue()
-    except ImportError:
-        return None
-    except Exception:
-        raise ValueError("Não foi possível abrir essa foto. Tente outra imagem (JPG, PNG ou WEBP).")
-
-
-@st.cache_data(show_spinner=False, max_entries=6)
-def gerar_foto_ajustada(orig_bytes, modo="Preencher", zoom=1.0, pos_x=0, pos_y=0, rotacao=0):
-    from PIL import Image, ImageFilter
-    with Image.open(io.BytesIO(orig_bytes)) as im:
-        img = im.convert("RGB")
-    if rotacao:
-        img = img.rotate(-int(rotacao), expand=True)
-    resample = getattr(getattr(Image, "Resampling", Image), "BILINEAR", Image.BICUBIC)
-
-    if modo == "Encaixar inteira":
-        lado = min(img.size)
-        l, t = (img.width - lado) // 2, (img.height - lado) // 2
-        fundo = img.crop((l, t, l + lado, t + lado)).resize((64, 64), resample).filter(ImageFilter.GaussianBlur(4)).resize((200, 200), resample)
-        frente = img.copy()
-        frente.thumbnail((200, 200), resample)
-        fundo.paste(frente, ((200 - frente.width) // 2, (200 - frente.height) // 2))
-        final = fundo
-    else:
-        lado_base = min(img.size)
-        lado = max(32, int(lado_base / max(1.0, float(zoom))))
-        max_dx, max_dy = max(0, (img.width - lado) // 2), max(0, (img.height - lado) // 2)
-        cx = img.width // 2 + int((pos_x / 100.0) * max_dx)
-        cy = img.height // 2 + int((pos_y / 100.0) * max_dy)
-        l = max(0, min(img.width - lado, cx - lado // 2))
-        t = max(0, min(img.height - lado, cy - lado // 2))
-        final = img.crop((l, t, l + lado, t + lado)).resize((200, 200), resample)
-
-    buf = io.BytesIO()
-    final.save(buf, format="JPEG", quality=84)
-    return buf.getvalue()
-
-
-def salvar_foto_perfil_final(usuario, orig_bytes, final_bytes):
-    with open(obter_arquivo_usuario(usuario, "foto_original.jpg"), "wb") as f:
-        f.write(orig_bytes)
-    if supabase_ativo():
-        b64 = base64.b64encode(final_bytes).decode("ascii")
-        atualizar_campos_perfil(usuario, foto_url=f"data:image/jpeg;base64,{b64}")
-    else:
-        remover_foto_perfil(usuario, incluir_original=False)
-        with open(obter_arquivo_usuario(usuario, "foto_perfil.jpg"), "wb") as f:
-            f.write(final_bytes)
-
-
-def avatar_html(nome, usuario, tamanho=48, solido=False):
-    if foto := carregar_foto_perfil_base64(usuario):
-        borda = "border: 2px solid #86EFAC;" if solido else ""
-        return f'<img src="data:{foto[1]};base64,{foto[0]}" class="listai-avatar-img" style="width:{tamanho}px;height:{tamanho}px;{borda}" alt="Foto">'
-    classe = "listai-avatar-solid" if solido else "listai-avatar"
-    return f'<div class="{classe}" style="width:{tamanho}px;height:{tamanho}px;font-size:{max(14, int(tamanho * 0.36))}px;">{html.escape(obter_iniciais(nome))}</div>'
-
-
-@st.cache_resource
-def obter_gemini_client(api_key):
-    from google import genai
-    return genai.Client(api_key=api_key)
-
-
+# --- Tela de Login / Cadastro / Recuperação ---
 def exibir_tela_login():
     st.session_state.setdefault("modo_login", "entrar")
     _, col_c, _ = st.columns([1, 1.8, 1])
     with col_c:
-        st.markdown(f'<div class="listai-header"><div class="listai-header-top"><div class="listai-brand">{LOGO_SVG}<h1>Listaí</h1></div><span class="listai-pill">PREÇOS E COMPRAS</span></div><p>Sua lista inteligente e os melhores preços da região.</p></div>', unsafe_allow_html=True)
-
+        st.markdown(
+            f'<div class="listai-header"><div class="listai-header-top"><div class="listai-brand">{LOGO_SVG}<h1>Listaí</h1></div>'
+            '<span class="listai-pill">PREÇOS E COMPRAS</span></div><p>Sua lista inteligente e os melhores preços da região.</p></div>',
+            unsafe_allow_html=True,
+        )
         with st.container(border=True):
             modo = st.session_state["modo_login"]
             if modo == "entrar":
@@ -1052,811 +286,59 @@ if not st.session_state.get("autenticado", False):
     exibir_tela_login()
     st.stop()
 
-usuario_atual = st.session_state.get("usuario_logado", "usuario")
-nome_usuario = st.session_state.get("nome_usuario", usuario_atual)
-USUARIOS_ADMIN = obter_usuarios_admin()
+
+# --- Componentes Compartilhados ---
+def avatar_html(nome, usuario, tamanho=48, solido=False):
+    if foto := carregar_foto_perfil_base64(usuario):
+        borda = "border: 2px solid #86EFAC;" if solido else ""
+        return f'<img src="data:{foto[1]};base64,{foto[0]}" class="listai-avatar-img" style="width:{tamanho}px;height:{tamanho}px;{borda}" alt="Foto">'
+    classe = "listai-avatar-solid" if solido else "listai-avatar"
+    return f'<div class="{classe}" style="width:{tamanho}px;height:{tamanho}px;font-size:{max(14, int(tamanho * 0.36))}px;">{html.escape(obter_iniciais(nome))}</div>'
 
 
-# --- Localização, Orçamento e Supermercados ---
-def carregar_preferencias_gps(usuario):
-    if supabase_ativo():
-        u_reg = obter_perfil_atual(usuario)
-        if u_reg.get("gps_lat") is not None and u_reg.get("gps_lon") is not None:
-            return {"lat": u_reg["gps_lat"], "lon": u_reg["gps_lon"], "regiao": u_reg.get("gps_regiao", "")}
-        return {}
-    return ler_json(obter_arquivo_usuario(usuario, "preferencias_gps.json"), dict)
+def exibir_banner_anuncio_topo():
+    script_secret = ler_segredo("AD_BANNER_HTML")
+    cadastrados, _ = carregar_anuncios_cadastrados()
+    script_ad = next((a["script_html"] for a in cadastrados if a.get("script_html")), "")
+    tag_cpm = script_secret or script_ad
 
+    if tag_cpm:
+        components.html(f"<div style='margin:0;padding:0;display:flex;justify-content:center;align-items:center;overflow:hidden;'>{tag_cpm}</div>", height=90, scrolling=False)
+        return
 
-def salvar_preferencias_gps(lat, lon, regiao, usuario):
-    if supabase_ativo():
-        atualizar_campos_perfil(usuario, gps_lat=lat, gps_lon=lon, gps_regiao=regiao)
-    else:
-        salvar_json(obter_arquivo_usuario(usuario, "preferencias_gps.json"), {"lat": lat, "lon": lon, "regiao": regiao})
+    pool = [a for a in cadastrados if str(a.get("url", "")).startswith("https://")] or ANUNCIOS_PADRAO
+    cards_html = []
+    for ad in pool[:8]:
+        url = html.escape(ad["url"])
+        disc = ad.get("desconto") or ("OFERTA" if not ad.get("cupom") else ad["cupom"][:8])
+        img_u, tit_c = ad.get("imagem_url", ""), html.escape(ad["titulo"][:26])
+        corpo = f'<img src="{html.escape(img_u)}" alt="{tit_c}" loading="lazy">' if img_u.startswith("https://") else f'<div class="listai-top-ad-fallback">{tit_c}</div>'
+        cards_html.append(f'<a class="listai-top-ad-card" href="{url}" target="_blank" rel="noopener noreferrer" title="{tit_c}"><span class="listai-top-ad-disc">{html.escape(disc)}</span>{corpo}</a>')
 
-
-def carregar_orcamento_mensal(usuario):
-    if supabase_ativo():
-        u_reg = obter_perfil_atual(usuario)
-        return {"limite": max(0.0, float(u_reg.get("limite_mensal") or 0.0)), "bloquear": bool(u_reg.get("bloquear_limite") or False)}
-    dados = ler_json(obter_arquivo_usuario(usuario, "orcamento.json"), dict)
-    try:
-        return {"limite": max(0.0, float(dados.get("limite", 0.0))), "bloquear": bool(dados.get("bloquear", False))}
-    except (TypeError, ValueError):
-        return {"limite": 0.0, "bloquear": False}
-
-
-def salvar_orcamento_mensal(limite, bloquear, usuario):
-    lim_f, bloq_b = max(0.0, float(limite)), bool(bloquear)
-    if supabase_ativo():
-        atualizar_campos_perfil(usuario, limite_mensal=lim_f, bloquear_limite=bloq_b)
-    else:
-        salvar_json(obter_arquivo_usuario(usuario, "orcamento.json"), {"limite": lim_f, "bloquear": bloq_b})
-    for k in list(st.session_state.keys()):
-        if k.startswith(("num_lim_", "chk_bloq_")):
-            st.session_state.pop(k, None)
-
-
-def calcular_distancia_metros(lat1, lon1, lat2, lon2):
-    dlat, dlon = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
-    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
-    return int(2 * 6371000 * math.asin(math.sqrt(a)))
-
-
-def _registrar_ponto_mercado(enc, nome, tipo, end, elat, elon, dist):
-    chave = f"{nome}|{round(elat, 4)}|{round(elon, 4)}"
-    if chave not in enc or dist < enc[chave]["Distância (m)"]:
-        enc[chave] = {"Supermercado": nome, "Tipo": tipo, "Endereço": end or "-", "Distância (m)": dist, "lat": elat, "lon": elon}
-
-
-def consultar_photon_mercados(lat, lon, raio):
-    http = obter_http_session()
-    d_lat, d_lon = raio / 111320.0, raio / (111320.0 * max(0.2, abs(math.cos(math.radians(lat)))))
-    bbox, enc, ok = f"{lon - d_lon},{lat - d_lat},{lon + d_lon},{lat + d_lat}", {}, False
-    for termo in ("supermercado", "mercado"):
-        try:
-            resp = http.get("https://photon.komoot.io/api/", params={"q": termo, "lat": lat, "lon": lon, "bbox": bbox, "limit": 25}, timeout=3.5)
-            if resp.status_code != 200:
-                continue
-            ok = True
-            for feat in resp.json().get("features", []):
-                props, coords = feat.get("properties", {}), feat.get("geometry", {}).get("coordinates", [])
-                nome = (props.get("name") or "").strip()
-                if not nome or len(coords) < 2 or (props.get("osm_key") != "shop" and props.get("osm_value") not in TRADUCAO_LOJA):
-                    continue
-                dist = calcular_distancia_metros(lat, lon, float(coords[1]), float(coords[0]))
-                if dist <= raio:
-                    end = ", ".join(p for p in [props.get("street", ""), props.get("district") or props.get("locality") or ""] if p)
-                    _registrar_ponto_mercado(enc, nome, TRADUCAO_LOJA.get(props.get("osm_value", ""), "Supermercado"), end, float(coords[1]), float(coords[0]), dist)
-        except Exception:
-            continue
-    return sorted(enc.values(), key=lambda x: x["Distância (m)"]) if ok else None
-
-
-@st.cache_data(ttl=900, show_spinner=False)
-def consultar_overpass_mercados(lat, lon, raio):
-    http = obter_http_session()
-    filtros = "".join(f'nw(around:{raio},{lat},{lon})["shop"="{s}"];' for s in TRADUCAO_LOJA)
-    query = f"[out:json][timeout:4];({filtros});out center tags;"
-    for srv in OVERPASS_SERVERS:
-        try:
-            resp = http.post(srv, data={"data": query}, timeout=4)
-            if resp.status_code == 200:
-                enc = {}
-                for el in resp.json().get("elements", []):
-                    tags = el.get("tags", {})
-                    nome = (tags.get("name") or tags.get("brand") or "").strip()
-                    elat, elon = el.get("lat") or el.get("center", {}).get("lat"), el.get("lon") or el.get("center", {}).get("lon")
-                    if nome and elat is not None and elon is not None:
-                        end = ", ".join(p for p in [f"{tags.get('addr:street', '')} {tags.get('addr:housenumber', '')}".strip(), tags.get("addr:suburb", "")] if p)
-                        _registrar_ponto_mercado(enc, nome, TRADUCAO_LOJA.get(tags.get("shop", "supermarket"), "Supermercado"), end, float(elat), float(elon), calcular_distancia_metros(lat, lon, float(elat), float(elon)))
-                return sorted(enc.values(), key=lambda x: x["Distância (m)"])
-        except Exception:
-            continue
-    if (res := consultar_photon_mercados(lat, lon, raio)) is not None:
-        return res
-    raise RuntimeError("Servidores de mapa ocupados no momento. Tente novamente.")
-
-
-def _resumir_mercados(lista):
-    vistos, out = set(), []
-    for x in lista:
-        if x["Supermercado"] not in vistos:
-            vistos.add(x["Supermercado"])
-            out.append((x["Supermercado"], x["Distância (m)"]))
-    return out
-
-
-@st.cache_data(ttl=900, show_spinner=False)
-def buscar_regiao_e_mercados_proximos(lat, lon):
-    regiao = ""
-    try:
-        r = obter_http_session().get("https://nominatim.openstreetmap.org/reverse", params={"lat": lat, "lon": lon, "format": "json", "accept-language": "pt-BR"}, timeout=4)
-        if r.status_code == 200:
-            a = r.json().get("address", {})
-            cid = a.get("city") or a.get("town") or a.get("municipality") or a.get("village") or ""
-            bai = a.get("suburb") or a.get("neighbourhood") or a.get("city_district") or ""
-            regiao = f"{cid} - {bai}" if (cid and bai) else (cid or bai)
-    except Exception:
-        pass
-    detalhes = consultar_overpass_mercados(lat, lon, 3000)
-    return (regiao or "Minha Região (GPS)"), _resumir_mercados(detalhes), detalhes
-
-
-@st.cache_data(ttl=900, show_spinner=False)
-def buscar_supermercados_por_regiao(texto, raio=3000):
-    r = obter_http_session().get("https://nominatim.openstreetmap.org/search", params={"q": texto, "countrycodes": "br", "format": "json", "limit": 1, "accept-language": "pt-BR"}, timeout=4)
-    if r.status_code != 200 or not r.json():
-        return None, []
-    lugar = r.json()[0]
-    return lugar.get("display_name", texto), consultar_overpass_mercados(float(lugar["lat"]), float(lugar["lon"]), raio)
-
-
-@st.cache_data(ttl=300, show_spinner=False)
-def carregar_mercados():
-    if supabase_ativo():
-        rows = _sb_req("GET", "supermercados", params={"select": "regiao,nome"}) or []
-        if rows:
-            mapa = {}
-            for r in rows:
-                mapa.setdefault(r["regiao"], set()).add(r["nome"])
-            return {k: sorted(v) for k, v in mapa.items()}
-        iniciais = [{"regiao": "Centro (Exemplo)", "nome": m} for m in ("Atacadão", "Carrefour", "Supermercado Local")]
-        _sb_req("POST", "supermercados", params={"on_conflict": "regiao,nome"}, json_data=iniciais, extra_headers={"Prefer": "resolution=ignore-duplicates"})
-        return {"Centro (Exemplo)": ["Atacadão", "Carrefour", "Supermercado Local"]}
-
-    if isinstance(dados := ler_json(ARQUIVO_MERCADOS, dict), dict) and dados:
-        return dados
-    iniciais = {"Centro (Exemplo)": ["Atacadão", "Carrefour", "Supermercado Local"]}
-    salvar_json(ARQUIVO_MERCADOS, iniciais)
-    return iniciais
-
-
-def registrar_varios_mercados(regiao, nomes):
-    if not (regiao := regiao.strip()) or not nomes:
-        return 0
-    mercados = carregar_mercados().copy()
-    atual = set(mercados.get(regiao, []))
-    novos = [n.strip() for n in nomes if n.strip() and n.strip() not in atual]
-    if not novos and regiao in mercados:
-        return 0
-    if supabase_ativo():
-        payload = [{"regiao": regiao, "nome": n} for n in (novos or [nomes[0].strip()])]
-        _sb_req("POST", "supermercados", params={"on_conflict": "regiao,nome"}, json_data=payload, extra_headers={"Prefer": "resolution=ignore-duplicates"})
-    else:
-        atual.update(novos)
-        mercados[regiao] = sorted(atual)
-        salvar_json(ARQUIVO_MERCADOS, mercados)
-    carregar_mercados.clear()
-    return len(novos)
-
-
-def processar_leitura_gps(loc, usuario):
-    if loc and loc.get("latitude") is not None and loc.get("longitude") is not None:
-        lat, lon = round(float(loc["latitude"]), 4), round(float(loc["longitude"]), 4)
-        if st.session_state.get("gps_ultima_leitura") != (lat, lon):
-            with st.spinner("Localizando supermercados próximos..."):
-                try:
-                    reg_g, mercs_g, det_g = buscar_regiao_e_mercados_proximos(lat, lon)
-                    if det_g:
-                        registrar_varios_mercados(reg_g, [m["Supermercado"] for m in det_g])
-                    salvar_preferencias_gps(lat, lon, reg_g, usuario)
-                    st.session_state.update({"gps_ultima_leitura": (lat, lon), "gps_coords": (lat, lon), "gps_regiao": reg_g, "gps_mercados": mercs_g, "gps_detalhes": det_g, "gps_raio_atual": 3, "mkt_limite_exib": 15, "regiao_para_selecionar": reg_g, "msg_sucesso": f"Localização atualizada: **{reg_g}**."})
-                    st.rerun()
-                except Exception as erro:
-                    st.warning(f"⚠️ {erro}")
-
-
-# --- IA (Categorização + Voz + Leitor de Foto/Cupom) ---
-def identificar_categoria_local(produto):
-    p_norm = normalizar_texto(produto)
-    return next((cat for padrao, cat, _ in _REGRAS_CATEGORIA if padrao.search(p_norm)), "Outros")
-
-
-@st.cache_data(ttl=86400, show_spinner=False)
-def classificar_com_ia(prod_norm, api_key):
-    from google.genai import types
-    resp = obter_gemini_client(api_key).models.generate_content(
-        model="gemini-3.5-flash-lite", contents=f"Produto: {prod_norm}",
-        config=types.GenerateContentConfig(system_instruction=f"Classificador de produtos de mercado no Brasil. Responda APENAS com UMA categoria exata: {', '.join(LISTA_CATEGORIAS)}."),
+    destaque = pool[0]
+    cards_html.append(
+        f'<a class="listai-top-ad-store" href="{html.escape(destaque["url"])}" target="_blank" rel="noopener noreferrer">'
+        f'<span class="listai-top-ad-info">ⓘ</span><div class="listai-top-ad-store-name">{html.escape((destaque.get("texto_botao") or "Ofertas")[:16])}</div>'
+        '<div class="listai-top-ad-store-cta">Abrir ↗</div></a>'
     )
-    limpa = normalizar_texto(resp.text)
-    return next((c for c in LISTA_CATEGORIAS if normalizar_texto(c) in limpa), "Outros")
-
-
-@st.cache_data(ttl=86400, show_spinner=False)
-def classificar_lote_com_ia(prods_norm, api_key):
-    from google.genai import types
-    resp = obter_gemini_client(api_key).models.generate_content(
-        model="gemini-3.5-flash-lite", contents="Produtos:\n" + "\n".join(f"{i + 1}. {p}" for i, p in enumerate(prods_norm)),
-        config=types.GenerateContentConfig(
-            system_instruction=f"Classificador de produtos no Brasil. Retorne 'categorias' na mesma ordem usando APENAS: {', '.join(LISTA_CATEGORIAS)}.",
-            response_mime_type="application/json",
-            response_schema={"type": "OBJECT", "properties": {"categorias": {"type": "ARRAY", "items": {"type": "STRING"}}}, "required": ["categorias"]},
-        ),
-    )
-    cats = json.loads(resp.text).get("categorias", [])
-    return [next((c for c in LISTA_CATEGORIAS if normalizar_texto(c) in (normalizar_texto(cats[i]) if i < len(cats) else "")), "Outros") for i in range(len(prods_norm))]
-
-
-def identificar_categoria(produto, api_key):
-    if (cat_local := identificar_categoria_local(produto)) != "Outros" or not api_key:
-        return cat_local
-    try:
-        return classificar_com_ia(normalizar_texto(produto), api_key)
-    except Exception:
-        return "Outros"
-
-
-def identificar_categorias_em_lote(produtos, api_key):
-    res = [identificar_categoria_local(p) for p in produtos]
-    if not api_key or not (desc := [(i, normalizar_texto(produtos[i])) for i, c in enumerate(res) if c == "Outros"]):
-        return res
-    try:
-        for (idx, _), cat_ia in zip(desc, classificar_lote_com_ia(tuple(p for _, p in desc), api_key)):
-            res[idx] = cat_ia
-    except Exception:
-        pass
-    return res
-
-
-def reconhecer_produto_por_voz(audio_bytes, api_key, mime_type="audio/wav"):
-    from google.genai import types
-    schema = {"type": "OBJECT", "properties": {k: {"type": t} for k, t in [("transcricao", "STRING"), ("produto", "STRING"), ("categoria", "STRING"), ("quantidade", "INTEGER"), ("preco_unitario", "NUMBER"), ("supermercado", "STRING")]}, "required": ["transcricao", "produto", "categoria", "quantidade", "preco_unitario", "supermercado"]}
-    prompt = f"Extraia do áudio de compra no Brasil: transcricao, produto, categoria (uma de: {', '.join(LISTA_CATEGORIAS)}), quantidade (1 padrão), preco_unitario (0 padrão) e supermercado ('' padrão)."
-    resp = obter_gemini_client(api_key).models.generate_content(model="gemini-3.5-flash-lite", contents=[types.Part.from_bytes(data=audio_bytes, mime_type=mime_type), prompt], config=types.GenerateContentConfig(response_mime_type="application/json", response_schema=schema))
-    d = json.loads(resp.text)
-    cat_n, prod_ok = normalizar_texto(d.get("categoria", "")), str(d.get("produto", "")).strip()
-    cat_ok = next((c for c in LISTA_CATEGORIAS if normalizar_texto(c) in cat_n), None) or identificar_categoria_local(prod_ok)
-    return {"transcricao": str(d.get("transcricao", "")).strip(), "produto": prod_ok, "categoria": cat_ok, "quantidade": max(1, int(d.get("quantidade") or 1)), "preco_unitario": max(0.0, float(d.get("preco_unitario") or 0.0)), "supermercado": str(d.get("supermercado", "")).strip()}
-
-
-def reconhecer_compra_por_foto(img_bytes, api_key, mime_type="image/jpeg"):
-    from google.genai import types
-    schema = {
-        "type": "OBJECT",
-        "properties": {
-            "supermercado": {"type": "STRING"},
-            "itens": {
-                "type": "ARRAY",
-                "items": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "produto": {"type": "STRING"},
-                        "categoria": {"type": "STRING"},
-                        "quantidade": {"type": "INTEGER"},
-                        "preco_unitario": {"type": "NUMBER"},
-                    },
-                    "required": ["produto", "categoria", "quantidade", "preco_unitario"],
-                },
-            },
-        },
-        "required": ["supermercado", "itens"],
-    }
-    prompt = (
-        f"Analise a imagem (pode ser uma etiqueta de preço de supermercado ou um cupom/nota fiscal no Brasil). "
-        f"Extraia o nome do supermercado (se visível, senão '') e a lista de itens comprados com: "
-        f"produto (nome claro), categoria (UMA de: {', '.join(LISTA_CATEGORIAS)}), quantidade (inteiro >= 1) "
-        f"e preco_unitario (preço de 1 unidade em reais). Ignore subtotais, descontos totais, troco e tributos."
-    )
-    resp = obter_gemini_client(api_key).models.generate_content(
-        model="gemini-3.5-flash-lite",
-        contents=[types.Part.from_bytes(data=img_bytes, mime_type=mime_type), prompt],
-        config=types.GenerateContentConfig(response_mime_type="application/json", response_schema=schema),
-    )
-    dados = json.loads(resp.text)
-    itens_ok = []
-    for it in dados.get("itens", []):
-        prod_ok = str(it.get("produto", "")).strip()
-        preco_ok = float(it.get("preco_unitario") or 0.0)
-        if not prod_ok or preco_ok <= 0:
-            continue
-        cat_n = normalizar_texto(it.get("categoria", ""))
-        cat_ok = next((c for c in LISTA_CATEGORIAS if normalizar_texto(c) in cat_n), None) or identificar_categoria_local(prod_ok)
-        itens_ok.append({
-            "produto": prod_ok,
-            "categoria": cat_ok,
-            "quantidade": max(1, int(it.get("quantidade") or 1)),
-            "preco_unitario": round(preco_ok, 2),
-        })
-    return {"supermercado": str(dados.get("supermercado", "")).strip(), "itens": itens_ok}
-
-
-# --- Persistência com Cache de Sessão ---
-def _ler_csv_seguro(caminho, colunas, cols_num):
-    if not (os.path.exists(caminho) and os.path.getsize(caminho) > 0):
-        return pd.DataFrame(columns=colunas)
-    df, alt = pd.read_csv(caminho), False
-    for c in colunas:
-        if c not in df.columns:
-            alt, df[c] = True, (0.0 if c in cols_num else "")
-    df = df[colunas]
-    for c in cols_num:
-        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
-    if alt:
-        df.to_csv(caminho, index=False)
-    return df
-
-
-def carregar_dados(usuario):
-    if st.session_state.get("_ss_compras_owner") == usuario and isinstance(st.session_state.get("_ss_compras_df"), pd.DataFrame):
-        return st.session_state["_ss_compras_df"]
-
-    if supabase_ativo():
-        rows = _sb_req("GET", "compras", params={"usuario": f"eq.{usuario}", "select": "id,data,regiao,supermercado,produto,categoria,quantidade,preco_unitario,total", "order": "id.asc"}) or []
-        if not rows:
-            df = pd.DataFrame(columns=COLUNAS)
-        else:
-            df = pd.DataFrame([{
-                "Data": r.get("data", ""),
-                "Região": r.get("regiao", ""),
-                "Supermercado": r.get("supermercado", ""),
-                "Produto": r.get("produto", ""),
-                "Categoria": r.get("categoria", "Outros"),
-                "Quantidade": r.get("quantidade", 1),
-                "Preço Unitário": r.get("preco_unitario", 0.0),
-                "Total": r.get("total", 0.0),
-            } for r in rows], index=[r["id"] for r in rows])
-            for c in ("Quantidade", "Preço Unitário", "Total"):
-                df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
-            df = df[COLUNAS]
-    else:
-        df = _ler_csv_seguro(obter_arquivo_usuario(usuario, "compras.csv"), COLUNAS, ["Quantidade", "Preço Unitário", "Total"])
-
-    st.session_state["_ss_compras_df"] = df
-    st.session_state["_ss_compras_owner"] = usuario
-    st.session_state["_ss_compras_ver"] = st.session_state.get("_ss_compras_ver", 0) + 1
-    return df
-
-
-def _invalidar_proc_compras():
-    st.session_state["_ss_compras_ver"] = st.session_state.get("_ss_compras_ver", 0) + 1
-    st.session_state.pop("_ss_compras_proc", None)
-
-
-def obter_compras_com_datas(usuario):
-    df = carregar_dados(usuario)
-    ver = st.session_state.get("_ss_compras_ver", 0)
-    if (
-        st.session_state.get("_ss_compras_owner") == usuario
-        and st.session_state.get("_ss_compras_proc_ver") == ver
-        and isinstance(st.session_state.get("_ss_compras_proc"), tuple)
-    ):
-        return st.session_state["_ss_compras_proc"]
-
-    if df.empty:
-        res = (df, pd.DataFrame(columns=COLUNAS))
-    else:
-        df_c = df.copy()
-        df_c["Data_dt"] = pd.to_datetime(df_c["Data"], errors="coerce")
-        df_v = df_c.dropna(subset=["Data_dt"]).copy()
-        if not df_v.empty:
-            df_v["Mês"] = df_v["Data_dt"].dt.strftime("%Y-%m")
-        res = (df_c, df_v)
-
-    st.session_state["_ss_compras_proc"] = res
-    st.session_state["_ss_compras_proc_ver"] = ver
-    return res
-
-
-def obter_gasto_mes_atual(usuario, mes_ref):
-    _, df_v = obter_compras_com_datas(usuario)
-    return 0.0 if df_v.empty else float(df_v.loc[df_v["Mês"] == mes_ref, "Total"].sum())
-
-
-def salvar_compra_usuario(usuario, nova_df):
-    df_at = carregar_dados(usuario)
-    if supabase_ativo():
-        payload = [{
-            "usuario": usuario,
-            "data": str(r["Data"]),
-            "regiao": str(r["Região"]),
-            "supermercado": str(r["Supermercado"]),
-            "produto": str(r["Produto"]),
-            "categoria": str(r["Categoria"]),
-            "quantidade": int(r["Quantidade"]),
-            "preco_unitario": float(r["Preço Unitário"]),
-            "total": float(r["Total"]),
-        } for r in nova_df.to_dict("records")]
-        resp = _sb_req("POST", "compras", json_data=payload, extra_headers={"Prefer": "return=representation"}) or []
-        novos_ids = [r["id"] for r in resp if "id" in r]
-    else:
-        inicio = len(df_at)
-        novos_ids = list(range(inicio, inicio + len(nova_df)))
-        pd.concat([df_at, nova_df], ignore_index=True).to_csv(obter_arquivo_usuario(usuario, "compras.csv"), index=False)
-
-    if len(novos_ids) == len(nova_df):
-        nova_cop = nova_df.copy()
-        nova_cop.index = novos_ids
-        st.session_state["_ss_compras_df"] = pd.concat([df_at, nova_cop]) if not df_at.empty else nova_cop
-    else:
-        st.session_state.pop("_ss_compras_df", None)
-    _invalidar_proc_compras()
-    return novos_ids
-
-
-def atualizar_compra_usuario(usuario, idx_edit, dt_iso, merc, prod, cat, qtd, preco):
-    v_tot = float(qtd) * float(preco)
-    if supabase_ativo():
-        _sb_req("PATCH", "compras", params={"id": f"eq.{int(idx_edit)}", "usuario": f"eq.{usuario}"}, json_data={
-            "data": dt_iso, "supermercado": merc, "produto": prod, "categoria": cat,
-            "quantidade": int(qtd), "preco_unitario": float(preco), "total": v_tot,
-        })
-    df_edit = carregar_dados(usuario).copy()
-    if idx_edit in df_edit.index:
-        df_edit.loc[idx_edit, ["Data", "Supermercado", "Produto", "Categoria", "Quantidade", "Preço Unitário", "Total"]] = [dt_iso, merc, prod, cat, int(qtd), float(preco), v_tot]
-        st.session_state["_ss_compras_df"] = df_edit
-        if not supabase_ativo():
-            df_edit[COLUNAS].to_csv(obter_arquivo_usuario(usuario, "compras.csv"), index=False)
-    _invalidar_proc_compras()
-
-
-def excluir_compras_usuario(usuario, ids=None, tudo=False):
-    if supabase_ativo():
-        if tudo:
-            _sb_req("DELETE", "compras", params={"usuario": f"eq.{usuario}"})
-        elif ids:
-            _sb_req("DELETE", "compras", params={"usuario": f"eq.{usuario}", "id": f"in.({','.join(str(int(i)) for i in ids)})"})
-    cam = obter_arquivo_usuario(usuario, "compras.csv")
-    if tudo:
-        if not supabase_ativo() and os.path.exists(cam):
-            os.remove(cam)
-        st.session_state["_ss_compras_df"] = pd.DataFrame(columns=COLUNAS)
-    elif ids:
-        df_c = carregar_dados(usuario)
-        df_novo = df_c.drop(index=[i for i in ids if i in df_c.index])[COLUNAS]
-        if not supabase_ativo():
-            df_novo.reset_index(drop=True, inplace=True)
-            df_novo.to_csv(cam, index=False)
-            ids_set = set(ids)
-            if sess_ids := st.session_state.get("compra_sessao_ids", []):
-                st.session_state["compra_sessao_ids"] = [sid - sum(1 for d in ids_set if d < sid) for sid in sess_ids if sid not in ids_set]
-        st.session_state["_ss_compras_df"] = df_novo
-    _invalidar_proc_compras()
-
-
-@st.cache_data(ttl=300, show_spinner=False)
-def carregar_comunidade_ordenada():
-    if supabase_ativo():
-        rows = _sb_req("GET", "precos_comunidade", params={"select": "data,regiao,supermercado,produto,categoria,preco_unitario,usuario_nome", "order": "preco_unitario.asc,id.desc", "limit": "500"}) or []
-        if not rows:
-            return pd.DataFrame(columns=COLUNAS_COMUNIDADE)
-        df = pd.DataFrame([{
-            "Data": r.get("data", ""),
-            "Região": r.get("regiao", ""),
-            "Supermercado": r.get("supermercado", ""),
-            "Produto": r.get("produto", ""),
-            "Categoria": r.get("categoria", "Outros"),
-            "Preço Unitário": r.get("preco_unitario", 0.0),
-            "Usuário": r.get("usuario_nome", ""),
-        } for r in rows])
-        df["Preço Unitário"] = pd.to_numeric(df["Preço Unitário"], errors="coerce").fillna(0.0)
-        df = df[COLUNAS_COMUNIDADE]
-    else:
-        df = _ler_csv_seguro(ARQUIVO_COMUNIDADE, COLUNAS_COMUNIDADE, ["Preço Unitário"])
-
-    if df.empty:
-        return df
-    df = df.copy()
-    df["Data_dt"] = pd.to_datetime(df["Data"], errors="coerce")
-    df["Prod_norm"] = df["Produto"].map(normalizar_texto)
-    df["Merc_norm"] = df["Supermercado"].map(normalizar_texto)
-    return df.sort_values(by=["Data_dt", "Preço Unitário"], ascending=[False, True]).reset_index(drop=True)
-
-
-def salvar_preco_comunidade(nova_df):
-    if supabase_ativo():
-        payload = [{
-            "data": str(r["Data"]),
-            "regiao": str(r["Região"]),
-            "supermercado": str(r["Supermercado"]),
-            "produto": str(r["Produto"]),
-            "categoria": str(r["Categoria"]),
-            "preco_unitario": float(r["Preço Unitário"]),
-            "usuario_nome": str(r["Usuário"]),
-        } for r in nova_df.to_dict("records")]
-        _sb_req("POST", "precos_comunidade", json_data=payload)
-    else:
-        ant = _ler_csv_seguro(ARQUIVO_COMUNIDADE, COLUNAS_COMUNIDADE, ["Preço Unitário"])
-        pd.concat([ant, nova_df], ignore_index=True).to_csv(ARQUIVO_COMUNIDADE, index=False)
-    carregar_comunidade_ordenada.clear()
-
-
-def limpar_comunidade():
-    if supabase_ativo():
-        _sb_req("DELETE", "precos_comunidade", params={"id": "gt.0"})
-    elif os.path.exists(ARQUIVO_COMUNIDADE):
-        os.remove(ARQUIVO_COMUNIDADE)
-    carregar_comunidade_ordenada.clear()
-
-
-def carregar_pre_lista(dono_lista):
-    if st.session_state.get("_ss_pre_lista_owner") == dono_lista and isinstance(st.session_state.get("_ss_pre_lista_df"), pd.DataFrame):
-        return st.session_state["_ss_pre_lista_df"]
-
-    if supabase_ativo():
-        rows = _sb_req("GET", "pre_lista", params={"usuario": f"eq.{dono_lista}", "select": "id,produto,quantidade,categoria,comprado", "order": "criado_em.asc"}) or []
-        if not rows:
-            df = pd.DataFrame(columns=COLUNAS_PRE_LISTA)
-        else:
-            df = pd.DataFrame([{
-                "ID": str(r["id"]),
-                "Produto": r.get("produto", ""),
-                "Quantidade": int(r.get("quantidade") or 1),
-                "Categoria": r.get("categoria") or "Outros",
-                "Comprado": bool(r.get("comprado") or False),
-            } for r in rows])[COLUNAS_PRE_LISTA]
-    else:
-        caminho = obter_arquivo_usuario(dono_lista, "pre_lista.csv")
-        if not (os.path.exists(caminho) and os.path.getsize(caminho) > 0):
-            df = pd.DataFrame(columns=COLUNAS_PRE_LISTA)
-        else:
-            df = pd.read_csv(caminho)
-            for col in COLUNAS_PRE_LISTA:
-                if col not in df.columns:
-                    df[col] = 1 if col == "Quantidade" else (False if col == "Comprado" else ([str(uuid.uuid4()) for _ in range(len(df))] if col == "ID" else ""))
-            df = df[COLUNAS_PRE_LISTA]
-            df["Quantidade"] = pd.to_numeric(df["Quantidade"], errors="coerce").fillna(1).astype(int)
-            df["Comprado"] = df["Comprado"].map(lambda v: str(v).strip().lower() in ("true", "1", "sim"))
-            df["ID"] = df["ID"].astype(str)
-
-    st.session_state["_ss_pre_lista_df"] = df
-    st.session_state["_ss_pre_lista_owner"] = dono_lista
-    return df
-
-
-def adicionar_itens_pre_lista(texto, qtd, api_key, dono_lista):
-    itens = [i.strip() for i in texto.split(",") if i.strip()]
-    if not itens:
-        return 0
-    cats = identificar_categorias_em_lote(itens, api_key)
-    novos_regs = [{"ID": str(uuid.uuid4()), "Produto": p, "Quantidade": max(1, int(qtd)), "Categoria": cat, "Comprado": False} for p, cat in zip(itens, cats)]
-    if supabase_ativo():
-        payload = [{"id": r["ID"], "usuario": dono_lista, "produto": r["Produto"], "quantidade": r["Quantidade"], "categoria": r["Categoria"], "comprado": False} for r in novos_regs]
-        _sb_req("POST", "pre_lista", json_data=payload)
-    df_atual = carregar_pre_lista(dono_lista)
-    df_novo = pd.concat([df_atual, pd.DataFrame(novos_regs, columns=COLUNAS_PRE_LISTA)], ignore_index=True)[COLUNAS_PRE_LISTA]
-    st.session_state["_ss_pre_lista_df"] = df_novo
-    if not supabase_ativo():
-        df_novo.to_csv(obter_arquivo_usuario(dono_lista, "pre_lista.csv"), index=False)
-    return len(itens)
-
-
-def copiar_itens_para_familia(usuario, dono_destino):
-    df_orig = carregar_pre_lista(usuario)
-    df_pend = df_orig[~df_orig["Comprado"]] if not df_orig.empty else df_orig
-    if df_pend.empty:
-        return 0
-    novos_regs = [{"ID": str(uuid.uuid4()), "Produto": r["Produto"], "Quantidade": max(1, int(r["Quantidade"])), "Categoria": r["Categoria"] or "Outros", "Comprado": False} for r in df_pend.to_dict("records")]
-    if supabase_ativo():
-        payload = [{"id": r["ID"], "usuario": dono_destino, "produto": r["Produto"], "quantidade": r["Quantidade"], "categoria": r["Categoria"], "comprado": False} for r in novos_regs]
-        _sb_req("POST", "pre_lista", json_data=payload)
-    else:
-        df_dest = carregar_pre_lista(dono_destino)
-        df_novo = pd.concat([df_dest, pd.DataFrame(novos_regs, columns=COLUNAS_PRE_LISTA)], ignore_index=True)[COLUNAS_PRE_LISTA]
-        df_novo.to_csv(obter_arquivo_usuario(dono_destino, "pre_lista.csv"), index=False)
-    return len(novos_regs)
-
-
-def atualizar_item_pre_lista(dono_lista, item_id, **campos):
-    if supabase_ativo():
-        mapa = {"Produto": "produto", "Quantidade": "quantidade", "Categoria": "categoria", "Comprado": "comprado"}
-        _sb_req("PATCH", "pre_lista", params={"id": f"eq.{item_id}", "usuario": f"eq.{dono_lista}"}, json_data={mapa[k]: v for k, v in campos.items() if k in mapa})
-    df_pre = carregar_pre_lista(dono_lista).copy()
-    mask = df_pre["ID"] == str(item_id)
-    for k, v in campos.items():
-        df_pre.loc[mask, k] = v
-    st.session_state["_ss_pre_lista_df"] = df_pre
-    if not supabase_ativo():
-        df_pre[COLUNAS_PRE_LISTA].to_csv(obter_arquivo_usuario(dono_lista, "pre_lista.csv"), index=False)
-
-
-def remover_pre_lista(dono_lista, item_id=None, apenas_marcados=False, tudo=False):
-    if supabase_ativo():
-        if tudo:
-            _sb_req("DELETE", "pre_lista", params={"usuario": f"eq.{dono_lista}"})
-        elif apenas_marcados:
-            _sb_req("DELETE", "pre_lista", params={"usuario": f"eq.{dono_lista}", "comprado": "is.true"})
-        elif item_id:
-            _sb_req("DELETE", "pre_lista", params={"id": f"eq.{item_id}", "usuario": f"eq.{dono_lista}"})
-    cp = obter_arquivo_usuario(dono_lista, "pre_lista.csv")
-    if tudo:
-        if not supabase_ativo() and os.path.exists(cp):
-            os.remove(cp)
-        st.session_state["_ss_pre_lista_df"] = pd.DataFrame(columns=COLUNAS_PRE_LISTA)
-    else:
-        df_pre = carregar_pre_lista(dono_lista)
-        df_novo = (df_pre[~df_pre["Comprado"]] if apenas_marcados else df_pre[df_pre["ID"] != str(item_id)]).reset_index(drop=True)
-        st.session_state["_ss_pre_lista_df"] = df_novo
-        if not supabase_ativo():
-            df_novo[COLUNAS_PRE_LISTA].to_csv(cp, index=False)
-
-
-# --- Inteligência de Preços por Supermercado & Comparador de Lista ---
-def calcular_ranking_precos_mercados(df_com):
-    if df_com.empty:
-        return {}
-    df = df_com.copy()
-    if "Prod_norm" not in df.columns:
-        df["Prod_norm"] = df["Produto"].map(normalizar_texto)
-    if "Merc_norm" not in df.columns:
-        df["Merc_norm"] = df["Supermercado"].map(normalizar_texto)
-
-    df = df.sort_values(by=["Data_dt", "Preço Unitário"], ascending=[False, True], na_position="last")
-    df_ult = df.drop_duplicates(subset=["Merc_norm", "Prod_norm"], keep="first").copy()
-
-    stats_prod = df_ult.groupby("Prod_norm", as_index=False)["Preço Unitário"].agg(media="mean", minimo="min", qtd_mercados="count")
-    df_m = df_ult.merge(stats_prod, on="Prod_norm", how="left")
-    df_m["diff_pct"] = ((df_m["Preço Unitário"] - df_m["media"]) / df_m["media"].clip(lower=0.01)) * 100.0
-    df_m["eh_menor"] = (df_m["qtd_mercados"] > 1) & (df_m["Preço Unitário"] <= df_m["minimo"] + 0.01)
-
-    ranking = {}
-    for merc_n, grp in df_m.groupby("Merc_norm"):
-        comp = grp[grp["qtd_mercados"] > 1]
-        indice_pct = float(comp["diff_pct"].mean()) if not comp.empty else 0.0
-        ranking[merc_n] = {
-            "qtd_precos": int(len(grp)),
-            "wins": int(grp["eh_menor"].sum()),
-            "indice_pct": indice_pct,
-            "preco_medio": float(grp["Preço Unitário"].mean()),
-            "tem_comparacao": not comp.empty,
-            "ultima_data": grp["Data_dt"].max() if "Data_dt" in grp else pd.NaT,
-        }
-    return ranking
-
-
-def classificar_selo_preco(info):
-    if not info:
-        return "🏷️ Sem preços ainda", "listai-pill-muted"
-    idx = info["indice_pct"]
-    if not info["tem_comparacao"]:
-        return f"🏷️ {info['qtd_precos']} preço(s)", "listai-pill-muted"
-    if idx <= -2.0:
-        return f"💚 {abs(idx):.0f}% mais barato", "listai-pill-best"
-    if idx >= 2.0:
-        return f"💸 +{idx:.0f}% acima da média", "listai-pill-high"
-    return "⚖️ Preço na média", "listai-pill-mid"
-
-
-def comparar_lista_nos_mercados(df_pend, df_com, regiao_alvo=""):
-    if df_pend.empty or df_com.empty:
-        return [], ""
-
-    df_base = df_com[df_com["Região"] == regiao_alvo] if (regiao_alvo and (df_com["Região"] == regiao_alvo).any()) else df_com
-    escopo = regiao_alvo if (regiao_alvo and (df_com["Região"] == regiao_alvo).any()) else "Todas as regiões"
-
-    df_ult = (
-        df_base.sort_values(by=["Data_dt", "Preço Unitário"], ascending=[False, True], na_position="last")
-        .drop_duplicates(subset=["Merc_norm", "Prod_norm"], keep="first")
-    )
-
-    itens_lista = [
-        {"nome": str(r["Produto"]), "norm": normalizar_texto(r["Produto"]), "qtd": max(1, int(r["Quantidade"]))}
-        for r in df_pend.to_dict("records")
-        if str(r.get("Produto", "")).strip()
-    ]
-    if not itens_lista:
-        return [], escopo
-
-    resultados = []
-    for (_, reg_m), grp in df_ult.groupby(["Merc_norm", "Região"]):
-        merc_nome = str(grp.iloc[0]["Supermercado"] or "Mercado")
-        prods_merc = [
-            {"prod": str(r["Produto"]), "norm": str(r["Prod_norm"]), "preco": float(r["Preço Unitário"])}
-            for r in grp.to_dict("records")
-        ]
-        encontrados, faltando, total_est = [], [], 0.0
-
-        for it in itens_lista:
-            it_n = it["norm"]
-            tokens = [w for w in it_n.split() if len(w) >= 2] or [it_n]
-            melhor = None
-            melhor_score = (99, 999, 999999.0)
-
-            for pm in prods_merc:
-                pn = pm["norm"]
-                if pn == it_n:
-                    sc = (0, len(pn), pm["preco"])
-                elif re.search(rf"\b{re.escape(it_n)}\b", pn):
-                    sc = (1, len(pn), pm["preco"])
-                elif all(re.search(rf"\b{re.escape(t)}\b", pn) for t in tokens):
-                    sc = (2, len(pn), pm["preco"])
-                elif it_n in pn or pn in it_n:
-                    sc = (3, len(pn), pm["preco"])
-                else:
-                    continue
-                if sc < melhor_score:
-                    melhor_score = sc
-                    melhor = pm
-
-            if melhor:
-                sub = it["qtd"] * melhor["preco"]
-                total_est += sub
-                encontrados.append({
-                    "item": it["nome"],
-                    "banco": melhor["prod"],
-                    "qtd": it["qtd"],
-                    "preco": melhor["preco"],
-                    "subtotal": sub,
-                })
-            else:
-                faltando.append(it["nome"])
-
-        if encontrados:
-            resultados.append({
-                "mercado": merc_nome,
-                "regiao": str(reg_m or "-"),
-                "qtd_enc": len(encontrados),
-                "qtd_total": len(itens_lista),
-                "total": total_est,
-                "itens": encontrados,
-                "faltando": faltando,
-            })
-
-    resultados.sort(key=lambda r: (-r["qtd_enc"], r["total"], r["mercado"].lower()))
-    return resultados, escopo
-
-
-# --- Componentes de UI ---
-def _fmt_qtd(v):
-    return int(v) if float(v).is_integer() else v
-
-
-def _fmt_dt(dt):
-    return dt.strftime("%d/%m/%Y") if pd.notna(dt) else "Sem data"
-
-
-def _html_hist_card(ico, nome, qtd, pct, total, badge_extra=""):
-    plural = "item" if qtd == 1 else "itens"
-    extra_html = f'<span class="listai-hist-badge">{html.escape(badge_extra)}</span> ' if badge_extra else ""
-    return (
-        f'<div class="listai-hist-card"><div class="listai-hist-head">'
-        f'<div class="listai-hist-title">{ico} {html.escape(str(nome))} {extra_html}<span class="listai-hist-badge">{qtd} {plural} • {pct:.0f}%</span></div>'
-        f'<div class="listai-hist-total">{formatar_reais(total)}</div></div>'
-        f'<div class="listai-hist-track"><div class="listai-hist-fill" style="width:{pct:.1f}%"></div></div></div>'
-    )
-
-
-def renderizar_tabela_banco_precos(df_rows, min_por_prod, contar_merc_prod, mostrar_mercado=False):
-    linhas_html = []
-    for row in df_rows.to_dict("records"):
-        prod = html.escape(str(row.get("Produto", "")))
-        cat_r = str(row.get("Categoria") or "Outros")
-        ico_r = ICONES_CATEGORIA.get(cat_r, "📦")
-        dt_r = _fmt_dt(row.get("Data_dt"))
-        p_u = float(row.get("Preço Unitário", 0.0))
-        p_norm = row.get("Prod_norm", "")
-        p_min = float(min_por_prod.get(p_norm, p_u))
-        qtd_m = int(contar_merc_prod.get(p_norm, 1))
-        diff = p_u - p_min
-
-        if qtd_m <= 1:
-            st_html, prc_cls = '<span class="listai-st-only">Único</span>', "listai-db-price"
-        elif diff <= 0.01:
-            st_html, prc_cls = '<span class="listai-st-best">🏆 Menor</span>', "listai-db-price listai-db-price-best"
-        else:
-            st_html, prc_cls = f'<span class="listai-st-up">+{formatar_reais(diff)}</span>', "listai-db-price"
-
-        meta_itens = [f"{ico_r} {html.escape(cat_r)}", f"📅 {dt_r}"]
-        if mostrar_mercado:
-            merc_s = html.escape(str(row.get("Supermercado") or "Mercado"))
-            reg_s = html.escape(str(row.get("Região") or "-"))
-            meta_itens.insert(0, f"🏪 <strong>{merc_s}</strong> ({reg_s})")
-
-        linhas_html.append(
-            f'<tr><td><div class="listai-db-prod">{prod}</div><div class="listai-db-meta">{" · ".join(meta_itens)}</div></td>'
-            f'<td class="{prc_cls}">{formatar_reais(p_u)}</td>'
-            f'<td class="listai-db-status">{st_html}</td></tr>'
+    st.markdown(f'<div class="listai-top-ad-wrap"><div class="listai-top-ad-strip">{"".join(cards_html)}</div></div>', unsafe_allow_html=True)
+
+
+def exibir_rodape_anuncio(gps_regiao):
+    ad, motivo = selecionar_anuncio_inteligente(gps_regiao, st.session_state.get("pagina_atual", ""))
+    url = ad["url"] if str(ad["url"]).startswith("https://") else "https://"
+    cupom_html = f'<span class="listai-ad-cupom">🏷️ Cupom: {html.escape(ad["cupom"])}</span>' if ad.get("cupom") else ""
+    with st.container(border=True):
+        c1, c2 = st.columns([4, 1], vertical_alignment="center")
+        c1.markdown(
+            f'<span class="listai-ad-badge">{html.escape(motivo)}</span>'
+            f'<strong>{html.escape(ad["titulo"])}</strong> — {html.escape(ad["descricao"])}{cupom_html}',
+            unsafe_allow_html=True,
         )
-
-    st.markdown(
-        '<div class="listai-db-wrap"><table class="listai-db-table">'
-        '<thead><tr><th>Produto</th><th class="num">Preço</th><th class="num">Status</th></tr></thead>'
-        f'<tbody>{"".join(linhas_html)}</tbody></table></div>',
-        unsafe_allow_html=True,
-    )
+        c2.link_button(ad["texto_botao"], url, use_container_width=True)
 
 
-def renderizar_topo_nubank():
+def renderizar_topo_nubank(nome_usuario, usuario_atual, gps_regiao):
     p_nome = nome_usuario.strip().split()[0] if nome_usuario.strip() else usuario_atual
     sub_reg = f"📍 {gps_regiao}" if gps_regiao else "Lista inteligente e menor preço"
     no_perfil = st.session_state["pagina_atual"] == PAGINA_PERFIL
@@ -1968,14 +450,12 @@ def renderizar_itens_compra_ativa(df_c, usuario, merc_atual, data_atual):
     tot_atual = float(sub_df["Total"].sum()) if not sub_df.empty else 0.0
     qtd_atual = len(sub_df)
     merc_exib = merc_atual.strip() or "Supermercado"
-    data_str = data_atual.strftime("%d/%m/%Y")
 
     with st.container(border=True):
         st.markdown(
-            f'<div class="listai-compra-banner">'
-            f'<div><div class="listai-compra-eyebrow">🛒 Compra em Andamento</div>'
+            f'<div class="listai-compra-banner"><div><div class="listai-compra-eyebrow">🛒 Compra em Andamento</div>'
             f'<div class="listai-compra-merc">🏪 {html.escape(merc_exib)}</div>'
-            f'<div class="listai-compra-data">📅 {data_str} • {qtd_atual} {"item" if qtd_atual == 1 else "itens"} no carrinho</div></div>'
+            f'<div class="listai-compra-data">📅 {data_atual.strftime("%d/%m/%Y")} • {qtd_atual} {"item" if qtd_atual == 1 else "itens"} no carrinho</div></div>'
             f'<div class="listai-compra-total-box"><div class="listai-compra-total-lbl">Total desta compra</div>'
             f'<div class="listai-compra-total-val">{formatar_reais(tot_atual)}</div></div></div>',
             unsafe_allow_html=True,
@@ -1993,7 +473,7 @@ def renderizar_itens_compra_ativa(df_c, usuario, merc_atual, data_atual):
                     ico_r = ICONES_CATEGORIA.get(cat_r, "📦")
                     c_info, c_ed = st.columns([6, 1])
                     c_info.markdown(
-                        f'<div class="listai-rec-row"><div class="listai-rec-nome">{ico_r} {html.escape(str(rr["Produto"]))} (x{_fmt_qtd(rr.get("Quantidade", 1))}) — {formatar_reais(float(rr.get("Total", 0.0)))}</div>'
+                        f'<div class="listai-rec-row"><div class="listai-rec-nome">{ico_r} {html.escape(str(rr["Produto"]))} (x{fmt_qtd(rr.get("Quantidade", 1))}) — {formatar_reais(float(rr.get("Total", 0.0)))}</div>'
                         f'<div class="listai-rec-meta">{html.escape(cat_r)} · {formatar_reais(float(rr.get("Preço Unitário", 0.0)))}/un</div></div>',
                         unsafe_allow_html=True,
                     )
@@ -2005,22 +485,252 @@ def renderizar_itens_compra_ativa(df_c, usuario, merc_atual, data_atual):
         lbl_fin = "✅ Finalizar Compra" if qtd_atual > 0 else "✖️ Sair da Compra"
         if st.button(lbl_fin, type="primary" if qtd_atual > 0 else "secondary", use_container_width=True, key="btn_finalizar_compra"):
             st.session_state.update({
-                "compra_ativa": False,
-                "compra_sessao_ids": [],
-                "valor_produto": "",
-                "valor_quantidade": 1,
-                "valor_preco": 1.00,
-                "valor_categoria": "✨ Automática",
-                "valor_supermercado": "",
+                "compra_ativa": False, "compra_sessao_ids": [], "valor_produto": "",
+                "valor_quantidade": 1, "valor_preco": 1.00, "valor_categoria": "✨ Automática", "valor_supermercado": "",
             })
             st.session_state.pop("edit_compra_idx", None)
             st.session_state.pop("aviso_voz", None)
             st.session_state.pop("itens_foto_lidos", None)
+            st.session_state.pop("ultimo_cupom_hash", None)
             if qtd_atual > 0:
                 st.session_state["msg_sucesso"] = f"Compra finalizada em **{merc_exib}**! {qtd_atual} {'item' if qtd_atual == 1 else 'itens'} • Total: **{formatar_reais(tot_atual)}** (salva no Histórico)."
             else:
                 st.session_state["msg_sucesso"] = "Compra encerrada."
             st.rerun()
+
+
+def renderizar_tabela_banco_precos(df_rows, min_por_prod, contar_merc_prod, mostrar_mercado=False):
+    linhas_html = []
+    for row in df_rows.to_dict("records"):
+        prod = html.escape(str(row.get("Produto", "")))
+        cat_r = str(row.get("Categoria") or "Outros")
+        ico_r, dt_r = ICONES_CATEGORIA.get(cat_r, "📦"), fmt_dt(row.get("Data_dt"))
+        p_u, p_norm = float(row.get("Preço Unitário", 0.0)), row.get("Prod_norm", "")
+        p_min, qtd_m = float(min_por_prod.get(p_norm, p_u)), int(contar_merc_prod.get(p_norm, 1))
+        diff = p_u - p_min
+
+        if qtd_m <= 1:
+            st_html, prc_cls = '<span class="listai-st-only">Único</span>', "listai-db-price"
+        elif diff <= 0.01:
+            st_html, prc_cls = '<span class="listai-st-best">🏆 Menor</span>', "listai-db-price listai-db-price-best"
+        else:
+            st_html, prc_cls = f'<span class="listai-st-up">+{formatar_reais(diff)}</span>', "listai-db-price"
+
+        meta_itens = [f"{ico_r} {html.escape(cat_r)}", f"📅 {dt_r}"]
+        if mostrar_mercado:
+            meta_itens.insert(0, f"🏪 <strong>{html.escape(str(row.get('Supermercado') or 'Mercado'))}</strong> ({html.escape(str(row.get('Região') or '-'))})")
+
+        linhas_html.append(
+            f'<tr><td><div class="listai-db-prod">{prod}</div><div class="listai-db-meta">{" · ".join(meta_itens)}</div></td>'
+            f'<td class="{prc_cls}">{formatar_reais(p_u)}</td><td class="listai-db-status">{st_html}</td></tr>'
+        )
+
+    st.markdown(
+        '<div class="listai-db-wrap"><table class="listai-db-table">'
+        '<thead><tr><th>Produto</th><th class="num">Preço</th><th class="num">Status</th></tr></thead>'
+        f'<tbody>{"".join(linhas_html)}</tbody></table></div>',
+        unsafe_allow_html=True,
+    )
+
+
+@_st_fragment
+def renderizar_editor_foto_perfil(usuario, rascunho):
+    with st.container(border=True):
+        st.markdown("#### ✂️ Ajustar Foto do Perfil")
+        modo_f = st.radio("Como encaixar:", ["🔍 Preencher círculo", "🖼️ Caber inteira"], horizontal=True, key="foto_ed_modo")
+        if modo_f == "🔍 Preencher círculo":
+            zoom_f = st.slider("🔎 Zoom", 1.0, 2.5, 1.0, 0.1, key="foto_ed_zoom")
+            with st.container(key="foto_pos_row"):
+                c_px, c_py = st.columns(2)
+                pos_x = c_px.slider("⬅️ ➡️ Lado", -100, 100, 0, 5, key="foto_ed_px")
+                pos_y = c_py.slider("⬆️ ⬇️ Altura", -100, 100, 0, 5, key="foto_ed_py")
+        else:
+            zoom_f, pos_x, pos_y = 1.0, 0, 0
+        rot_f = st.radio("🔄 Girar:", [0, 90, 180, 270], horizontal=True, format_func=lambda g: f"{g}°", key="foto_ed_rot")
+
+        prev_bytes = gerar_foto_ajustada(rascunho, modo=("Encaixar inteira" if modo_f == "🖼️ Caber inteira" else "Preencher"), zoom=zoom_f, pos_x=pos_x, pos_y=pos_y, rotacao=rot_f)
+        prev_b64 = base64.b64encode(prev_bytes).decode("ascii")
+        st.markdown(f'<div class="listai-foto-preview"><img src="data:image/jpeg;base64,{prev_b64}" alt="Prévia"></div>', unsafe_allow_html=True)
+
+        with st.container(key="kpi_2cols_foto_ed"):
+            s_col, c_col = st.columns(2)
+            if s_col.button("✅ Salvar foto", type="primary", use_container_width=True, key="btn_salvar_foto_ed"):
+                salvar_foto_perfil_final(usuario, rascunho, prev_bytes)
+                limpar_estado_editor_foto()
+                st.session_state["msg_sucesso"] = "Foto de perfil salva!"
+                st.rerun()
+            if c_col.button("✖️ Cancelar", use_container_width=True, key="btn_cancelar_foto_ed"):
+                limpar_estado_editor_foto()
+                st.rerun()
+
+
+def _ao_alternar_item_lista(dono_lista, item_id, chk_key):
+    atualizar_item_pre_lista(dono_lista, item_id, Comprado=bool(st.session_state.get(chk_key, False)))
+
+
+@_st_fragment
+def renderizar_bloco_lista_interativa(usuario_atual, api_key, gps_regiao):
+    df_c, _ = obter_compras_com_datas(usuario_atual)
+    cod_fam = obter_grupo_lista_atual(usuario_atual)
+    dono_lista = obter_dono_lista(usuario_atual)
+    versao = st.session_state["form_versao"]
+
+    if cod_fam:
+        with st.container(key="fam_bar"):
+            c_fb, c_fs = st.columns([4, 1], vertical_alignment="center")
+            c_fb.markdown(f'<div class="listai-fam-badge">👨‍👩‍👧‍👦 Lista da Família • Código: <span class="listai-fam-code">{html.escape(cod_fam)}</span></div>', unsafe_allow_html=True)
+            if c_fs.button("🔄 Atualizar", key="btn_sync_fam", use_container_width=True, help="Buscar novidades da família"):
+                st.session_state.pop("_ss_pre_lista_df", None)
+                st.session_state.pop("_ss_pre_lista_owner", None)
+                rerun_fragmento()
+
+    with st.container(border=True):
+        with st.container(key="add_lista_row"):
+            c_in, c_bt = st.columns([5, 1], vertical_alignment="bottom")
+            novo_item = c_in.text_input("Anotar na lista", placeholder="Ex: Arroz, Café, Leite...", key=f"in_lista_{st.session_state.get('lista_versao', 0)}", label_visibility="collapsed")
+            if c_bt.button("➕", key="btn_add_lista", type="primary", use_container_width=True, help="Adicionar na lista"):
+                if not novo_item.strip():
+                    st.warning("Digite um item.")
+                else:
+                    adicionar_itens_pre_lista(novo_item, 1, api_key, dono_lista)
+                    st.session_state["lista_versao"] = st.session_state.get("lista_versao", 0) + 1
+                    rerun_fragmento()
+
+        if not df_c.empty:
+            with st.expander("⚡ Adicionar rápido dos itens mais comprados"):
+                esc = st.multiselect("Escolha os itens:", df_c["Produto"].value_counts().head(8).index.tolist(), key="ms_mais_comprados")
+                if st.button("Adicionar selecionados na lista", disabled=not esc, use_container_width=True):
+                    adicionar_itens_pre_lista(", ".join(esc), 1, api_key, dono_lista)
+                    rerun_fragmento()
+
+        df_pre = carregar_pre_lista(dono_lista)
+        if not df_pre.empty:
+            tot_l, pegos = len(df_pre), int(df_pre["Comprado"].sum())
+            st.progress(pegos / tot_l, text=f"✅ {pegos} de {tot_l} no carrinho ({int((pegos / tot_l) * 100)}%)")
+
+            with st.container(key="lista_chk_box"):
+                for _, row in df_pre.sort_values(by="Comprado", ascending=True).iterrows():
+                    iid, nome_i, qtd_i, cat_i, pego = row["ID"], row["Produto"], int(row["Quantidade"]), row["Categoria"] or "Outros", bool(row["Comprado"])
+                    ico_i = ICONES_CATEGORIA.get(cat_i, "📦")
+                    c_chk, c_lnc, c_del = st.columns([6, 1, 1])
+                    lbl = f"~~{ico_i} {nome_i} (x{qtd_i})~~" if pego else f"**{ico_i} {nome_i}** (x{qtd_i}) · *{cat_i}*"
+                    c_chk.checkbox(lbl, value=pego, key=f"chk_pre_{iid}", on_change=_ao_alternar_item_lista, args=(dono_lista, iid, f"chk_pre_{iid}"))
+
+                    if c_lnc.button("💰", key=f"btn_lancar_{iid}", help="Lançar preço em Compra", use_container_width=True):
+                        atualizar_item_pre_lista(dono_lista, iid, Comprado=True)
+                        st.session_state.pop("aviso_voz", None)
+                        st.session_state.update({
+                            "compra_ativa": True, "valor_produto": nome_i, "valor_quantidade": qtd_i,
+                            "valor_categoria": cat_i if cat_i in LISTA_CATEGORIAS else "✨ Automática",
+                            "form_versao": versao + 1, "pagina_atual": PAGINAS[0], "rolar_topo": True,
+                        })
+                        st.rerun()
+                    if c_del.button("🗑️", key=f"btn_del_pre_{iid}", help="Remover", use_container_width=True):
+                        remover_pre_lista(dono_lista, item_id=iid)
+                        rerun_fragmento()
+
+            df_pre = carregar_pre_lista(dono_lista)
+            if not df_pre.empty:
+                with st.expander("✏️ Ajustar item ou categoria da lista"):
+                    ops_l = {idx: f"{r['Produto']} (x{int(r['Quantidade'])}) — {r['Categoria'] or 'Outros'}" for idx, r in df_pre.iterrows()}
+                    idx_l = st.selectbox("Item da lista", list(ops_l.keys()), format_func=lambda i: ops_l[i], key="sel_aj_lista")
+                    row_l = df_pre.loc[idx_l]
+                    cat_l = row_l["Categoria"] if row_l["Categoria"] in LISTA_CATEGORIAS else "Outros"
+                    with st.form("form_aj_lista", border=False):
+                        aj_nome = st.text_input("Produto", value=str(row_l["Produto"]))
+                        with st.container(key="edit_qp_lista"):
+                            cq_l, cc_l = st.columns(2)
+                            aj_qtd = cq_l.number_input("Qtd", min_value=1, value=max(1, int(row_l["Quantidade"])), step=1)
+                            aj_cat = cc_l.selectbox("Categoria", LISTA_CATEGORIAS, index=LISTA_CATEGORIAS.index(cat_l))
+                        if st.form_submit_button("💾 Atualizar item da lista", use_container_width=True) and aj_nome.strip():
+                            atualizar_item_pre_lista(dono_lista, row_l["ID"], Produto=aj_nome.strip(), Quantidade=int(aj_qtd), Categoria=aj_cat)
+                            rerun_fragmento()
+
+                pegos_atual = int(df_pre["Comprado"].sum())
+                with st.container(key="kpi_2cols_lista"):
+                    a1, a2 = st.columns(2)
+                    if a1.button("🧹 Limpar marcados", disabled=(pegos_atual == 0), use_container_width=True):
+                        remover_pre_lista(dono_lista, apenas_marcados=True)
+                        rerun_fragmento()
+                    if a2.button("🗑️ Limpar lista", use_container_width=True):
+                        remover_pre_lista(dono_lista, tudo=True)
+                        rerun_fragmento()
+
+                df_pend = df_pre[~df_pre["Comprado"]]
+                if not df_pend.empty:
+                    df_com = carregar_comunidade_ordenada()
+                    res_comp, escopo = comparar_lista_nos_mercados(df_pend, df_com, gps_regiao)
+                    if res_comp:
+                        st.divider()
+                        vencedor = res_comp[0]
+                        comparaveis = [r for r in res_comp if r["qtd_enc"] == vencedor["qtd_enc"]]
+                        econ = max(0.0, max((r["total"] for r in comparaveis), default=vencedor["total"]) - vencedor["total"])
+                        eco_badge = f'<span class="listai-eco-pill">Economia de até {formatar_reais(econ)}</span>' if econ > 0.01 else ""
+
+                        st.markdown(f"**🧠 Onde sua lista sai mais barata hoje** *({html.escape(escopo)})*")
+                        st.markdown(
+                            f'<div class="listai-winner-card"><div><h3>🏆 {html.escape(vencedor["mercado"])}</h3>'
+                            f'<div>📦 <strong>{vencedor["qtd_enc"]} de {vencedor["qtd_total"]}</strong> itens encontrados · {html.escape(vencedor["regiao"])}</div>'
+                            f'{eco_badge}</div><div class="listai-winner-price">{formatar_reais(vencedor["total"])}</div></div>',
+                            unsafe_allow_html=True,
+                        )
+
+                        if st.button(f"🛒 Comprar em {vencedor['mercado']}", type="primary", use_container_width=True, key="btn_comprar_vencedor_lista"):
+                            if vencedor["regiao"] and vencedor["regiao"] != "-":
+                                registrar_varios_mercados(vencedor["regiao"], [vencedor["mercado"]])
+                                st.session_state["regiao_para_selecionar"] = vencedor["regiao"]
+                            st.session_state.update({"merc_para_selecionar": vencedor["mercado"], "compra_ativa": True, "compra_sessao_ids": [], "pagina_atual": PAGINAS[0], "rolar_topo": True})
+                            st.rerun()
+
+                        with st.expander(f"🔎 Comparar todos os mercados ({len(res_comp)})"):
+                            for idx_c, r in enumerate(res_comp[:6]):
+                                sel_ico = "🥇" if idx_c == 0 else ("🥈" if idx_c == 1 else ("🥉" if idx_c == 2 else "🏪"))
+                                st.markdown(f"**{sel_ico} {html.escape(r['mercado'])}** — **{formatar_reais(r['total'])}** ({r['qtd_enc']}/{r['qtd_total']} itens)")
+                                st.caption("✓ " + " · ".join(f"{it['item']} ({formatar_reais(it['preco'])})" for it in r["itens"]))
+                                if r["faltando"]:
+                                    st.caption(f"⚠️ Sem preço: {', '.join(r['faltando'])}")
+        else:
+            st.caption("Sua lista está vazia. Anote acima o que precisa comprar!")
+
+        with st.expander("👨‍👩‍👧‍👦 Lista da Família (Compartilhada)", expanded=False):
+            if cod_fam:
+                st.success(f"Você está conectado à Lista da Família **`{cod_fam}`**.")
+                zap_convite = f"🏠 Entre na nossa Lista de Compras no Listaí!\n\nCódigo: *{cod_fam}*\nAbra a aba 📝 Lista → 👨‍👩‍👧‍👦 Lista da Família e digite esse código."
+                st.link_button("📲 Enviar código no WhatsApp", f"https://wa.me/?text={urllib.parse.quote(zap_convite)}", type="primary", use_container_width=True)
+                if st.button("🚪 Voltar para minha lista pessoal", use_container_width=True, key="btn_sair_fam"):
+                    try:
+                        definir_grupo_lista(usuario_atual, "")
+                        st.session_state["msg_sucesso"] = "Você voltou para sua lista pessoal."
+                        st.rerun()
+                    except Exception as e_fam:
+                        st.warning(str(e_fam))
+            else:
+                st.caption("Divida a mesma lista em tempo real com outra pessoa da sua casa.")
+                copiar_at = st.checkbox("Copiar meus itens pendentes para a nova lista da família", value=True, key="chk_copiar_fam")
+                if st.button("🏠 Criar lista da família", type="primary", use_container_width=True, key="btn_criar_fam"):
+                    novo_cod = gerar_codigo_familia()
+                    try:
+                        if copiar_at:
+                            copiar_itens_para_familia(usuario_atual, f"fam:{novo_cod}")
+                        definir_grupo_lista(usuario_atual, novo_cod)
+                        st.session_state["msg_sucesso"] = f"Lista da Família criada! Código: **`{novo_cod}`**."
+                        st.rerun()
+                    except Exception as e_fam:
+                        st.warning(str(e_fam))
+
+                st.divider()
+                with st.form("form_entrar_fam", border=False):
+                    cod_in = st.text_input("Já tem um código?", placeholder="Ex: CASA-7K9P2M")
+                    if st.form_submit_button("🔗 Entrar na lista da família", use_container_width=True):
+                        if not (cod_ok := validar_codigo_familia(cod_in)):
+                            st.warning("Código inválido. Use o formato `CASA-XXXXXX`.")
+                        else:
+                            try:
+                                definir_grupo_lista(usuario_atual, cod_ok)
+                                st.session_state["msg_sucesso"] = f"Conectado à lista da família **`{cod_ok}`**!"
+                                st.rerun()
+                            except Exception as e_fam:
+                                st.warning(str(e_fam))
 
 
 def renderizar_graficos_compras(df, df_validos, limite_mensal=0.0):
@@ -2092,13 +802,20 @@ def renderizar_grupos_historico(df_exib, col_grupo, total_geral, modo="categoria
         sub = df_exib[df_exib[col_grupo] == nome_grp].sort_values(by=("Data_dt" if modo == "categoria" else ["Categoria", "Data_dt"]), ascending=(False if modo == "categoria" else [True, False]), na_position="last")
         ico = ICONES_CATEGORIA.get(nome_grp, "📦") if modo == "categoria" else "🏪"
         qtd = len(sub)
-        st.markdown(_html_hist_card(ico, nome_grp, qtd, pct, total_grp), unsafe_allow_html=True)
+        plural = "item" if qtd == 1 else "itens"
+        st.markdown(
+            f'<div class="listai-hist-card"><div class="listai-hist-head">'
+            f'<div class="listai-hist-title">{ico} {html.escape(str(nome_grp))} <span class="listai-hist-badge">{qtd} {plural} • {pct:.0f}%</span></div>'
+            f'<div class="listai-hist-total">{formatar_reais(total_grp)}</div></div>'
+            f'<div class="listai-hist-track"><div class="listai-hist-fill" style="width:{pct:.1f}%"></div></div></div>',
+            unsafe_allow_html=True,
+        )
         with st.expander(f"Ver produtos de {nome_grp} ({qtd})", expanded=(abrir_todos or idx == 0)):
             itens = []
             for r in sub.to_dict("records"):
-                dt_txt, merc_str, cat_str = _fmt_dt(r.get("Data_dt")), html.escape(str(r.get("Supermercado") or "Não informado")), str(r.get("Categoria") or "Outros")
+                dt_txt, merc_str, cat_str = fmt_dt(r.get("Data_dt")), html.escape(str(r.get("Supermercado") or "Não informado")), str(r.get("Categoria") or "Outros")
                 meta = f"🏪 {merc_str} · 📅 {dt_txt}" if modo == "categoria" else f"{ICONES_CATEGORIA.get(cat_str, '📦')} {html.escape(cat_str)} · 📅 {dt_txt}"
-                itens.append(f'<div class="listai-hist-item"><div><div class="listai-hist-prod">{html.escape(str(r.get("Produto", "")))} <small>(x{_fmt_qtd(r.get("Quantidade", 1))})</small></div><div class="listai-hist-meta">{meta}</div></div><div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(float(r.get("Total", 0.0)))}</div><div class="listai-hist-unit">{formatar_reais(float(r.get("Preço Unitário", 0.0)))}/un</div></div></div>')
+                itens.append(f'<div class="listai-hist-item"><div><div class="listai-hist-prod">{html.escape(str(r.get("Produto", "")))} <small>(x{fmt_qtd(r.get("Quantidade", 1))})</small></div><div class="listai-hist-meta">{meta}</div></div><div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(float(r.get("Total", 0.0)))}</div><div class="listai-hist-unit">{formatar_reais(float(r.get("Preço Unitário", 0.0)))}/un</div></div></div>')
             st.markdown("".join(itens), unsafe_allow_html=True)
 
 
@@ -2106,8 +823,8 @@ def _montar_row_feed(r, mostrar_data=False):
     cat = str(r.get("Categoria") or "Outros")
     tags = f'<span class="listai-feed-tag">🏪 {html.escape(str(r.get("Supermercado") or "Não informado"))}</span><span class="listai-feed-tag listai-feed-tag-cat">{html.escape(cat)}</span>'
     if mostrar_data:
-        tags += f'<span class="listai-feed-tag">📅 {_fmt_dt(r.get("Data_dt"))}</span>'
-    return f'<div class="listai-feed-row"><div class="listai-feed-left"><div class="listai-feed-ico">{ICONES_CATEGORIA.get(cat, "📦")}</div><div class="listai-feed-info"><div class="listai-feed-name">{html.escape(str(r.get("Produto", "")))} <small>(x{_fmt_qtd(r.get("Quantidade", 1))})</small></div><div class="listai-feed-tags">{tags}</div></div></div><div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(float(r.get("Total", 0.0)))}</div><div class="listai-hist-unit">{formatar_reais(float(r.get("Preço Unitário", 0.0)))}/un</div></div></div>'
+        tags += f'<span class="listai-feed-tag">📅 {fmt_dt(r.get("Data_dt"))}</span>'
+    return f'<div class="listai-feed-row"><div class="listai-feed-left"><div class="listai-feed-ico">{ICONES_CATEGORIA.get(cat, "📦")}</div><div class="listai-feed-info"><div class="listai-feed-name">{html.escape(str(r.get("Produto", "")))} <small>(x{fmt_qtd(r.get("Quantidade", 1))})</small></div><div class="listai-feed-tags">{tags}</div></div></div><div class="listai-hist-right"><div class="listai-hist-val">{formatar_reais(float(r.get("Total", 0.0)))}</div><div class="listai-hist-unit">{formatar_reais(float(r.get("Preço Unitário", 0.0)))}/un</div></div></div>'
 
 
 def renderizar_lista_geral_historico(df_tab, agrupar_por_data=True):
@@ -2117,7 +834,7 @@ def renderizar_lista_geral_historico(df_tab, agrupar_por_data=True):
         return
     blocos, mapa, hoje = [], {}, date.today().strftime("%d/%m/%Y")
     for r in regs:
-        dia = _fmt_dt(r.get("Data_dt"))
+        dia = fmt_dt(r.get("Data_dt"))
         if dia not in mapa:
             mapa[dia] = {"dia": dia, "total": 0.0, "itens": []}
             blocos.append(mapa[dia])
@@ -2131,235 +848,11 @@ def renderizar_lista_geral_historico(df_tab, agrupar_por_data=True):
     st.markdown("".join(partes), unsafe_allow_html=True)
 
 
-def exibir_rodape_anuncio():
-    ad, motivo = selecionar_anuncio_inteligente(gps_regiao, st.session_state.get("pagina_atual", ""))
-    url = ad["url"] if str(ad["url"]).startswith("https://") else "https://"
-    cupom_html = f'<span class="listai-ad-cupom">🏷️ Cupom: {html.escape(ad["cupom"])}</span>' if ad.get("cupom") else ""
-    with st.container(border=True):
-        c1, c2 = st.columns([4, 1], vertical_alignment="center")
-        c1.markdown(
-            f'<span class="listai-ad-badge">{html.escape(motivo)}</span>'
-            f'<strong>{html.escape(ad["titulo"])}</strong> — {html.escape(ad["descricao"])}{cupom_html}',
-            unsafe_allow_html=True,
-        )
-        c2.link_button(ad["texto_botao"], url, use_container_width=True)
-
-
-_st_fragment = getattr(st, "fragment", lambda f: f)
-
-
-@_st_fragment
-def renderizar_editor_foto_perfil(usuario, rascunho):
-    with st.container(border=True):
-        st.markdown("#### ✂️ Ajustar Foto do Perfil")
-        modo_f = st.radio("Como encaixar:", ["🔍 Preencher círculo", "🖼️ Caber inteira"], horizontal=True, key="foto_ed_modo")
-        if modo_f == "🔍 Preencher círculo":
-            zoom_f = st.slider("🔎 Zoom", 1.0, 2.5, 1.0, 0.1, key="foto_ed_zoom")
-            with st.container(key="foto_pos_row"):
-                c_px, c_py = st.columns(2)
-                pos_x = c_px.slider("⬅️ ➡️ Lado", -100, 100, 0, 5, key="foto_ed_px")
-                pos_y = c_py.slider("⬆️ ⬇️ Altura", -100, 100, 0, 5, key="foto_ed_py")
-        else:
-            zoom_f, pos_x, pos_y = 1.0, 0, 0
-        rot_f = st.radio("🔄 Girar:", [0, 90, 180, 270], horizontal=True, format_func=lambda g: f"{g}°", key="foto_ed_rot")
-
-        prev_bytes = gerar_foto_ajustada(rascunho, modo=("Encaixar inteira" if modo_f == "🖼️ Caber inteira" else "Preencher"), zoom=zoom_f, pos_x=pos_x, pos_y=pos_y, rotacao=rot_f)
-        prev_b64 = base64.b64encode(prev_bytes).decode("ascii")
-        st.markdown(f'<div class="listai-foto-preview"><img src="data:image/jpeg;base64,{prev_b64}" alt="Prévia"></div>', unsafe_allow_html=True)
-
-        with st.container(key="kpi_2cols_foto_ed"):
-            s_col, c_col = st.columns(2)
-            if s_col.button("✅ Salvar foto", type="primary", use_container_width=True, key="btn_salvar_foto_ed"):
-                salvar_foto_perfil_final(usuario, rascunho, prev_bytes)
-                limpar_estado_editor_foto()
-                st.session_state["msg_sucesso"] = "Foto de perfil salva!"
-                st.rerun()
-            if c_col.button("✖️ Cancelar", use_container_width=True, key="btn_cancelar_foto_ed"):
-                limpar_estado_editor_foto()
-                st.rerun()
-
-
-def _ao_alternar_item_lista(dono_lista, item_id, chk_key):
-    atualizar_item_pre_lista(dono_lista, item_id, Comprado=bool(st.session_state.get(chk_key, False)))
-
-
-@_st_fragment
-def renderizar_bloco_lista_interativa():
-    df_c, _ = obter_compras_com_datas(usuario_atual)
-    cod_fam = obter_grupo_lista_atual(usuario_atual)
-    dono_lista = obter_dono_lista(usuario_atual)
-    versao = st.session_state["form_versao"]
-
-    if cod_fam:
-        with st.container(key="fam_bar"):
-            c_fb, c_fs = st.columns([4, 1], vertical_alignment="center")
-            c_fb.markdown(
-                f'<div class="listai-fam-badge">👨‍👩‍👧‍👦 Lista da Família • Código: <span class="listai-fam-code">{html.escape(cod_fam)}</span></div>',
-                unsafe_allow_html=True,
-            )
-            if c_fs.button("🔄 Atualizar", key="btn_sync_fam", use_container_width=True, help="Buscar novidades da família"):
-                st.session_state.pop("_ss_pre_lista_df", None)
-                st.session_state.pop("_ss_pre_lista_owner", None)
-
-    with st.container(border=True):
-        with st.container(key="add_lista_row"):
-            c_in, c_bt = st.columns([5, 1], vertical_alignment="bottom")
-            novo_item = c_in.text_input("Anotar na lista", placeholder="Ex: Arroz, Café, Leite...", key=f"in_lista_{st.session_state.get('lista_versao', 0)}", label_visibility="collapsed")
-            if c_bt.button("➕", key="btn_add_lista", type="primary", use_container_width=True, help="Adicionar na lista"):
-                if not novo_item.strip():
-                    st.warning("Digite um item.")
-                else:
-                    adicionar_itens_pre_lista(novo_item, 1, api_key, dono_lista)
-                    st.session_state["lista_versao"] = st.session_state.get("lista_versao", 0) + 1
-
-        if not df_c.empty:
-            with st.expander("⚡ Adicionar rápido dos itens mais comprados"):
-                esc = st.multiselect("Escolha os itens:", df_c["Produto"].value_counts().head(8).index.tolist(), key="ms_mais_comprados")
-                if st.button("Adicionar selecionados na lista", disabled=not esc, use_container_width=True):
-                    adicionar_itens_pre_lista(", ".join(esc), 1, api_key, dono_lista)
-
-        df_pre = carregar_pre_lista(dono_lista)
-        if not df_pre.empty:
-            tot_l, pegos = len(df_pre), int(df_pre["Comprado"].sum())
-            st.progress(pegos / tot_l, text=f"✅ {pegos} de {tot_l} no carrinho ({int((pegos / tot_l) * 100)}%)")
-
-            with st.container(key="lista_chk_box"):
-                for _, row in df_pre.sort_values(by="Comprado", ascending=True).iterrows():
-                    iid, nome_i, qtd_i, cat_i, pego = row["ID"], row["Produto"], int(row["Quantidade"]), row["Categoria"] or "Outros", bool(row["Comprado"])
-                    ico_i = ICONES_CATEGORIA.get(cat_i, "📦")
-                    c_chk, c_lnc, c_del = st.columns([6, 1, 1])
-                    lbl = f"~~{ico_i} {nome_i} (x{qtd_i})~~" if pego else f"**{ico_i} {nome_i}** (x{qtd_i}) · *{cat_i}*"
-                    c_chk.checkbox(lbl, value=pego, key=f"chk_pre_{iid}", on_change=_ao_alternar_item_lista, args=(dono_lista, iid, f"chk_pre_{iid}"))
-
-                    if c_lnc.button("💰", key=f"btn_lancar_{iid}", help="Lançar preço em Compra", use_container_width=True):
-                        atualizar_item_pre_lista(dono_lista, iid, Comprado=True)
-                        st.session_state.pop("aviso_voz", None)
-                        st.session_state.update({
-                            "compra_ativa": True,
-                            "valor_produto": nome_i,
-                            "valor_quantidade": qtd_i,
-                            "valor_categoria": cat_i if cat_i in LISTA_CATEGORIAS else "✨ Automática",
-                            "form_versao": versao + 1,
-                            "pagina_atual": PAGINAS[0],
-                            "rolar_topo": True,
-                        })
-                        st.rerun()
-                    if c_del.button("🗑️", key=f"btn_del_pre_{iid}", help="Remover", use_container_width=True):
-                        remover_pre_lista(dono_lista, item_id=iid)
-
-            df_pre = carregar_pre_lista(dono_lista)
-            if not df_pre.empty:
-                with st.expander("✏️ Ajustar item ou categoria da lista"):
-                    ops_l = {idx: f"{r['Produto']} (x{int(r['Quantidade'])}) — {r['Categoria'] or 'Outros'}" for idx, r in df_pre.iterrows()}
-                    idx_l = st.selectbox("Item da lista", list(ops_l.keys()), format_func=lambda i: ops_l[i], key="sel_aj_lista")
-                    row_l = df_pre.loc[idx_l]
-                    cat_l = row_l["Categoria"] if row_l["Categoria"] in LISTA_CATEGORIAS else "Outros"
-                    with st.form("form_aj_lista", border=False):
-                        aj_nome = st.text_input("Produto", value=str(row_l["Produto"]))
-                        with st.container(key="edit_qp_lista"):
-                            cq_l, cc_l = st.columns(2)
-                            aj_qtd = cq_l.number_input("Qtd", min_value=1, value=max(1, int(row_l["Quantidade"])), step=1)
-                            aj_cat = cc_l.selectbox("Categoria", LISTA_CATEGORIAS, index=LISTA_CATEGORIAS.index(cat_l))
-                        if st.form_submit_button("💾 Atualizar item da lista", use_container_width=True) and aj_nome.strip():
-                            atualizar_item_pre_lista(dono_lista, row_l["ID"], Produto=aj_nome.strip(), Quantidade=int(aj_qtd), Categoria=aj_cat)
-
-                pegos_atual = int(df_pre["Comprado"].sum())
-                with st.container(key="kpi_2cols_lista"):
-                    a1, a2 = st.columns(2)
-                    if a1.button("🧹 Limpar marcados", disabled=(pegos_atual == 0), use_container_width=True):
-                        remover_pre_lista(dono_lista, apenas_marcados=True)
-                    if a2.button("🗑️ Limpar lista", use_container_width=True):
-                        remover_pre_lista(dono_lista, tudo=True)
-
-                df_pend = df_pre[~df_pre["Comprado"]]
-                if not df_pend.empty:
-                    df_com = carregar_comunidade_ordenada()
-                    res_comp, escopo = comparar_lista_nos_mercados(df_pend, df_com, gps_regiao)
-                    if res_comp:
-                        st.divider()
-                        vencedor = res_comp[0]
-                        comparaveis = [r for r in res_comp if r["qtd_enc"] == vencedor["qtd_enc"]]
-                        econ = max(0.0, max((r["total"] for r in comparaveis), default=vencedor["total"]) - vencedor["total"])
-                        eco_badge = f'<span class="listai-eco-pill">Economia de até {formatar_reais(econ)}</span>' if econ > 0.01 else ""
-
-                        st.markdown(f"**🧠 Onde sua lista sai mais barata hoje** *({html.escape(escopo)})*")
-                        st.markdown(
-                            f'<div class="listai-winner-card">'
-                            f'<div><h3>🏆 {html.escape(vencedor["mercado"])}</h3>'
-                            f'<div>📦 <strong>{vencedor["qtd_enc"]} de {vencedor["qtd_total"]}</strong> itens encontrados · {html.escape(vencedor["regiao"])}</div>'
-                            f'{eco_badge}</div>'
-                            f'<div class="listai-winner-price">{formatar_reais(vencedor["total"])}</div>'
-                            f'</div>',
-                            unsafe_allow_html=True,
-                        )
-
-                        if st.button(f"🛒 Comprar em {vencedor['mercado']}", type="primary", use_container_width=True, key="btn_comprar_vencedor_lista"):
-                            if vencedor["regiao"] and vencedor["regiao"] != "-":
-                                registrar_varios_mercados(vencedor["regiao"], [vencedor["mercado"]])
-                                st.session_state["regiao_para_selecionar"] = vencedor["regiao"]
-                            st.session_state.update({
-                                "merc_para_selecionar": vencedor["mercado"],
-                                "compra_ativa": True,
-                                "compra_sessao_ids": [],
-                                "pagina_atual": PAGINAS[0],
-                                "rolar_topo": True,
-                            })
-                            st.rerun()
-
-                        with st.expander(f"🔎 Comparar todos os mercados ({len(res_comp)})"):
-                            for idx_c, r in enumerate(res_comp[:6]):
-                                sel_ico = "🥇" if idx_c == 0 else ("🥈" if idx_c == 1 else ("🥉" if idx_c == 2 else "🏪"))
-                                st.markdown(f"**{sel_ico} {html.escape(r['mercado'])}** — **{formatar_reais(r['total'])}** ({r['qtd_enc']}/{r['qtd_total']} itens)")
-                                det_txt = " · ".join(f"{it['item']} ({formatar_reais(it['preco'])})" for it in r["itens"])
-                                st.caption(f"✓ {det_txt}")
-                                if r["faltando"]:
-                                    st.caption(f"⚠️ Sem preço: {', '.join(r['faltando'])}")
-        else:
-            st.caption("Sua lista está vazia. Anote acima o que precisa comprar!")
-
-        with st.expander("👨‍👩‍👧‍👦 Lista da Família (Compartilhada)", expanded=False):
-            if cod_fam:
-                st.success(f"Você está conectado à Lista da Família **`{cod_fam}`**.")
-                zap_convite = f"🏠 Entre na nossa Lista de Compras no Listaí!\n\nCódigo: *{cod_fam}*\nAbra a aba 📝 Lista → 👨‍👩‍👧‍👦 Lista da Família e digite esse código."
-                st.link_button("📲 Enviar código no WhatsApp", f"https://wa.me/?text={urllib.parse.quote(zap_convite)}", type="primary", use_container_width=True)
-                if st.button("🚪 Voltar para minha lista pessoal", use_container_width=True, key="btn_sair_fam"):
-                    try:
-                        definir_grupo_lista(usuario_atual, "")
-                        st.session_state["msg_sucesso"] = "Você voltou para sua lista pessoal."
-                        st.rerun()
-                    except Exception as e_fam:
-                        st.warning(str(e_fam))
-            else:
-                st.caption("Divida a mesma lista em tempo real com outra pessoa da sua casa.")
-                copiar_at = st.checkbox("Copiar meus itens pendentes para a nova lista da família", value=True, key="chk_copiar_fam")
-                if st.button("🏠 Criar lista da família", type="primary", use_container_width=True, key="btn_criar_fam"):
-                    novo_cod = gerar_codigo_familia()
-                    try:
-                        if copiar_at:
-                            copiar_itens_para_familia(usuario_atual, f"fam:{novo_cod}")
-                        definir_grupo_lista(usuario_atual, novo_cod)
-                        st.session_state["msg_sucesso"] = f"Lista da Família criada! Código: **`{novo_cod}`**."
-                        st.rerun()
-                    except Exception as e_fam:
-                        st.warning(str(e_fam))
-
-                st.divider()
-                with st.form("form_entrar_fam", border=False):
-                    cod_in = st.text_input("Já tem um código?", placeholder="Ex: CASA-7K9P2M")
-                    if st.form_submit_button("🔗 Entrar na lista da família", use_container_width=True):
-                        if not (cod_ok := validar_codigo_familia(cod_in)):
-                            st.warning("Código inválido. Use o formato `CASA-XXXXXX`.")
-                        else:
-                            try:
-                                definir_grupo_lista(usuario_atual, cod_ok)
-                                st.session_state["msg_sucesso"] = f"Conectado à lista da família **`{cod_ok}`**!"
-                                st.rerun()
-                            except Exception as e_fam:
-                                st.warning(str(e_fam))
-
-
 # --- Páginas ---
-def pagina_compra():
+def pagina_compra(ctx):
+    usuario_atual, nome_usuario, api_key = ctx["usuario"], ctx["nome"], ctx["api_key"]
+    gps_regiao, gps_mercados = ctx["gps_regiao"], ctx["gps_mercados"]
+
     mes_hoje = date.today().strftime("%Y-%m")
     df_c, df_v = obter_compras_com_datas(usuario_atual)
     gasto_mes = 0.0 if df_v.empty else float(df_v.loc[df_v["Mês"] == mes_hoje, "Total"].sum())
@@ -2435,9 +928,7 @@ def pagina_compra():
         merc_final = st.text_input("Nome do Supermercado", placeholder="Ex: Atacadão, Mercado Central").strip() if merc_esc == "➕ Novo supermercado..." else merc_esc
 
         if aviso := st.session_state.get("aviso_voz"):
-            txt_v = f'🎤 **Ouvi:** *"{aviso["transcricao"]}"* • **{aviso["categoria"]}**'
-            if aviso.get("supermercado"):
-                txt_v += f" • **{aviso['supermercado']}**"
+            txt_v = f'🎤 **Ouvi:** *"{aviso["transcricao"]}"* • **{aviso["categoria"]}**' + (f" • **{aviso['supermercado']}**" if aviso.get("supermercado") else "")
             st.info(txt_v)
         if err_v := st.session_state.pop("aviso_voz_erro", None):
             st.warning(err_v)
@@ -2457,7 +948,7 @@ def pagina_compra():
             clicou_add = c_add.button("✅ Adicionar", type="primary", use_container_width=True, key=f"btn_add_prod_{versao}")
             audio = c_mic.audio_input("Por Voz", label_visibility="collapsed", key=f"audio_zap_{versao}")
 
-        st.caption("🎤 Toque no microfone ao lado para falar (ex: *'2 arroz por 24,90'*)." if api_key else "🎤 Para usar a voz ou foto, informe sua Chave Gemini em **👤 Perfil → Inteligência Artificial**.")
+        st.caption("🎤 Toque no microfone ao lado para falar (ex: *'2 arroz por 24,90'*)." if api_key else "🎤 Para usar a voz ou o leitor Pix, informe sua Chave Gemini em **👤 Perfil → Inteligência Artificial**.")
 
         if audio is not None:
             ab = audio.getvalue()
@@ -2475,12 +966,10 @@ def pagina_compra():
                                 st.session_state.update({"aviso_voz_erro": "Não entendi o produto. Tente falar mais perto do microfone.", "form_versao": versao + 1})
                             else:
                                 st.session_state.update({
-                                    "valor_produto": dv["produto"],
-                                    "valor_quantidade": dv["quantidade"],
+                                    "valor_produto": dv["produto"], "valor_quantidade": dv["quantidade"],
                                     "valor_preco": dv["preco_unitario"] or 1.00,
                                     "valor_categoria": dv["categoria"] if dv["categoria"] in LISTA_CATEGORIAS else "✨ Automática",
-                                    "aviso_voz": dv,
-                                    "form_versao": versao + 1,
+                                    "aviso_voz": dv, "form_versao": versao + 1,
                                 })
                                 if dv["supermercado"]:
                                     st.session_state.update({"valor_supermercado": dv["supermercado"], "merc_para_selecionar": dv["supermercado"]})
@@ -2496,69 +985,31 @@ def pagina_compra():
             reg_esc = st.selectbox("📍 Região", op_reg, key="sel_reg_compra")
             reg_final = st.text_input("Nome da nova região", placeholder="Ex: Campinas - Centro", key="input_nova_regiao").strip() if reg_esc == "➕ Nova região..." else reg_esc
 
-        lidos_foto = st.session_state.get("itens_foto_lidos")
-        with st.expander("📸 Ler etiqueta de preço ou cupom fiscal", expanded=bool(lidos_foto)):
-            f_cup = st.file_uploader("Foto da etiqueta ou nota fiscal", type=["jpg", "jpeg", "png", "webp"], key=f"up_cupom_{versao}")
-            if f_cup is not None:
-                raw_c = f_cup.getvalue()
-                hc = hashlib.sha256(raw_c).hexdigest()
-                if hc != st.session_state.get("ultimo_cupom_hash"):
-                    st.session_state["ultimo_cupom_hash"] = hc
-                    if not api_key:
-                        st.warning("Configure a Chave Gemini em **👤 Perfil → Inteligência Artificial** para ler fotos com IA.")
-                    else:
-                        with st.spinner("Lendo produtos e preços da imagem..."):
-                            try:
-                                img_ocr = preparar_imagem_base(raw_c, max_lado=1024) or raw_c
-                                res_ocr = reconhecer_compra_por_foto(img_ocr, api_key, mime_type="image/jpeg")
-                                if not res_ocr["itens"]:
-                                    st.warning("Não consegui identificar produtos com preço nessa foto. Tente uma foto mais próxima e nítida.")
-                                else:
-                                    st.session_state["itens_foto_lidos"] = res_ocr
-                                    st.rerun()
-                            except Exception as err_ocr:
-                                st.warning(f"⚠️ Não foi possível ler a imagem: {err_ocr}")
-
-            if lidos_foto and lidos_foto.get("itens"):
-                merc_lido = lidos_foto.get("supermercado") or merc_final
-                st.success(f"📸 **{len(lidos_foto['itens'])} item(ns)** identificado(s)!" + (f" Local: **{merc_lido}**" if merc_lido else ""))
-                selecionados = []
-                for idx_f, it_f in enumerate(lidos_foto["itens"]):
-                    ico_f = ICONES_CATEGORIA.get(it_f["categoria"], "📦")
-                    lbl_f = f"{ico_f} **{it_f['produto']}** (x{it_f['quantidade']}) — {formatar_reais(it_f['preco_unitario'])}/un"
-                    if st.checkbox(lbl_f, value=True, key=f"chk_foto_item_{idx_f}"):
-                        selecionados.append(it_f)
-
-                with st.container(key="kpi_2cols_foto_ocr"):
-                    b_ok, b_no = st.columns(2)
-                    if b_ok.button(f"✅ Salvar ({len(selecionados)})", type="primary", disabled=(not selecionados), use_container_width=True, key="btn_salvar_foto_itens"):
-                        merc_usar = merc_lido or merc_final or "Supermercado"
-                        if not reg_final:
-                            st.warning("Informe a Região antes de salvar.")
-                        else:
-                            v_tot_lote = sum(it["quantidade"] * it["preco_unitario"] for it in selecionados)
-                            orc = carregar_orcamento_mensal(usuario_atual)
-                            lim, mes_c = float(orc["limite"]), data_c.strftime("%Y-%m")
-                            novo_tot = gasto_mes + (v_tot_lote if mes_c == mes_hoje else 0.0)
-                            if lim > 0 and orc["bloquear"] and mes_c == mes_hoje and novo_tot > lim:
-                                st.error(f"🚫 Bloqueado pelo limite mensal de **{formatar_reais(lim)}**!")
-                            else:
-                                registrar_varios_mercados(reg_final, [merc_usar])
-                                linhas_u = [[data_c.isoformat(), reg_final, merc_usar, it["produto"], it["categoria"], it["quantidade"], it["preco_unitario"], it["quantidade"] * it["preco_unitario"]] for it in selecionados]
-                                novos_ids = salvar_compra_usuario(usuario_atual, pd.DataFrame(linhas_u, columns=COLUNAS))
-                                st.session_state.setdefault("compra_sessao_ids", []).extend(novos_ids)
-                                if comp:
-                                    linhas_c = [[data_c.isoformat(), reg_final, merc_usar, it["produto"], it["categoria"], it["preco_unitario"], nome_usuario] for it in selecionados]
-                                    salvar_preco_comunidade(pd.DataFrame(linhas_c, columns=COLUNAS_COMUNIDADE))
-                                if lim > 0 and mes_c == mes_hoje and novo_tot > lim:
-                                    st.session_state["msg_limite_alerta"] = f"⚠️ Gastos do mês chegaram a **{formatar_reais(novo_tot)}** (acima do limite de **{formatar_reais(lim)}**)."
-                                st.session_state.pop("itens_foto_lidos", None)
-                                st.session_state.update({"msg_sucesso": f"📸 **{len(selecionados)} item(ns)** salvos em **{merc_usar}**!", "merc_para_selecionar": merc_usar, "form_versao": versao + 1})
-                                st.rerun()
-                    if b_no.button("✖️ Descartar", use_container_width=True, key="btn_descartar_foto_itens"):
-                        st.session_state.pop("itens_foto_lidos", None)
-                        st.session_state["form_versao"] = versao + 1
-                        st.rerun()
+        if res_pix := renderizar_leitor_pix(api_key, merc_final, versao):
+            selecionados, merc_usar = res_pix
+            if not reg_final:
+                st.warning("Informe a Região antes de salvar.")
+            else:
+                v_tot_lote = sum(it["quantidade"] * it["preco_unitario"] for it in selecionados)
+                orc = carregar_orcamento_mensal(usuario_atual)
+                lim, mes_c = float(orc["limite"]), data_c.strftime("%Y-%m")
+                novo_tot = gasto_mes + (v_tot_lote if mes_c == mes_hoje else 0.0)
+                if lim > 0 and orc["bloquear"] and mes_c == mes_hoje and novo_tot > lim:
+                    st.error(f"🚫 Bloqueado pelo limite mensal de **{formatar_reais(lim)}**!")
+                else:
+                    registrar_varios_mercados(reg_final, [merc_usar])
+                    linhas_u = [[data_c.isoformat(), reg_final, merc_usar, it["produto"], it["categoria"], it["quantidade"], it["preco_unitario"], it["quantidade"] * it["preco_unitario"]] for it in selecionados]
+                    novos_ids = salvar_compra_usuario(usuario_atual, pd.DataFrame(linhas_u, columns=COLUNAS))
+                    st.session_state.setdefault("compra_sessao_ids", []).extend(novos_ids)
+                    if comp:
+                        linhas_c = [[data_c.isoformat(), reg_final, merc_usar, it["produto"], it["categoria"], it["preco_unitario"], nome_usuario] for it in selecionados]
+                        salvar_preco_comunidade(pd.DataFrame(linhas_c, columns=COLUNAS_COMUNIDADE))
+                    if lim > 0 and mes_c == mes_hoje and novo_tot > lim:
+                        st.session_state["msg_limite_alerta"] = f"⚠️ Gastos do mês chegaram a **{formatar_reais(novo_tot)}** (acima do limite de **{formatar_reais(lim)}**)."
+                    st.session_state.pop("itens_foto_lidos", None)
+                    st.session_state.pop("ultimo_cupom_hash", None)
+                    st.session_state.update({"msg_sucesso": f"📸 **{len(selecionados)} item(ns)** salvos em **{merc_usar}**!", "merc_para_selecionar": merc_usar, "form_versao": versao + 1})
+                    st.rerun()
 
         if clicou_add:
             if not (prod_ok := prod.strip()):
@@ -2583,19 +1034,25 @@ def pagina_compra():
                         extra = " Preço compartilhado!"
                     if lim > 0 and mes_c == mes_hoje and novo_tot > lim:
                         st.session_state["msg_limite_alerta"] = f"⚠️ Gastos do mês chegaram a **{formatar_reais(novo_tot)}** (acima do limite de **{formatar_reais(lim)}**)."
-                    st.session_state.update({"msg_sucesso": f"'{prod_ok}' adicionado em **{merc_final}** ({cat}).{extra}", "valor_produto": "", "valor_quantidade": 1, "valor_preco": 1.00, "valor_categoria": "✨ Automática", "valor_supermercado": "", "regiao_para_selecionar": reg_final, "merc_para_selecionar": merc_final, "form_versao": versao + 1})
+                    st.session_state.update({
+                        "msg_sucesso": f"'{prod_ok}' adicionado em **{merc_final}** ({cat}).{extra}",
+                        "valor_produto": "", "valor_quantidade": 1, "valor_preco": 1.00,
+                        "valor_categoria": "✨ Automática", "valor_supermercado": "",
+                        "regiao_para_selecionar": reg_final, "merc_para_selecionar": merc_final, "form_versao": versao + 1,
+                    })
                     st.session_state.pop("aviso_voz", None)
                     st.rerun()
 
     renderizar_itens_compra_ativa(df_c, usuario_atual, merc_final, data_c)
 
 
-def pagina_lista():
+def pagina_lista(ctx):
     st.subheader("📝 Lista de Compras")
-    renderizar_bloco_lista_interativa()
+    renderizar_bloco_lista_interativa(ctx["usuario"], ctx["api_key"], ctx["gps_regiao"])
 
 
-def pagina_graficos():
+def pagina_graficos(ctx):
+    usuario_atual = ctx["usuario"]
     st.subheader("📊 Gráficos e Gastos")
     df_c, df_v = obter_compras_com_datas(usuario_atual)
     mes_hoje = date.today().strftime("%Y-%m")
@@ -2623,7 +1080,8 @@ def pagina_graficos():
         renderizar_graficos_compras(df_c, df_v, limite_mensal=float(carregar_orcamento_mensal(usuario_atual)["limite"]))
 
 
-def pagina_historico():
+def pagina_historico(ctx):
+    usuario_atual = ctx["usuario"]
     st.subheader("🧾 Histórico de Compras")
     df_c, df_v = obter_compras_com_datas(usuario_atual)
     if df_c.empty:
@@ -2662,7 +1120,7 @@ def pagina_historico():
             hm2.metric("🛍️ Compras", f"{len(df_e)} itens · {df_e['Categoria'].nunique()} cat.")
 
         with st.expander("✏️ Editar uma compra", expanded=(st.session_state.get("edit_hist_idx") is not None)):
-            ops_ed = {i: f"{r['Data'] or 'Sem data'} | {r['Produto']} (x{_fmt_qtd(r['Quantidade'])}) — {formatar_reais(float(r['Total']))}" for i, r in df_e.iloc[::-1].iterrows()}
+            ops_ed = {i: f"{r['Data'] or 'Sem data'} | {r['Produto']} (x{fmt_qtd(r['Quantidade'])}) — {formatar_reais(float(r['Total']))}" for i, r in df_e.iloc[::-1].iterrows()}
             idx_ed = st.selectbox("Selecione o produto:", list(ops_ed.keys()), format_func=lambda i: ops_ed[i], key="sel_hist_edit")
             renderizar_editor_compra(df_c, idx_ed, "edit_hist_idx", usuario_atual)
 
@@ -2690,7 +1148,8 @@ def pagina_historico():
             st.rerun()
 
 
-def pagina_precos():
+def pagina_precos(ctx):
+    usuario_atual, gps_regiao = ctx["usuario"], ctx["gps_regiao"]
     st.subheader("🏆 Banco de Preços por Supermercado")
     df_ord = carregar_comunidade_ordenada()
     if df_ord.empty:
@@ -2750,16 +1209,15 @@ def pagina_precos():
         for (merc_nome, reg_nome), grp in df_db.groupby(["Supermercado", "Região"]):
             mn = normalizar_texto(merc_nome)
             info = ranking_reg.get(mn, {})
-            wins = sum(1 for r in grp.itertuples() if contar_merc_prod.get(r.Prod_norm, 1) > 1 and float(r._6) <= min_por_prod.get(r.Prod_norm, 0) + 0.01)
+            wins = sum(
+                1 for r in grp.to_dict("records")
+                if contar_merc_prod.get(r["Prod_norm"], 1) > 1 and float(r["Preço Unitário"]) <= min_por_prod.get(r["Prod_norm"], 0) + 0.01
+            )
             grupos.append({
-                "mercado": merc_nome or "Não informado",
-                "regiao": reg_nome or "-",
+                "mercado": merc_nome or "Não informado", "regiao": reg_nome or "-",
                 "grp": grp.sort_values(by="Produto", key=lambda s: s.astype(str).str.lower()),
-                "info": info,
-                "wins": wins,
-                "qtd": len(grp),
-                "indice": info.get("indice_pct", 0.0) if info else 0.0,
-                "ult_dt": grp["Data_dt"].max(),
+                "info": info, "wins": wins, "qtd": len(grp),
+                "indice": info.get("indice_pct", 0.0) if info else 0.0, "ult_dt": grp["Data_dt"].max(),
             })
 
         grupos.sort(key=lambda g: (0 if g["info"] and g["info"].get("tem_comparacao") else 1, g["indice"], -g["wins"], -g["qtd"]))
@@ -2770,14 +1228,11 @@ def pagina_precos():
             selo_txt, selo_cls = classificar_selo_preco(g["info"])
             wins_badge = f'<span class="listai-pill-best">🏆 {g["wins"]} menor(es)</span>' if g["wins"] > 0 else ""
             st.markdown(
-                f'<div class="listai-db-head">'
-                f'<div><div class="listai-db-title">🏪 {html.escape(g["mercado"])}</div>'
-                f'<div class="listai-db-sub">📍 {html.escape(g["regiao"])} • 📅 Atualizado em {_fmt_dt(g["ult_dt"])}</div></div>'
-                f'<div class="listai-db-badges"><span class="listai-pill-muted">📦 {g["qtd"]} {"item" if g["qtd"] == 1 else "itens"}</span>{wins_badge}<span class="{selo_cls}">{html.escape(selo_txt)}</span></div>'
-                f'</div>',
+                f'<div class="listai-db-head"><div><div class="listai-db-title">🏪 {html.escape(g["mercado"])}</div>'
+                f'<div class="listai-db-sub">📍 {html.escape(g["regiao"])} • 📅 Atualizado em {fmt_dt(g["ult_dt"])}</div></div>'
+                f'<div class="listai-db-badges"><span class="listai-pill-muted">📦 {g["qtd"]} {"item" if g["qtd"] == 1 else "itens"}</span>{wins_badge}<span class="{selo_cls}">{html.escape(selo_txt)}</span></div></div>',
                 unsafe_allow_html=True,
             )
-
             with st.expander(f"Abrir banco de preços — {g['mercado']} ({g['qtd']})", expanded=(abrir_auto or idx == 0)):
                 renderizar_tabela_banco_precos(g["grp"].head(60), min_por_prod, contar_merc_prod, mostrar_mercado=False)
 
@@ -2808,68 +1263,22 @@ def pagina_precos():
     zap = "\n".join(["🛒 *Melhores preços no Listaí:*", ""] + [f"• *{r['Produto']}*: R$ {r['Preço Unitário']:.2f} ({r['Supermercado']} - {r['Região']})" for r in zap_df.to_dict("records")])
     st.link_button("📲 Enviar melhores preços no WhatsApp", f"https://wa.me/?text={urllib.parse.quote(zap)}", type="primary", use_container_width=True)
 
-    if usuario_atual in USUARIOS_ADMIN:
+    if usuario_atual in ctx["admins"]:
         with st.expander("👑 Admin — Limpar comunidade"):
             if st.button("Apagar preços compartilhados"):
                 limpar_comunidade()
                 st.rerun()
 
 
-def _montar_lista_mercados_classificada(regiao_alvo, detalhes_gps, mercados_salvos, df_com):
-    df_reg = df_com[df_com["Região"] == regiao_alvo] if (not df_com.empty and regiao_alvo) else df_com
-    if df_reg.empty:
-        df_reg = df_com
-    ranking = calcular_ranking_precos_mercados(df_reg)
-
-    por_nome = {}
-    for item in (detalhes_gps or []):
-        mn = normalizar_texto(item["Supermercado"])
-        if mn not in por_nome or (item.get("Distância (m)") or 999999) < (por_nome[mn].get("Distância (m)") or 999999):
-            por_nome[mn] = dict(item)
-
-    for nome_s in (mercados_salvos or []):
-        mn = normalizar_texto(nome_s)
-        if mn not in por_nome:
-            por_nome[mn] = {"Supermercado": nome_s, "Tipo": "Cadastrado na região", "Endereço": regiao_alvo or "-", "Distância (m)": None, "lat": None, "lon": None}
-
-    if not df_reg.empty:
-        for nome_c in df_reg["Supermercado"].dropna().unique():
-            mn = normalizar_texto(nome_c)
-            if mn and mn not in por_nome:
-                por_nome[mn] = {"Supermercado": nome_c, "Tipo": "Com preços registrados", "Endereço": regiao_alvo or "-", "Distância (m)": None, "lat": None, "lon": None}
-
-    lista_final = []
-    for mn, item in por_nome.items():
-        info = ranking.get(mn)
-        item["preco_info"] = info
-        lista_final.append(item)
-
-    def chave_ordem(x):
-        info = x.get("preco_info")
-        dist = x.get("Distância (m)")
-        dist_ord = dist if dist is not None else 999999
-        if info and info.get("tem_comparacao"):
-            return (0, info["indice_pct"], -info["wins"], dist_ord, x["Supermercado"].lower())
-        if info:
-            return (1, info["preco_medio"], -info["qtd_precos"], dist_ord, x["Supermercado"].lower())
-        return (2, 0.0, 0, dist_ord, x["Supermercado"].lower())
-
-    return sorted(lista_final, key=chave_ordem)
-
-
-def pagina_mercados():
+def pagina_mercados(ctx):
+    usuario_atual, gps_coords, gps_regiao = ctx["usuario"], ctx["gps_coords"], ctx["gps_regiao"]
     st.subheader("🗺️ Mercados da Região")
     raio_atual = int(st.session_state.get("gps_raio_atual", 3))
     if raio_atual not in RAIO_OPCOES:
         raio_atual = 3
 
     with st.container(border=True):
-        raio = st.select_slider(
-            "📡 Raio de alcance",
-            options=RAIO_OPCOES,
-            value=raio_atual,
-            format_func=lambda x: RAIO_LABELS.get(x, f"{x} km"),
-        )
+        raio = st.select_slider("📡 Raio de alcance", options=RAIO_OPCOES, value=raio_atual, format_func=lambda x: RAIO_LABELS.get(x, f"{x} km"))
         st.caption(f"Buscando estabelecimentos em até **{raio} km** de distância.")
 
         with st.expander("📍 Ativar ou atualizar GPS", expanded=not bool(gps_coords)):
@@ -2887,7 +1296,7 @@ def pagina_mercados():
                                     if nova:
                                         registrar_varios_mercados(gps_regiao, [m["Supermercado"] for m in nova])
                                     salvar_preferencias_gps(gps_coords[0], gps_coords[1], gps_regiao, usuario_atual)
-                                    st.session_state.update({"gps_detalhes": nova, "gps_mercados": _resumir_mercados(nova), "gps_raio_atual": raio, "mkt_limite_exib": 15})
+                                    st.session_state.update({"gps_detalhes": nova, "gps_mercados": resumir_mercados(nova), "gps_raio_atual": raio, "mkt_limite_exib": 15})
                                     st.rerun()
                                 except Exception as e:
                                     st.warning(f"⚠️ {e}")
@@ -2915,20 +1324,16 @@ def pagina_mercados():
     mercados_reg = carregar_mercados()
     res_m = st.session_state.get("res_manual")
     if res_m and res_m.get("nome_local"):
-        reg_exib = res_m["regiao"]
-        det_exib = res_m["lista"]
+        reg_exib, det_exib = res_m["regiao"], res_m["lista"]
         st.success(f"📍 Exibindo busca para **{res_m['nome_local']}** ({len(det_exib)} no raio de {raio} km).")
     elif gps_regiao:
-        reg_exib = gps_regiao
-        det_exib = st.session_state.get("gps_detalhes", [])
+        reg_exib, det_exib = gps_regiao, st.session_state.get("gps_detalhes", [])
     else:
         reg_exib = st.selectbox("📍 Região salva:", sorted(mercados_reg.keys())) if mercados_reg else ""
         det_exib = []
 
     df_com = carregar_comunidade_ordenada()
-    salvos_reg = mercados_reg.get(reg_exib, [])
-    lista_rank = _montar_lista_mercados_classificada(reg_exib, det_exib, salvos_reg, df_com)
-
+    lista_rank = montar_lista_mercados_classificada(reg_exib, det_exib, mercados_reg.get(reg_exib, []), df_com)
     if not lista_rank:
         st.info("Nenhum supermercado encontrado nesta região ainda. Ative seu GPS ou busque uma cidade acima.")
         return
@@ -2960,26 +1365,17 @@ def pagina_mercados():
                 with st.container(key=f"mkt_card_{idx}"):
                     c_inf, c_act = st.columns([4, 1.3], vertical_alignment="center")
                     c_inf.markdown(
-                        f'<div class="listai-mkt-item">'
-                        f'<div class="{rank_cls}">{pos_txt}</div>'
-                        f'<div class="listai-mkt-info">'
-                        f'<div class="listai-mkt-name">{html.escape(m["Supermercado"])}</div>'
+                        f'<div class="listai-mkt-item"><div class="{rank_cls}">{pos_txt}</div>'
+                        f'<div class="listai-mkt-info"><div class="listai-mkt-name">{html.escape(m["Supermercado"])}</div>'
                         f'<div class="listai-mkt-meta">{html.escape(" · ".join(meta_partes))}</div>'
-                        f'<div class="listai-mkt-tags">{tags_html}</div>'
-                        f'</div></div>',
+                        f'<div class="listai-mkt-tags">{tags_html}</div></div></div>',
                         unsafe_allow_html=True,
                     )
                     if c_act.button("🛒 Comprar aqui", key=f"btn_comprar_mkt_{idx}", use_container_width=True):
                         if reg_exib:
                             registrar_varios_mercados(reg_exib, [m["Supermercado"]])
                             st.session_state["regiao_para_selecionar"] = reg_exib
-                        st.session_state.update({
-                            "merc_para_selecionar": m["Supermercado"],
-                            "compra_ativa": True,
-                            "compra_sessao_ids": [],
-                            "pagina_atual": PAGINAS[0],
-                            "rolar_topo": True,
-                        })
+                        st.session_state.update({"merc_para_selecionar": m["Supermercado"], "compra_ativa": True, "compra_sessao_ids": [], "pagina_atual": PAGINAS[0], "rolar_topo": True})
                         st.rerun()
 
         if len(lista_rank) > lim_mkt:
@@ -2994,16 +1390,17 @@ def pagina_mercados():
             st.info("Use **📍 Ativar ou atualizar GPS** ou **🔎 Buscar Cidade / Bairro / CEP** para visualizar os pinos no mapa.")
 
 
-def pagina_perfil():
+def pagina_perfil(ctx):
+    usuario_atual, nome_usuario = ctx["usuario"], ctx["nome"]
+    api_key, origem_api = ctx["api_key"], ctx["origem_api"]
+    gps_coords, gps_regiao, gps_mercados = ctx["gps_coords"], ctx["gps_regiao"], ctx["gps_mercados"]
+
     st.subheader("👤 Meu Perfil")
     reg_u = dict(obter_perfil_atual(usuario_atual))
     df_p, _ = obter_compras_com_datas(usuario_atual)
     sub_p = f"@{usuario_atual}" + (f" • Desde {reg_u['criado_em']}" if reg_u.get("criado_em") else "")
 
-    if supabase_ativo():
-        st.caption("☁️ Banco na nuvem: **Supabase conectado**")
-    else:
-        st.caption("💾 Armazenamento local (configure `SUPABASE_URL` e `SUPABASE_KEY` nos Secrets para salvar na nuvem)")
+    st.caption("☁️ Banco na nuvem: **Supabase conectado**" if supabase_ativo() else "💾 Armazenamento local (configure `SUPABASE_URL` e `SUPABASE_KEY` nos Secrets para salvar na nuvem)")
 
     with st.container(border=True):
         if err_f := st.session_state.pop("msg_foto_erro", None):
@@ -3134,8 +1531,8 @@ def pagina_perfil():
                         st.session_state.update({"gemini_api_key_usuario": nk.strip(), "msg_sucesso": "Chave salva!" if nk.strip() else "Chave removida."})
                         st.rerun()
 
-    if usuario_atual in USUARIOS_ADMIN:
-        with st.expander("👑 Admin — Anúncios e Links de Afiliado"):
+    if usuario_atual in ctx["admins"]:
+        with st.expander("👑 Admin — Anúncios, Carrossel Topo e Script CPM"):
             ads_salvos, tab_ok = carregar_anuncios_cadastrados()
             if supabase_ativo() and not tab_ok:
                 st.warning("Tabela `anuncios` ainda não criada no Supabase. Rode o SQL da tabela `anuncios` no SQL Editor para salvar seus links na nuvem.")
@@ -3147,14 +1544,18 @@ def pagina_perfil():
                 ad_cat = a_c1.selectbox("Categoria alvo", ["Geral"] + LISTA_CATEGORIAS)
                 ad_reg = a_c2.text_input("Região alvo (opcional)", placeholder="Ex: Itajaí (vazio = todas)")
                 b_c1, b_c2 = st.columns(2)
-                ad_btn = b_c1.text_input("Texto do botão", value="Ver Oferta")
+                ad_btn = b_c1.text_input("Nome da Loja / Botão", value="Ver Oferta")
                 ad_cup = b_c2.text_input("Cupom (opcional)", placeholder="Ex: LISTAI10")
+                i_c1, i_c2 = st.columns(2)
+                ad_img = i_c1.text_input("URL da Imagem (carrossel topo)", placeholder="https://.../foto.jpg")
+                ad_desc_tag = i_c2.text_input("Selo de desconto (topo)", placeholder="Ex: -10%")
+                ad_script = st.text_area("Script HTML CPM (opcional — Adsterra / Monetag / Adcash)", placeholder="<script>...</script>", height=70)
                 if st.form_submit_button("➕ Publicar Anúncio", type="primary", use_container_width=True):
-                    if not ad_tit.strip() or not ad_url.strip():
-                        st.warning("Informe o título e o link (https://...).")
+                    if not ad_tit.strip() or (not ad_url.strip() and not ad_script.strip()):
+                        st.warning("Informe o título e o link (https://...) ou um Script HTML.")
                     else:
                         try:
-                            salvar_anuncio_admin(ad_tit, ad_desc, ad_btn, ad_url, ad_cat, ad_reg, ad_cup)
+                            salvar_anuncio_admin(ad_tit, ad_desc, ad_btn, ad_url, ad_cat, ad_reg, ad_cup, ad_img, ad_desc_tag, ad_script)
                             st.session_state["msg_sucesso"] = f"Anúncio **{ad_tit.strip()}** publicado!"
                             st.rerun()
                         except Exception as err_ad:
@@ -3167,12 +1568,13 @@ def pagina_perfil():
                     with st.container(key=f"adm_ad_row_{ad_i['id']}"):
                         ca_i, ca_d = st.columns([6, 1])
                         reg_lbl = f"📍 {ad_i['regiao']}" if ad_i.get("regiao") else "🌎 Todas"
-                        ca_i.markdown(f"**{html.escape(ad_i['titulo'])}** · `{ad_i['categoria']}` · {html.escape(reg_lbl)}")
+                        tipo_lbl = "📡 CPM" if ad_i.get("script_html") else f"`{ad_i['categoria']}`"
+                        ca_i.markdown(f"**{html.escape(ad_i['titulo'])}** · {tipo_lbl} · {html.escape(reg_lbl)}")
                         if ca_d.button("🗑️", key=f"btn_del_ad_{ad_i['id']}", help="Remover anúncio", use_container_width=True):
                             remover_anuncio_admin(ad_i["id"])
                             st.rerun()
             else:
-                st.caption("Nenhum anúncio próprio cadastrado ainda — exibindo ofertas padrão no rodapé.")
+                st.caption("Nenhum anúncio próprio cadastrado ainda — exibindo ofertas padrão.")
 
         with st.expander("👑 Admin — Usuários"):
             lista_adm = listar_usuarios_admin()
@@ -3196,12 +1598,21 @@ def pagina_perfil():
 
 
 # --- Inicialização e Execução ---
+usuario_atual = st.session_state.get("usuario_logado", "usuario")
+nome_usuario = st.session_state.get("nome_usuario", usuario_atual)
+
 if st.session_state.get("gps_usuario_owner") != usuario_atual:
     limpar_estado_usuario(incluir_auth=False)
     prefs = carregar_preferencias_gps(usuario_atual)
     if prefs.get("lat") is not None and prefs.get("lon") is not None:
         rs = prefs.get("regiao", "")
-        st.session_state.update({"gps_coords": (float(prefs["lat"]), float(prefs["lon"])), "gps_regiao": rs, "gps_mercados": [(m, None) for m in carregar_mercados().get(rs, [])], "gps_raio_atual": 3, "regiao_para_selecionar": rs})
+        st.session_state.update({
+            "gps_coords": (float(prefs["lat"]), float(prefs["lon"])),
+            "gps_regiao": rs,
+            "gps_mercados": [(m, None) for m in carregar_mercados().get(rs, [])],
+            "gps_raio_atual": 3,
+            "regiao_para_selecionar": rs,
+        })
     st.session_state["gps_usuario_owner"] = usuario_atual
 
 if st.session_state.get("pagina_atual") not in (PAGINAS + [PAGINA_PERFIL]):
@@ -3217,8 +1628,19 @@ api_key, origem_api = obter_api_key_gemini()
 if st.session_state.pop("rolar_topo", False):
     rolar_para_topo()
 
-gps_coords, gps_regiao, gps_mercados = st.session_state.get("gps_coords"), st.session_state.get("gps_regiao", ""), st.session_state.get("gps_mercados", [])
-renderizar_topo_nubank()
+ctx = {
+    "usuario": usuario_atual,
+    "nome": nome_usuario,
+    "api_key": api_key,
+    "origem_api": origem_api,
+    "gps_coords": st.session_state.get("gps_coords"),
+    "gps_regiao": st.session_state.get("gps_regiao", ""),
+    "gps_mercados": st.session_state.get("gps_mercados", []),
+    "admins": obter_usuarios_admin(),
+}
+
+renderizar_topo_nubank(ctx["nome"], ctx["usuario"], ctx["gps_regiao"])
+exibir_banner_anuncio_topo()
 renderizar_barra_navegacao()
 
 if msg := st.session_state.pop("msg_sucesso", None):
@@ -3226,5 +1648,14 @@ if msg := st.session_state.pop("msg_sucesso", None):
 if msg_lim := st.session_state.pop("msg_limite_alerta", None):
     st.warning(msg_lim)
 
-{PAGINAS[0]: pagina_compra, PAGINAS[1]: pagina_lista, PAGINAS[2]: pagina_graficos, PAGINAS[3]: pagina_historico, PAGINAS[4]: pagina_precos, PAGINAS[5]: pagina_mercados, PAGINA_PERFIL: pagina_perfil}[st.session_state["pagina_atual"]]()
-exibir_rodape_anuncio()
+{
+    PAGINAS[0]: pagina_compra,
+    PAGINAS[1]: pagina_lista,
+    PAGINAS[2]: pagina_graficos,
+    PAGINAS[3]: pagina_historico,
+    PAGINAS[4]: pagina_precos,
+    PAGINAS[5]: pagina_mercados,
+    PAGINA_PERFIL: pagina_perfil,
+}[st.session_state["pagina_atual"]](ctx)
+
+exibir_rodape_anuncio(ctx["gps_regiao"])
