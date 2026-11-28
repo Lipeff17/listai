@@ -3,3 +3,4 @@ pandas
 google-genai
 streamlit-geolocation
 requests
+opencv-python-headless
