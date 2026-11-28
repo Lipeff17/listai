@@ -40,19 +40,20 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-topo_nubank .stButton > button p { color: #064E3B !important; font-weight: 800 !important; white-space: nowrap !important; }
 
 /* Banner Superior Estilo Carrossel */
-.listai-top-ad-wrap { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 0.35rem 0.45rem; margin-bottom: 0.55rem; box-shadow: 0 2px 8px rgba(6, 78, 59, 0.05); }
-.listai-top-ad-strip { display: flex; align-items: stretch; gap: 0.38rem; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
+.listai-top-ad-wrap { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 0.4rem 0.45rem; margin-bottom: 0.55rem; box-shadow: 0 2px 8px rgba(6, 78, 59, 0.05); }
+.listai-top-ad-strip { display: flex; align-items: stretch; gap: 0.42rem; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
 .listai-top-ad-strip::-webkit-scrollbar { display: none; }
-.listai-top-ad-card { position: relative; flex: 0 0 74px; height: 74px; border-radius: 9px; border: 1px solid #E2E8F0; background: #F8FAFC; overflow: hidden; text-decoration: none !important; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #132A1E !important; scroll-snap-align: start; transition: transform 0.14s ease; }
+.listai-top-ad-card { position: relative; flex: 0 0 106px; height: 82px; border-radius: 10px; border: 1px solid #E2E8F0; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%); overflow: hidden; text-decoration: none !important; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #132A1E !important; scroll-snap-align: start; transition: transform 0.14s ease; }
 .listai-top-ad-card:active { transform: scale(0.96); }
 .listai-top-ad-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.listai-top-ad-fallback { padding: 0.25rem; text-align: center; font-size: 0.65rem; font-weight: 700; line-height: 1.15; color: #064E3B; }
-.listai-top-ad-disc { position: absolute; top: 4px; left: 4px; background: #7C3AED; color: #FFFFFF; font-size: 0.62rem; font-weight: 800; padding: 1px 5px; border-radius: 5px; line-height: 1.2; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-.listai-top-ad-store { flex: 0 0 74px; height: 74px; border-radius: 9px; border: 1px solid #BAE6FD; background: #E0F2FE; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0.25rem; text-decoration: none !important; position: relative; scroll-snap-align: start; transition: transform 0.14s ease; }
+.listai-top-ad-fallback { padding: 1.45rem 0.42rem 0.35rem 0.42rem; text-align: center; font-size: 0.70rem; font-weight: 700; line-height: 1.18; color: #064E3B; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+.listai-top-ad-disc { position: absolute; top: 5px; left: 5px; background: #7C3AED; color: #FFFFFF; font-size: 0.62rem; font-weight: 800; padding: 1px 6px; border-radius: 5px; line-height: 1.2; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.listai-top-ad-store { flex: 0 0 88px; height: 82px; border-radius: 10px; border: 1px solid #BAE6FD; background: #E0F2FE; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0.3rem; text-decoration: none !important; position: relative; scroll-snap-align: start; transition: transform 0.14s ease; }
 .listai-top-ad-store:active { transform: scale(0.96); }
-.listai-top-ad-info { position: absolute; top: 3px; right: 5px; font-size: 0.65rem; color: #0284C7; font-weight: 800; }
-.listai-top-ad-store-name { font-size: 0.68rem; font-weight: 800; color: #0369A1; line-height: 1.15; margin-top: 4px; word-break: break-word; }
-.listai-top-ad-store-cta { font-size: 0.58rem; color: #0284C7; font-weight: 700; margin-top: 2px; }
+.listai-top-ad-info { position: absolute; top: 4px; right: 6px; font-size: 0.65rem; color: #0284C7; font-weight: 800; }
+.listai-top-ad-store-name { font-size: 0.72rem; font-weight: 800; color: #0369A1; line-height: 1.15; margin-top: 4px; word-break: break-word; }
+.listai-top-ad-store-cta { font-size: 0.60rem; color: #0284C7; font-weight: 700; margin-top: 2px; }
+
 
 /* Barra de Navegação Superior */
 .st-key-barra_navegacao { background: #FFFFFF !important; border: 1px solid #86EFAC !important; border-radius: 14px !important; padding: 0.28rem 0.32rem !important; margin-bottom: 0.75rem !important; box-shadow: 0 3px 12px rgba(6, 78, 59, 0.07) !important; }
@@ -306,10 +307,10 @@ CHAVES_EDITOR_FOTO = ("foto_rascunho", "editando_foto", "foto_ed_modo", "foto_ed
 ALFABETO_CASA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 ANUNCIOS_PADRAO = [
-    {"id": None, "titulo": "🔥 Ofertas de Mercado na Amazon", "descricao": "Descontos em café, bebidas, limpeza e despensa.", "texto_botao": "Amazon", "url": "https://www.amazon.com.br/", "categoria": "Geral", "regiao": "", "cupom": "", "desconto": "-15%", "imagem_url": "", "script_html": ""},
-    {"id": None, "titulo": "🧽 Economia em Limpeza e Casa", "descricao": "Sabão, amaciante e multiuso em promoção no Mercado Livre.", "texto_botao": "Mercado Livre", "url": "https://www.mercadolivre.com.br/", "categoria": "Limpeza", "regiao": "", "cupom": "", "desconto": "-10%", "imagem_url": "", "script_html": ""},
-    {"id": None, "titulo": "🐾 Pet Shop com Desconto", "descricao": "Ração, petiscos e tapetes higiênicos na Shopee.", "texto_botao": "Shopee", "url": "https://shopee.com.br/", "categoria": "Pet Shop", "regiao": "", "cupom": "", "desconto": "-20%", "imagem_url": "", "script_html": ""},
-    {"id": None, "titulo": "☕ Café, Bebidas e Despensa", "descricao": "Compare kits econômicos com entrega rápida na Amazon.", "texto_botao": "Amazon", "url": "https://www.amazon.com.br/", "categoria": "Bebidas", "regiao": "", "cupom": "", "desconto": "-12%", "imagem_url": "", "script_html": ""},
+    {"id": None, "titulo": "🔥 Ofertas Amazon", "descricao": "Descontos em café, bebidas, limpeza e despensa.", "texto_botao": "Amazon", "url": "https://www.amazon.com.br/", "categoria": "Geral", "regiao": "", "cupom": "", "desconto": "-15%", "imagem_url": "", "script_html": ""},
+    {"id": None, "titulo": "🧽 Limpeza e Casa", "descricao": "Sabão, amaciante e multiuso em promoção no Mercado Livre.", "texto_botao": "Mercado Livre", "url": "https://www.mercadolivre.com.br/", "categoria": "Limpeza", "regiao": "", "cupom": "", "desconto": "-10%", "imagem_url": "", "script_html": ""},
+    {"id": None, "titulo": "🐾 Mundo Pet", "descricao": "Ração, petiscos e tapetes higiênicos na Shopee.", "texto_botao": "Shopee", "url": "https://shopee.com.br/", "categoria": "Pet Shop", "regiao": "", "cupom": "", "desconto": "-20%", "imagem_url": "", "script_html": ""},
+    {"id": None, "titulo": "☕ Café e Despensa", "descricao": "Compare kits econômicos com entrega rápida na Amazon.", "texto_botao": "Amazon", "url": "https://www.amazon.com.br/", "categoria": "Bebidas", "regiao": "", "cupom": "", "desconto": "-12%", "imagem_url": "", "script_html": ""},
 ]
 
 ICONES_CATEGORIA = {
@@ -618,3 +619,4 @@ def gerar_foto_ajustada(orig_bytes, modo="Preencher", zoom=1.0, pos_x=0, pos_y=0
     buf = io.BytesIO()
     final.save(buf, format="JPEG", quality=84)
     return buf.getvalue()
+
