@@ -111,7 +111,6 @@ from ia_leitor import (
 st.markdown(ESTILO_CSS, unsafe_allow_html=True)
 _st_fragment = getattr(st, "fragment", lambda f: f)
 
-st.info("ℹ️ **Versão Beta gratuita:** novos recursos poderão ter cobrança mensal após os primeiros meses de uso. Você será avisado antes.")
 def renderizar_tutorial_app(expandido=False):
     with st.expander("❓ Como usar o Listaí (Tutorial rápido)", expanded=expandido):
         st.markdown(
