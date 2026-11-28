@@ -322,7 +322,7 @@ if not st.session_state.get("autenticado", False):
 # --- Componentes Compartilhados ---
 def avatar_html(nome, usuario, tamanho=48, solido=False):
     if foto := carregar_foto_perfil_base64(usuario):
-        borda = "border: 2px solid #86EFAC;" if solido else ""
+        borda = "border: 2px solid rgba(255, 255, 255, 0.9);" if solido else ""
         return f'<img src="data:{foto[1]};base64,{foto[0]}" class="listai-avatar-img" style="width:{tamanho}px;height:{tamanho}px;{borda}" alt="Foto">'
     classe = "listai-avatar-solid" if solido else "listai-avatar"
     return f'<div class="{classe}" style="width:{tamanho}px;height:{tamanho}px;font-size:{max(14, int(tamanho * 0.36))}px;">{html.escape(obter_iniciais(nome))}</div>'
@@ -791,7 +791,7 @@ def renderizar_graficos_compras(df, df_validos, limite_mensal=0.0):
     import altair as alt
 
     visao = st.radio("Agrupar evolução mensal por:", ["Total do Mês", "Por Categoria", "Por Supermercado"], horizontal=True)
-    paleta = ["#064E3B", "#15803D", "#16A34A", "#22C55E", "#10B981", "#0D9488", "#4ADE80", "#86EFAC"]
+    paleta = ["#D91E2A", "#0B4EA2", "#E11D48", "#1D4ED8", "#991B1B", "#3B82F6", "#FB7185", "#60A5FA"]
     col_g, col_c = st.columns([3, 2])
 
     with col_g:
