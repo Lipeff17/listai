@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
-# --- CSS Global + Representação da Bandeira do Estado do Pará ---
+# --- CSS Global + Tema Bandeira do Pará + Estilos v2.0 ---
 ESTILO_CSS = """<style>
 html { scroll-behavior: smooth; }
 html, body, .stApp { background-color: #FDF7F7 !important; color: #1E1B24 !important; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important; overflow-x: clip !important; -webkit-tap-highlight-color: transparent; }
@@ -18,6 +18,7 @@ html, body, .stApp { background-color: #FDF7F7 !important; color: #1E1B24 !impor
 [data-testid="stHeader"] { background: rgba(253, 247, 247, 0.88) !important; backdrop-filter: blur(8px); }
 [data-stale="true"] { opacity: 0.9 !important; transition: opacity 0.14s ease !important; }
 .stElementContainer:has(iframe[height="0"][srcdoc]) { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
+button, a, input, select, textarea, [role="button"] { touch-action: manipulation; }
 
 h1, h2, h3, h4 { color: #881322 !important; font-weight: 800 !important; letter-spacing: -0.3px; }
 label, .stMarkdown p, .stCheckbox p, .stRadio p { color: #1E1B24 !important; }
@@ -90,6 +91,17 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid
 .st-key-leitor_pix_cam [data-testid="stCameraInput"] img { border-radius: 10px !important; border: 2px solid #0B4EA2 !important; }
 .st-key-leitor_pix_cam [data-testid="stCameraInput"] button { background: #0B4EA2 !important; color: #FFFFFF !important; border: none !important; font-weight: 800 !important; border-radius: 999px !important; }
 .st-key-leitor_pix_gal [data-testid="stFileUploaderDropzone"] { background: #EFF6FF !important; border: 2px dashed #0B4EA2 !important; border-radius: 13px !important; padding: 0.9rem !important; }
+
+/* Versão 2.0: Compra Dividida, Alertas de Oferta & Inflação por Produto */
+.listai-split-card { background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 60%, #FEF2F2 100%); border: 1.5px solid #93C5FD; border-left: 6px solid #0B4EA2; border-radius: 13px; padding: 0.85rem 0.95rem; margin: 0.55rem 0; }
+.listai-split-title { font-size: 0.95rem; font-weight: 800; color: #0B4EA2; margin-bottom: 0.2rem; }
+.listai-split-sub { font-size: 0.82rem; color: #334155; line-height: 1.35; }
+.listai-alert-card { background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%); border: 1px solid #86EFAC; border-left: 5px solid #16A34A; border-radius: 12px; padding: 0.68rem 0.85rem; margin-bottom: 0.45rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.listai-alert-title { font-weight: 800; font-size: 0.90rem; color: #064E3B; }
+.listai-alert-meta { font-size: 0.77rem; color: #475569; margin-top: 2px; }
+.listai-alert-price { text-align: right; font-weight: 800; font-size: 1rem; color: #15803D; }
+.listai-trend-up { display: inline-block; background: #FEE2E2; color: #991B1B; font-size: 0.74rem; font-weight: 800; padding: 0.14rem 0.55rem; border-radius: 999px; }
+.listai-trend-down { display: inline-block; background: #DCFCE7; color: #166534; font-size: 0.74rem; font-weight: 800; padding: 0.14rem 0.55rem; border-radius: 999px; }
 
 /* Grids Fixos */
 [class*="st-key-kpi_2cols"] [data-testid="stHorizontalBlock"], .st-key-row_qtd_preco [data-testid="stHorizontalBlock"],
@@ -268,8 +280,8 @@ div[data-testid="stMetricLabel"] p { color: #334155 !important; font-weight: 600
 div[data-testid="stMetricValue"] { color: #881322 !important; font-weight: 800 !important; font-size: 1.35rem !important; }
 .stButton > button, .stLinkButton > a, .stFormSubmitButton > button { border-radius: 10px !important; font-weight: 600 !important; font-size: 0.90rem !important; transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease !important; }
 .stButton > button:active, .stLinkButton > a:active, .stFormSubmitButton > button:active { transform: scale(0.98) !important; }
-.stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primary"] { background-color: #0B4EA2 !important; border: none !important; color: #FFFFFF !important; }
-.stButton > button[kind="primary"] p, .stFormSubmitButton > button[kind="primary"] p { color: #FFFFFF !important; }
+.stButton > button[kind="primary"], .stFormSubmitButton button[kind*="primary"], button[data-testid="stBaseButton-primary"], button[data-testid="stBaseButton-primaryFormSubmit"] { background-color: #0B4EA2 !important; border: none !important; color: #FFFFFF !important; }
+.stButton > button[kind="primary"] p, .stFormSubmitButton button[kind*="primary"] p, button[data-testid="stBaseButton-primary"] p, button[data-testid="stBaseButton-primaryFormSubmit"] p { color: #FFFFFF !important; }
 .stButton > button[kind="secondary"] { background-color: #FFFFFF !important; border: 1px solid #FCA5A5 !important; color: #881322 !important; }
 div[data-testid="stProgress"] > div > div > div > div { background: linear-gradient(90deg, #D91E2A, #0B4EA2) !important; transition: width 0.3s ease !important; }
 
@@ -293,6 +305,32 @@ div[data-testid="stProgress"] > div > div > div > div { background: linear-gradi
 </style>"""
 
 LOGO_SVG = '<div class="listai-logo-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="lg" x1="0" y1="12" x2="24" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D91E2A"/><stop offset="55%" stop-color="#0B4EA2"/><stop offset="100%" stop-color="#1D4ED8"/></linearGradient></defs><path d="M2 4H5L7.4 14.5C7.6 15.4 8.4 16 9.3 16H17.5C18.4 16 19.2 15.4 19.4 14.5L21 7H6" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 10.2L12 12.6L19.5 4.8" stroke="url(#lg)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.6" fill="#D91E2A"/><circle cx="17" cy="19.5" r="1.6" fill="#0B4EA2"/></svg></div>'
+
+TERMOS_USO_PADRAO = """**Termos de Uso e Política de Privacidade — Listaí**
+
+1. **Finalidade do Aplicativo:** O Listaí é uma ferramenta colaborativa para organizar listas de compras, acompanhar gastos pessoais e comparar preços informados por usuários em supermercados da sua região.
+2. **Preços Colaborativos:** Os valores exibidos no banco de preços e no ranking de mercados são informados pela comunidade e podem sofrer alterações nas lojas sem aviso prévio.
+3. **Versão Beta e Planos Futuros:** O uso atual está liberado gratuitamente durante o período Beta. Novos recursos ou planos mensais poderão ser implementados após os primeiros meses, sempre com aviso prévio aos usuários.
+4. **Privacidade e Dados (LGPD):** Seus dados de cadastro (nome, e-mail/WhatsApp opcionais), compras e localização aproximada (GPS quando autorizado) são usados exclusivamente para o funcionamento do app e não são vendidos a terceiros.
+5. **Exclusão:** Você pode limpar suas compras, remover sua foto ou solicitar a exclusão da sua conta a qualquer momento."""
+
+
+def carregar_texto_termos():
+    pasta = "TERMOS"
+    if os.path.isdir(pasta):
+        textos = []
+        for nome in sorted(os.listdir(pasta)):
+            if nome.lower().endswith((".txt", ".md")):
+                try:
+                    with open(os.path.join(pasta, nome), "r", encoding="utf-8") as f:
+                        if conteudo := f.read().strip():
+                            textos.append(conteudo)
+                except Exception:
+                    pass
+        if textos:
+            return "\n\n---\n\n".join(textos)
+    return TERMOS_USO_PADRAO
+
 
 # --- Constantes ---
 PASTA_DADOS_USUARIOS = "dados_usuarios"
@@ -558,7 +596,7 @@ def limpar_estado_usuario(incluir_auth=False):
         "mkt_limite_exib", "db_limite_mercs", "leitor_pix_modo",
         "_ss_perfil", "_ss_perfil_owner", "_ss_compras_df", "_ss_compras_proc",
         "_ss_compras_owner", "_ss_compras_ver", "_ss_compras_proc_ver",
-        "_ss_pre_lista_df", "_ss_pre_lista_owner", "_ss_foto_b64", "_ss_foto_owner",
+        "_ss_pre_lista_df", "_ss_pre_lista_owner", "_ss_foto_b64", "_ss_foto_owner", "_ss_favoritos",
         *CHAVES_EDITOR_FOTO,
     }
     if incluir_auth:

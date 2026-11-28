@@ -1,6 +1,7 @@
 import base64
 from datetime import date
 import hashlib
+import json
 import math
 import os
 import random
@@ -70,6 +71,7 @@ def _normalizar_row_usuario_sb(r):
         "gps_lon": r.get("gps_lon"),
         "gps_regiao": r.get("gps_regiao") or "",
         "grupo_lista": str(r.get("grupo_lista") or "").strip().upper(),
+        "favoritos": str(r.get("favoritos") or ""),
         "foto_url": r.get("foto_url") or "",
         "criado_em": str(r.get("criado_em") or "")[:10],
     }
@@ -159,6 +161,45 @@ def listar_usuarios_admin():
         return [{"Usuário": r["usuario"], "Nome": r.get("nome") or r["usuario"], "E-mail": r.get("email") or "-", "Cidade": r.get("cidade") or "-"} for r in rows]
     u_dict = _carregar_usuarios_local()
     return [{"Usuário": k, "Nome": v.get("nome", k) if isinstance(v, dict) else k, "E-mail": v.get("email", "-") if isinstance(v, dict) else "-", "Cidade": v.get("cidade", "-") if isinstance(v, dict) else "-"} for k, v in sorted(u_dict.items())]
+
+
+# --- Favoritos (v2.0) ---
+def carregar_favoritos(usuario):
+    if isinstance(ss_fav := st.session_state.get("_ss_favoritos"), list) and st.session_state.get("_ss_perfil_owner") == usuario:
+        return ss_fav
+    raw = str(obter_perfil_atual(usuario).get("favoritos") or "").strip()
+    favs = []
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                favs = [str(x).strip() for x in parsed if str(x).strip()]
+        except json.JSONDecodeError:
+            favs = [x.strip() for x in raw.split(",") if x.strip()]
+    if not favs:
+        loc = ler_json(obter_arquivo_usuario(usuario, "favoritos.json"), list)
+        if isinstance(loc, list):
+            favs = [str(x).strip() for x in loc if str(x).strip()]
+    st.session_state["_ss_favoritos"] = favs
+    return favs
+
+
+def salvar_favoritos(usuario, lista_favs):
+    limpos, vistos = [], set()
+    for f in lista_favs:
+        txt = str(f or "").strip()
+        fn = normalizar_texto(txt)
+        if txt and fn not in vistos:
+            vistos.add(fn)
+            limpos.append(txt)
+    st.session_state["_ss_favoritos"] = limpos
+    salvar_json(obter_arquivo_usuario(usuario, "favoritos.json"), limpos)
+    if supabase_ativo():
+        try:
+            atualizar_campos_perfil(usuario, favoritos=json.dumps(limpos, ensure_ascii=False))
+        except RuntimeError:
+            pass
+    return limpos
 
 
 # --- Foto de Perfil ---
@@ -914,7 +955,7 @@ def remover_pre_lista(dono_lista, item_id=None, apenas_marcados=False, tudo=Fals
             df_novo[COLUNAS_PRE_LISTA].to_csv(cp, index=False)
 
 
-# --- Inteligência de Preços & Ranking ---
+# --- Inteligência de Preços, Ranking & Funções v2.0 ---
 def calcular_ranking_precos_mercados(df_com):
     if df_com.empty:
         return {}
@@ -960,6 +1001,25 @@ def classificar_selo_preco(info):
     return "⚖️ Preço na média", "listai-pill-mid"
 
 
+def _casar_item_mercado(it_n, tokens, prods_merc):
+    melhor, melhor_score = None, (99, 999, 999999.0)
+    for pm in prods_merc:
+        pn = pm["norm"]
+        if pn == it_n:
+            sc = (0, len(pn), pm["preco"])
+        elif re.search(rf"\b{re.escape(it_n)}\b", pn):
+            sc = (1, len(pn), pm["preco"])
+        elif all(re.search(rf"\b{re.escape(t)}\b", pn) for t in tokens):
+            sc = (2, len(pn), pm["preco"])
+        elif it_n in pn or pn in it_n:
+            sc = (3, len(pn), pm["preco"])
+        else:
+            continue
+        if sc < melhor_score:
+            melhor_score, melhor = sc, pm
+    return melhor
+
+
 def comparar_lista_nos_mercados(df_pend, df_com, regiao_alvo=""):
     if df_pend.empty or df_com.empty:
         return [], ""
@@ -983,33 +1043,13 @@ def comparar_lista_nos_mercados(df_pend, df_com, regiao_alvo=""):
     resultados = []
     for (_, reg_m), grp in df_ult.groupby(["Merc_norm", "Região"]):
         merc_nome = str(grp.iloc[0]["Supermercado"] or "Mercado")
-        prods_merc = [
-            {"prod": str(r["Produto"]), "norm": str(r["Prod_norm"]), "preco": float(r["Preço Unitário"])}
-            for r in grp.to_dict("records")
-        ]
+        prods_merc = [{"prod": str(r["Produto"]), "norm": str(r["Prod_norm"]), "preco": float(r["Preço Unitário"])} for r in grp.to_dict("records")]
         encontrados, faltando, total_est = [], [], 0.0
 
         for it in itens_lista:
             it_n = it["norm"]
             tokens = [w for w in it_n.split() if len(w) >= 2] or [it_n]
-            melhor, melhor_score = None, (99, 999, 999999.0)
-
-            for pm in prods_merc:
-                pn = pm["norm"]
-                if pn == it_n:
-                    sc = (0, len(pn), pm["preco"])
-                elif re.search(rf"\b{re.escape(it_n)}\b", pn):
-                    sc = (1, len(pn), pm["preco"])
-                elif all(re.search(rf"\b{re.escape(t)}\b", pn) for t in tokens):
-                    sc = (2, len(pn), pm["preco"])
-                elif it_n in pn or pn in it_n:
-                    sc = (3, len(pn), pm["preco"])
-                else:
-                    continue
-                if sc < melhor_score:
-                    melhor_score, melhor = sc, pm
-
-            if melhor:
+            if melhor := _casar_item_mercado(it_n, tokens, prods_merc):
                 sub = it["qtd"] * melhor["preco"]
                 total_est += sub
                 encontrados.append({"item": it["nome"], "banco": melhor["prod"], "qtd": it["qtd"], "preco": melhor["preco"], "subtotal": sub})
@@ -1025,6 +1065,201 @@ def comparar_lista_nos_mercados(df_pend, df_com, regiao_alvo=""):
 
     resultados.sort(key=lambda r: (-r["qtd_enc"], r["total"], r["mercado"].lower()))
     return resultados, escopo
+
+
+def calcular_cesta_dividida(df_pend, df_com, regiao_alvo="", res_comp=None):
+    """v2.0: Verifica se dividir a compra entre 2 mercados gera economia real (>= R$ 1,50)."""
+    if df_pend.empty or df_com.empty or len(df_pend) < 2:
+        return None
+    if res_comp is None:
+        res_comp, _ = comparar_lista_nos_mercados(df_pend, df_com, regiao_alvo)
+    if len(res_comp) < 2:
+        return None
+
+    vencedor = res_comp[0]
+    if vencedor["qtd_enc"] < 2:
+        return None
+
+    # Mapeia preços por mercado para os itens que o vencedor cobre
+    itens_v = {it["item"]: it["subtotal"] for it in vencedor["itens"]}
+    por_merc = {r["mercado"]: {it["item"]: it for it in r["itens"]} for r in res_comp}
+    nomes_m = list(por_merc.keys())
+
+    melhor_par, melhor_tot = None, vencedor["total"]
+    for i in range(len(nomes_m)):
+        for j in range(i + 1, len(nomes_m)):
+            m1, m2 = nomes_m[i], nomes_m[j]
+            d1, d2 = por_merc[m1], por_merc[m2]
+            if not all((it in d1 or it in d2) for it in itens_v):
+                continue
+            it_1, it_2, tot_par = [], [], 0.0
+            for it_nome in itens_v:
+                c1, c2 = d1.get(it_nome), d2.get(it_nome)
+                if c1 and (not c2 or c1["subtotal"] <= c2["subtotal"]):
+                    it_1.append(c1)
+                    tot_par += c1["subtotal"]
+                else:
+                    it_2.append(c2)
+                    tot_par += c2["subtotal"]
+            if it_1 and it_2 and tot_par < melhor_tot:
+                melhor_tot = tot_par
+                melhor_par = (m1, it_1, m2, it_2, tot_par)
+
+    if not melhor_par:
+        return None
+    m1, it_1, m2, it_2, tot_div = melhor_par
+    economia = vencedor["total"] - tot_div
+    if economia < 1.50:
+        return None
+
+    return {
+        "mercado_1": m1, "itens_1": it_1, "sub_1": sum(x["subtotal"] for x in it_1),
+        "mercado_2": m2, "itens_2": it_2, "sub_2": sum(x["subtotal"] for x in it_2),
+        "total_dividido": tot_div, "total_unico": vencedor["total"],
+        "economia": economia, "qtd_enc": vencedor["qtd_enc"], "qtd_total": vencedor["qtd_total"],
+    }
+
+
+def listar_produtos_evolucao(df_c, df_com, regiao_alvo=""):
+    """v2.0: Lista produtos disponíveis para análise de histórico/inflação."""
+    contagem = {}
+    if not df_c.empty:
+        for p, cnt in df_c["Produto"].dropna().value_counts().items():
+            contagem[str(p).strip()] = contagem.get(str(p).strip(), 0) + int(cnt) * 2
+    if not df_com.empty:
+        df_b = df_com[df_com["Região"] == regiao_alvo] if (regiao_alvo and (df_com["Região"] == regiao_alvo).any()) else df_com
+        for p, cnt in df_b["Produto"].dropna().value_counts().head(40).items():
+            contagem[str(p).strip()] = contagem.get(str(p).strip(), 0) + int(cnt)
+    return [p for p, _ in sorted(contagem.items(), key=lambda x: (-x[1], x[0].lower())) if p]
+
+
+def analisar_evolucao_produto(df_c, df_com, termo, regiao_alvo=""):
+    """v2.0: Monta a série histórica de preços de um produto (suas compras + comunidade)."""
+    t_norm = normalizar_texto(termo)
+    if not t_norm:
+        return pd.DataFrame(), None
+
+    registros, vistos = [], set()
+    fontes = []
+    if not df_c.empty:
+        fontes.append(("Minha compra", df_c))
+    if not df_com.empty:
+        df_b = df_com[df_com["Região"] == regiao_alvo] if (regiao_alvo and (df_com["Região"] == regiao_alvo).any()) else df_com
+        fontes.append(("Comunidade", df_b))
+
+    for origem, df_src in fontes:
+        for r in df_src.to_dict("records"):
+            pn = normalizar_texto(r.get("Produto", ""))
+            preco = float(r.get("Preço Unitário") or 0.0)
+            if preco <= 0 or (t_norm not in pn and pn not in t_norm):
+                continue
+            dt_str = str(r.get("Data") or "")[:10]
+            merc = str(r.get("Supermercado") or "Não informado")
+            chave = (dt_str, normalizar_texto(merc), round(preco, 2))
+            if chave in vistos:
+                continue
+            vistos.add(chave)
+            registros.append({
+                "Data": dt_str,
+                "Data_dt": pd.to_datetime(dt_str, errors="coerce"),
+                "Produto": str(r.get("Produto") or termo),
+                "Supermercado": merc,
+                "Preço": preco,
+                "Origem": origem,
+            })
+
+    if not registros:
+        return pd.DataFrame(), None
+
+    df_out = pd.DataFrame(registros).dropna(subset=["Data_dt"]).sort_values(by=["Data_dt", "Preço"], ascending=[True, True]).reset_index(drop=True)
+    if df_out.empty:
+        return pd.DataFrame(), None
+
+    primeiro, ultimo = float(df_out.iloc[0]["Preço"]), float(df_out.iloc[-1]["Preço"])
+    var_pct = ((ultimo - primeiro) / max(primeiro, 0.01)) * 100.0 if len(df_out) >= 2 else 0.0
+    melhor_row = df_out.sort_values(by="Preço", ascending=True).iloc[0]
+    resumo = {
+        "minimo": float(df_out["Preço"].min()),
+        "maximo": float(df_out["Preço"].max()),
+        "medio": float(df_out["Preço"].mean()),
+        "ultimo": ultimo,
+        "variacao_pct": var_pct,
+        "melhor_mercado": str(melhor_row["Supermercado"]),
+        "qtd": len(df_out),
+    }
+    return df_out, resumo
+
+
+def detectar_alertas_oferta(usuario, df_com, regiao_alvo="", favoritos=None):
+    """v2.0: Detecta ofertas abaixo da média para favoritos, lista pendente e itens mais comprados."""
+    if df_com.empty:
+        return []
+
+    df_base = df_com[df_com["Região"] == regiao_alvo] if (regiao_alvo and (df_com["Região"] == regiao_alvo).any()) else df_com
+    df_ult = (
+        df_base.sort_values(by=["Data_dt", "Preço Unitário"], ascending=[False, True], na_position="last")
+        .drop_duplicates(subset=["Merc_norm", "Prod_norm"], keep="first")
+    )
+    stats = df_base.groupby("Prod_norm", as_index=False)["Preço Unitário"].agg(media="mean", qtd="count")
+    stats_map = {r["Prod_norm"]: (float(r["media"]), int(r["qtd"])) for r in stats.to_dict("records")}
+
+    alvos = []
+    vistos_t = set()
+    for f in (favoritos or []):
+        fn = normalizar_texto(f)
+        if fn and fn not in vistos_t:
+            vistos_t.add(fn)
+            alvos.append((f, fn, True))
+
+    df_pre = carregar_pre_lista(obter_dono_lista(usuario))
+    if not df_pre.empty:
+        for p in df_pre[~df_pre["Comprado"]]["Produto"].dropna().tolist():
+            pn = normalizar_texto(p)
+            if pn and pn not in vistos_t:
+                vistos_t.add(pn)
+                alvos.append((p, pn, False))
+
+    df_u = carregar_dados(usuario)
+    if not df_u.empty:
+        for p in df_u["Produto"].dropna().value_counts().head(8).index.tolist():
+            pn = normalizar_texto(p)
+            if pn and pn not in vistos_t:
+                vistos_t.add(pn)
+                alvos.append((p, pn, False))
+
+    prods_base = df_ult.to_dict("records")
+    alertas, vistos_prod = [], set()
+    for termo, t_n, eh_fav in alvos:
+        melhor = None
+        for r in prods_base:
+            pn = str(r.get("Prod_norm") or "")
+            if t_n in pn or pn in t_n:
+                if melhor is None or float(r["Preço Unitário"]) < float(melhor["Preço Unitário"]):
+                    melhor = r
+        if not melhor:
+            continue
+        pn_m = str(melhor["Prod_norm"])
+        if pn_m in vistos_prod:
+            continue
+        media, qtd_r = stats_map.get(pn_m, (float(melhor["Preço Unitário"]), 1))
+        preco = float(melhor["Preço Unitário"])
+        desc_pct = ((media - preco) / max(media, 0.01)) * 100.0
+        if (qtd_r >= 2 and desc_pct >= 5.0) or eh_fav:
+            vistos_prod.add(pn_m)
+            alertas.append({
+                "termo": termo,
+                "produto": str(melhor["Produto"]),
+                "mercado": str(melhor["Supermercado"] or "Mercado"),
+                "regiao": str(melhor["Região"] or "-"),
+                "preco": preco,
+                "media": media,
+                "desconto_pct": max(0.0, desc_pct),
+                "economia": max(0.0, media - preco),
+                "eh_favorito": eh_fav,
+            })
+
+    alertas.sort(key=lambda a: (0 if a["eh_favorito"] else 1, -a["desconto_pct"], -a["economia"]))
+    return alertas[:6]
 
 
 def montar_lista_mercados_classificada(regiao_alvo, detalhes_gps, mercados_salvos, df_com):

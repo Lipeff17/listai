@@ -32,6 +32,7 @@ from config import (
     PERGUNTAS_SEGURANCA,
     RAIO_LABELS,
     RAIO_OPCOES,
+    carregar_texto_termos,
     fmt_dt,
     fmt_qtd,
     formatar_delta_reais,
@@ -55,14 +56,17 @@ from config import (
 )
 from dados import (
     adicionar_itens_pre_lista,
+    analisar_evolucao_produto,
     atualizar_campos_perfil,
     atualizar_compra_usuario,
     atualizar_item_pre_lista,
     buscar_supermercados_por_regiao,
     buscar_usuario_unico,
+    calcular_cesta_dividida,
     calcular_ranking_precos_mercados,
     carregar_anuncios_cadastrados,
     carregar_comunidade_ordenada,
+    carregar_favoritos,
     carregar_foto_original_bytes,
     carregar_foto_perfil_base64,
     carregar_mercados,
@@ -74,10 +78,12 @@ from dados import (
     consultar_overpass_mercados,
     copiar_itens_para_familia,
     definir_grupo_lista,
+    detectar_alertas_oferta,
     excluir_compras_usuario,
     gerar_codigo_familia,
     gerar_hash_senha,
     limpar_comunidade,
+    listar_produtos_evolucao,
     listar_usuarios_admin,
     montar_lista_mercados_classificada,
     obter_compras_com_datas,
@@ -93,6 +99,7 @@ from dados import (
     resumir_mercados,
     salvar_anuncio_admin,
     salvar_compra_usuario,
+    salvar_favoritos,
     salvar_foto_perfil_final,
     salvar_orcamento_mensal,
     salvar_preco_comunidade,
@@ -112,18 +119,23 @@ st.markdown(ESTILO_CSS, unsafe_allow_html=True)
 _st_fragment = getattr(st, "fragment", lambda f: f)
 
 
-# --- Tutorial & Tela de Login / Cadastro / Recuperação ---
+# --- Tutorial, Termos & Tela de Login ---
 def renderizar_tutorial_app(expandido=False):
     with st.expander("❓ Como usar o Listaí (Tutorial rápido)", expanded=expandido):
         st.markdown(
             """
 * **🛒 Compra:** escolha o mercado, toque em **Iniciar Compra** e lance itens **digitando**, falando no **microfone 🎤** ou usando o **📷 Leitor estilo Pix** *(código de barras, etiqueta, cupom fiscal ou link NFC-e)*.
-* **📝 Lista & 👨‍👩‍👧‍👦 Família:** anote o que falta, divida a lista usando o código `CASA-XXXXXX` e descubra **onde sua lista sai mais barata hoje**.
-* **🏆 Preços & 🗺️ Mercados:** ative o **GPS** ou busque sua cidade para ver os mercados do **mais barato ao mais caro** e comparar ofertas.
-* **📊 Gráficos, 🧾 Histórico & 🎯 Limite:** controle seu orçamento mensal, veja onde gasta mais e exporte suas compras em CSV.
-* **👤 Perfil:** troque sua foto, salve lembrete/pergunta secreta para recuperar a senha, ajuste o GPS e a chave de IA.
+* **📝 Lista & 💡 Compra Dividida:** anote o que falta, divida a lista com a família (`CASA-XXXXXX`) e veja se vale mais a pena comprar em **1 mercado** ou dividir em **2 mercados**.
+* **🏆 Preços & 🔔 Alertas:** marque seus **⭐ Favoritos** e receba alertas automáticos quando estiverem abaixo da média na região.
+* **📊 Gráficos & 📈 Inflação:** acompanhe gastos mensais, limite de orçamento e a **evolução do preço por produto**.
+* **🗺️ Mercados & 📲 Atalho:** ative o **GPS** para ver o ranking dos mercados por preço. *Dica: no menu do navegador (`⋮` ou Compartilhar), toque em **"Adicionar à tela inicial"** para usar como app!*
             """.strip()
         )
+
+
+def renderizar_termos_app(expandido=False):
+    with st.expander("📜 Termos de Uso e Privacidade", expanded=expandido):
+        st.markdown(carregar_texto_termos())
 
 
 def exibir_tela_login():
@@ -132,7 +144,7 @@ def exibir_tela_login():
     with col_c:
         st.markdown(
             f'<div class="listai-header"><div class="listai-header-top"><div class="listai-brand">{LOGO_SVG}<h1>Listaí</h1></div>'
-            '<span class="listai-pill">PREÇOS E COMPRAS</span></div><p>Sua lista inteligente e os melhores preços da região.</p></div>',
+            '<span class="listai-pill">v2.0 • PARÁ</span></div><p>Sua lista inteligente e os melhores preços da região.</p></div>',
             unsafe_allow_html=True,
         )
         st.info("ℹ️ **Versão Beta gratuita:** o app é gratuito nos primeiros meses e poderá ter cobrança futura (você será avisado antes).")
@@ -256,7 +268,7 @@ def exibir_tela_login():
                     nome_p = st.text_input("Nome completo *", placeholder="Ex: Maria Silva")
                     c1, c2 = st.columns(2)
                     email_p = c1.text_input("E-mail (opcional)", placeholder="maria@email.com")
-                    tel_p = c2.text_input("WhatsApp (opcional)", placeholder="(11) 99999-9999")
+                    tel_p = c2.text_input("WhatsApp (opcional)", placeholder="(91) 99999-9999")
                     cid_p = st.text_input("Cidade / Bairro (opcional)", placeholder="Ex: Belém - Nazaré")
                     a1, a2 = st.columns(2)
                     novo_u = a1.text_input("Usuário *", placeholder="Ex: maria")
@@ -266,11 +278,14 @@ def exibir_tela_login():
                     s1, s2 = st.columns(2)
                     perg_p = s1.selectbox("Pergunta secreta (opcional)", PERGUNTAS_SEGURANCA)
                     resp_p = s2.text_input("Resposta secreta (opcional)", placeholder="Ex: Rex")
+                    aceite_termos = st.checkbox("Li e concordo com os Termos de Uso e Política de Privacidade *", value=False)
 
                     if st.form_submit_button("✅ Criar conta e entrar", type="primary", use_container_width=True):
                         nome_ok = nome_p.strip()
                         nl = re.sub(r"[^a-z0-9._-]", "", novo_u.strip().lower())
-                        if len(nome_ok) < 2:
+                        if not aceite_termos:
+                            st.warning("Marque que leu e concorda com os Termos de Uso abaixo para criar a conta.")
+                        elif len(nome_ok) < 2:
                             st.warning("Digite seu nome completo.")
                         elif len(nl) < 2 or nl != novo_u.strip().lower():
                             st.warning("Usuário deve ter pelo menos 2 caracteres (letras, números, . _ -).")
@@ -296,6 +311,7 @@ def exibir_tela_login():
                     st.rerun()
 
         renderizar_tutorial_app()
+        renderizar_termos_app()
 
 
 if not st.session_state.get("autenticado", False):
@@ -363,7 +379,7 @@ def renderizar_topo_nubank(nome_usuario, usuario_atual, gps_regiao):
         c_user, c_btn = st.columns([5, 1])
         c_user.markdown(
             f'<div class="listai-nu-user">{avatar_html(nome_usuario, usuario_atual, 44)}'
-            f'<div class="listai-nu-texts"><div class="listai-nu-brand">Listaí • Pará</div>'
+            f'<div class="listai-nu-texts"><div class="listai-nu-brand">Listaí • v2.0 Pará</div>'
             f'<div class="listai-nu-hello">Olá, {html.escape(p_nome)}</div>'
             f'<div class="listai-nu-sub">{html.escape(sub_reg)}</div></div></div>',
             unsafe_allow_html=True,
@@ -692,6 +708,23 @@ def renderizar_bloco_lista_interativa(usuario_atual, api_key, gps_regiao):
                             f'{eco_badge}</div><div class="listai-winner-price">{formatar_reais(vencedor["total"])}</div></div>',
                             unsafe_allow_html=True,
                         )
+
+                        # v2.0: Compra Dividida Inteligente
+                        if cesta_div := calcular_cesta_dividida(df_pend, df_com, gps_regiao, res_comp=res_comp):
+                            st.markdown(
+                                f'<div class="listai-split-card">'
+                                f'<div class="listai-split-title">💡 Dica v2.0: Dividindo em 2 mercados você economiza +{formatar_reais(cesta_div["economia"])}!</div>'
+                                f'<div class="listai-split-sub">'
+                                f'• <strong>{html.escape(cesta_div["mercado_1"])}</strong>: {len(cesta_div["itens_1"])} {"item" if len(cesta_div["itens_1"]) == 1 else "itens"} ({formatar_reais(cesta_div["sub_1"])})<br>'
+                                f'• <strong>{html.escape(cesta_div["mercado_2"])}</strong>: {len(cesta_div["itens_2"])} {"item" if len(cesta_div["itens_2"]) == 1 else "itens"} ({formatar_reais(cesta_div["sub_2"])})<br>'
+                                f'Total dividido: <strong>{formatar_reais(cesta_div["total_dividido"])}</strong> (em vez de {formatar_reais(cesta_div["total_unico"])})</div></div>',
+                                unsafe_allow_html=True,
+                            )
+                            with st.expander("📋 Ver o que comprar em cada mercado"):
+                                st.markdown(f"**🏪 {html.escape(cesta_div['mercado_1'])} ({formatar_reais(cesta_div['sub_1'])})**")
+                                st.caption(" · ".join(f"{x['item']} ({formatar_reais(x['preco'])})" for x in cesta_div["itens_1"]))
+                                st.markdown(f"**🏪 {html.escape(cesta_div['mercado_2'])} ({formatar_reais(cesta_div['sub_2'])})**")
+                                st.caption(" · ".join(f"{x['item']} ({formatar_reais(x['preco'])})" for x in cesta_div["itens_2"]))
 
                         if st.button(f"🛒 Comprar em {vencedor['mercado']}", type="primary", use_container_width=True, key="btn_comprar_vencedor_lista"):
                             if vencedor["regiao"] and vencedor["regiao"] != "-":
@@ -1074,7 +1107,7 @@ def pagina_lista(ctx):
 
 
 def pagina_graficos(ctx):
-    usuario_atual = ctx["usuario"]
+    usuario_atual, gps_regiao = ctx["usuario"], ctx["gps_regiao"]
     st.subheader("📊 Gráficos e Gastos")
     df_c, df_v = obter_compras_com_datas(usuario_atual)
     mes_hoje = date.today().strftime("%Y-%m")
@@ -1086,20 +1119,65 @@ def pagina_graficos(ctx):
             delta = f"{formatar_delta_reais(gasto - float(tot_m[ant[-1]]))} vs {ant[-1][5:]}/{ant[-1][:4]}"
 
     renderizar_painel_limite_mensal(usuario_atual, "graficos", gasto_mes=gasto)
-    if df_c.empty:
+    if not df_c.empty:
+        with st.container(key="kpi_4cols_graf"):
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("💰 Total Geral", formatar_reais(df_c["Total"].sum()))
+            m2.metric("📅 Mês Atual", formatar_reais(gasto), delta=delta, delta_color="inverse")
+            m3.metric("📈 Média Mensal", formatar_reais(media))
+            m4.metric("🛍️ Itens", len(df_c))
+
+        with st.container(border=True):
+            renderizar_graficos_compras(df_c, df_v, limite_mensal=float(carregar_orcamento_mensal(usuario_atual)["limite"]))
+    else:
         with st.container(border=True):
             st.info("Você ainda não tem compras registradas. Adicione em **🛒 Compra**!")
-        return
 
-    with st.container(key="kpi_4cols_graf"):
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("💰 Total Geral", formatar_reais(df_c["Total"].sum()))
-        m2.metric("📅 Mês Atual", formatar_reais(gasto), delta=delta, delta_color="inverse")
-        m3.metric("📈 Média Mensal", formatar_reais(media))
-        m4.metric("🛍️ Itens", len(df_c))
+    # v2.0: Evolução / Inflação por Produto
+    df_com = carregar_comunidade_ordenada()
+    prods_ev = listar_produtos_evolucao(df_c, df_com, gps_regiao)
+    if prods_ev:
+        with st.expander("📈 Evolução e Inflação por Produto (v2.0)", expanded=False):
+            prod_ev = st.selectbox("Escolha um produto para acompanhar o preço:", prods_ev, key="sel_ev_prod")
+            df_ev, res_ev = analisar_evolucao_produto(df_c, df_com, prod_ev, gps_regiao)
+            if res_ev and not df_ev.empty:
+                with st.container(key="kpi_3cols_ev"):
+                    e1, e2, e3 = st.columns(3)
+                    e1.metric("🏆 Menor visto", formatar_reais(res_ev["minimo"]))
+                    e2.metric("📊 Preço médio", formatar_reais(res_ev["medio"]))
+                    e3.metric("📌 Último preço", formatar_reais(res_ev["ultimo"]))
 
-    with st.container(border=True):
-        renderizar_graficos_compras(df_c, df_v, limite_mensal=float(carregar_orcamento_mensal(usuario_atual)["limite"]))
+                var = res_ev["variacao_pct"]
+                if res_ev["qtd"] >= 2:
+                    if var > 2.0:
+                        st.markdown(f'<span class="listai-trend-up">🔺 Subiu {var:.1f}% desde o 1º registro</span> · Mais barato em <strong>{html.escape(res_ev["melhor_mercado"])}</strong>', unsafe_allow_html=True)
+                    elif var < -2.0:
+                        st.markdown(f'<span class="listai-trend-down">🔻 Caiu {abs(var):.1f}% desde o 1º registro</span> · Mais barato em <strong>{html.escape(res_ev["melhor_mercado"])}</strong>', unsafe_allow_html=True)
+                    else:
+                        st.caption(f"⚖️ Preço estável · Mais barato em **{res_ev['melhor_mercado']}**")
+
+                import altair as alt
+                df_ev["Data_fmt"] = df_ev["Data_dt"].dt.strftime("%d/%m/%Y")
+                df_ev["Preco_fmt"] = df_ev["Preço"].apply(formatar_reais)
+                ch_ev = (
+                    alt.Chart(df_ev)
+                    .mark_line(point=True, strokeWidth=2.5, color="#0B4EA2")
+                    .encode(
+                        x=alt.X("Data_dt:T", title=None, axis=alt.Axis(format="%d/%m", labelColor="#1E1B24")),
+                        y=alt.Y("Preço:Q", title="Preço (R$)", scale=alt.Scale(zero=False), axis=alt.Axis(labelColor="#1E1B24", titleColor="#881322")),
+                        tooltip=[
+                            alt.Tooltip("Data_fmt:N", title="Data"),
+                            alt.Tooltip("Produto:N", title="Produto"),
+                            alt.Tooltip("Supermercado:N", title="Mercado"),
+                            alt.Tooltip("Preco_fmt:N", title="Preço"),
+                        ],
+                    )
+                    .properties(height=220)
+                    .configure(background="#FFFFFF")
+                )
+                st.altair_chart(ch_ev, use_container_width=True)
+            else:
+                st.caption("Ainda não há registros suficientes com data para esse produto.")
 
 
 def pagina_historico(ctx):
@@ -1174,6 +1252,41 @@ def pagina_precos(ctx):
     usuario_atual, gps_regiao = ctx["usuario"], ctx["gps_regiao"]
     st.subheader("🏆 Banco de Preços por Supermercado")
     df_ord = carregar_comunidade_ordenada()
+
+    # v2.0: ⭐ Favoritos & 🔔 Alertas de Oferta
+    favs = carregar_favoritos(usuario_atual)
+    alertas = detectar_alertas_oferta(usuario_atual, df_ord, gps_regiao, favoritos=favs)
+    with st.expander(f"🔔 Alertas de Oferta & ⭐ Favoritos ({len(alertas)})", expanded=bool(alertas)):
+        if alertas:
+            for al in alertas:
+                selo_al = "⭐ Favorito" if al["eh_favorito"] else "🔥 Oferta"
+                eco_al = f" (-{al['desconto_pct']:.0f}% vs média)" if al["desconto_pct"] >= 3 else ""
+                st.markdown(
+                    f'<div class="listai-alert-card">'
+                    f'<div><div class="listai-alert-title">{selo_al}: {html.escape(al["produto"])}</div>'
+                    f'<div class="listai-alert-meta">🏪 <strong>{html.escape(al["mercado"])}</strong> · {html.escape(al["regiao"])}{eco_al}</div></div>'
+                    f'<div class="listai-alert-price">{formatar_reais(al["preco"])}</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.caption("Adicione itens favoritos abaixo ou na sua Lista para monitorar ofertas abaixo da média!")
+
+        with st.container(key="add_lista_row"):
+            cf_in, cf_bt = st.columns([5, 1], vertical_alignment="bottom")
+            novo_fav = cf_in.text_input("Favoritos", placeholder="Adicionar favorito (ex: Café, Azeite, Arroz)", key="in_novo_fav", label_visibility="collapsed")
+            if cf_bt.button("⭐", key="btn_add_fav", type="primary", use_container_width=True, help="Salvar favorito"):
+                if novos := [x.strip() for x in novo_fav.split(",") if x.strip()]:
+                    salvar_favoritos(usuario_atual, favs + novos)
+                    st.session_state["msg_sucesso"] = f"Favorito(s) salvo(s): **{', '.join(novos)}**"
+                    st.rerun()
+
+        if favs:
+            rem_favs = st.multiselect("⭐ Seus favoritos (desmarque para remover):", favs, default=favs, key="ms_favs_ed")
+            if rem_favs != favs:
+                salvar_favoritos(usuario_atual, rem_favs)
+                st.rerun()
+
     if df_ord.empty:
         with st.container(border=True):
             st.info("Ainda não há preços compartilhados. Cadastre uma compra em **🛒 Compra**!")
@@ -1616,6 +1729,7 @@ def pagina_perfil(ctx):
                             st.rerun()
 
     renderizar_tutorial_app()
+    renderizar_termos_app()
 
     if st.button("🚪 Sair da conta", type="secondary", use_container_width=True, key="perfil_logout"):
         limpar_estado_usuario(incluir_auth=True)
