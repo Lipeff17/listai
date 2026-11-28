@@ -349,6 +349,75 @@ div[data-testid="stMetricValue"] { color: #0F172A !important; font-weight: 800 !
 .stButton > button[kind="secondary"]:hover { border-color: #0B4EA2 !important; background-color: #F8FAFC !important; }
 div[data-testid="stProgress"] > div > div > div > div { background: linear-gradient(90deg, #D91E2A 0%, #5E2B7A 50%, #0B4EA2 100%) !important; transition: width 0.3s ease !important; }
 
+/* Todos os Botões Expansíveis do App (Mescla Vermelho + Azul) */
+[data-testid="stExpander"] details {
+    background: #FFFFFF !important;
+    border: 1.5px solid rgba(11, 78, 162, 0.18) !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.14s ease !important;
+}
+[data-testid="stExpander"] details:hover {
+    border-color: rgba(217, 30, 42, 0.35) !important;
+    box-shadow: 0 6px 18px rgba(11, 78, 162, 0.10) !important;
+    transform: translateY(-1px);
+}
+[data-testid="stExpander"] summary {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.62rem !important;
+    padding: 0.76rem 0.95rem !important;
+    background: linear-gradient(135deg, rgba(217, 30, 42, 0.06) 0%, #FFFFFF 48%, rgba(11, 78, 162, 0.08) 100%) !important;
+    cursor: pointer !important;
+    transition: background 0.18s ease !important;
+}
+[data-testid="stExpander"] details:not([open]) > summary:hover {
+    background: linear-gradient(135deg, rgba(217, 30, 42, 0.10) 0%, #FFFFFF 48%, rgba(11, 78, 162, 0.13) 100%) !important;
+}
+[data-testid="stExpander"] summary p {
+    font-weight: 800 !important;
+    color: #0F172A !important;
+    font-size: 0.90rem !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+}
+[data-testid="stExpander"] summary [data-testid="stExpanderToggleIcon"] {
+    color: #0B4EA2 !important;
+    background: linear-gradient(135deg, rgba(217, 30, 42, 0.12), rgba(11, 78, 162, 0.15)) !important;
+    border-radius: 9px !important;
+    width: 26px !important;
+    height: 26px !important;
+    padding: 4px !important;
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    transition: background 0.18s ease, color 0.18s ease !important;
+}
+
+/* Quando o usuário abre o botão: cabeçalho acende no degradê Vermelho + Azul */
+[data-testid="stExpander"] details[open] > summary {
+    background: linear-gradient(125deg, #D91E2A 0%, #5E2B7A 52%, #0B4EA2 100%) !important;
+}
+[data-testid="stExpander"] details[open] > summary p,
+[data-testid="stExpander"] details[open] > summary span,
+[data-testid="stExpander"] details[open] > summary svg {
+    color: #FFFFFF !important;
+}
+[data-testid="stExpander"] details[open] > summary [data-testid="stExpanderToggleIcon"] {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: #FFFFFF !important;
+}
+
+/* Conteúdo interno quando aberto */
+[data-testid="stExpanderDetails"] {
+    background: #FFFFFF !important;
+    border-top: 1px solid #E2E8F0 !important;
+    padding: 0.85rem 0.95rem 0.95rem 0.95rem !important;
+}
+
 @media (max-width: 680px) {
     .block-container { padding: 3.9rem 0.65rem 4.5rem 0.65rem !important; }
     .st-key-topo_nubank { padding: 0.85rem 0.9rem !important; margin-bottom: 0.5rem !important; border-radius: 18px !important; }
