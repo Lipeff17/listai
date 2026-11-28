@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import html
 import ipaddress
@@ -441,8 +442,428 @@ def _processar_imagem_pix(raw_bytes, api_key, versao):
             st.warning(f"⚠️ Não foi possível ler a imagem: {err_ocr}")
 
 
+_SCANNER_HTML = """
+<div class="pix-cam-box">
+  <div class="pix-cam-view" id="pix-view">
+    <video id="pix-video" autoplay playsinline muted></video>
+    <div class="pix-cam-overlay">
+      <div class="pix-cam-frame" id="pix-frame">
+        <div class="pix-cam-laser"></div>
+      </div>
+    </div>
+    <div id="pix-status" class="pix-status">📡 Iniciando câmera traseira...</div>
+    <button id="pix-start-btn" class="pix-overlay-btn" style="display:none;" type="button">📷 Ativar Câmera Traseira</button>
+  </div>
+  <div class="pix-cam-actions">
+    <button id="pix-snap" class="pix-btn-primary" type="button">📸 Ler Cupom / Etiqueta</button>
+    <button id="pix-flip" class="pix-btn-sec" type="button" title="Trocar câmera">🔄 Câmera</button>
+    <button id="pix-torch" class="pix-btn-sec" type="button" style="display:none;" title="Lanterna">🔦</button>
+  </div>
+</div>
+"""
+
+_SCANNER_CSS = """
+.pix-cam-box {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    width: 100%;
+}
+.pix-cam-view {
+    position: relative;
+    width: 100%;
+    height: 270px;
+    background: #0F172A;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid rgba(11, 78, 162, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pix-cam-view video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.pix-cam-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.pix-cam-frame {
+    position: relative;
+    width: 78%;
+    max-width: 290px;
+    height: 132px;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.78);
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.32);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.pix-cam-frame.pix-ok {
+    border-color: #22C55E;
+    box-shadow: 0 0 0 9999px rgba(21, 128, 61, 0.28);
+}
+.pix-cam-laser {
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    height: 2.5px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, #D91E2A, #3B82F6, transparent);
+    animation: pixScan 2s ease-in-out infinite;
+}
+@keyframes pixScan {
+    0%, 100% { top: 14%; }
+    50% { top: 84%; }
+}
+.pix-status {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.76);
+    backdrop-filter: blur(6px);
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    max-width: 92%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pix-overlay-btn {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(125deg, #D91E2A, #0B4EA2);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.pix-cam-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 9px;
+}
+.pix-btn-primary {
+    flex: 1;
+    background: linear-gradient(125deg, #D91E2A 0%, #5E2B7A 52%, #0B4EA2 100%);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.pix-btn-sec {
+    background: #FFFFFF;
+    color: #0F172A;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+"""
+
+_SCANNER_JS = """
+export default function (component) {
+  const { parentElement, setTriggerValue } = component;
+  const video = parentElement.querySelector("#pix-video");
+  const statusEl = parentElement.querySelector("#pix-status");
+  const frameEl = parentElement.querySelector("#pix-frame");
+  const startBtn = parentElement.querySelector("#pix-start-btn");
+  const snapBtn = parentElement.querySelector("#pix-snap");
+  const flipBtn = parentElement.querySelector("#pix-flip");
+  const torchBtn = parentElement.querySelector("#pix-torch");
+
+  const hostEl = parentElement instanceof ShadowRoot ? parentElement.host : parentElement;
+  const detailsEl = hostEl && hostEl.closest ? hostEl.closest("details") : null;
+
+  let stream = null;
+  let timerId = null;
+  let facingMode = "environment";
+  let torchOn = false;
+  let detector = null;
+  let isNative = false;
+  let done = false;
+  let destroyed = false;
+  let scanCanvas = null;
+
+  function setStatus(txt) {
+    if (statusEl) statusEl.textContent = txt;
+  }
+
+  function stopCamera() {
+    if (timerId) {
+      clearTimeout(timerId);
+      timerId = null;
+    }
+    if (stream) {
+      stream.getTracks().forEach((t) => {
+        try { t.stop(); } catch (_) {}
+      });
+      stream = null;
+    }
+    if (video) video.srcObject = null;
+    torchOn = false;
+    if (torchBtn) torchBtn.style.display = "none";
+  }
+
+  async function ensureDetector() {
+    if (detector) return detector;
+    const fmts = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "qr_code"];
+    if ("BarcodeDetector" in window) {
+      try {
+        detector = new window.BarcodeDetector({ formats: fmts });
+      } catch (_) {
+        detector = new window.BarcodeDetector();
+      }
+      isNative = true;
+      return detector;
+    }
+    try {
+      if (!window.__listaiBarcodePolyfill) {
+        window.__listaiBarcodePolyfill = import("https://cdn.jsdelivr.net/npm/barcode-detector@3/ponyfill/+esm");
+      }
+      const mod = await window.__listaiBarcodePolyfill;
+      detector = new mod.BarcodeDetector({ formats: fmts });
+      isNative = false;
+      return detector;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function isValidAutoCode(raw) {
+    const val = (raw || "").trim();
+    if (!val) return false;
+    if (/^https?:\\/\\//i.test(val)) return true;
+    const digits = val.replace(/\\D/g, "");
+    return val === digits && [8, 12, 13, 14].includes(digits.length);
+  }
+
+  async function scanLoop() {
+    if (destroyed || done || !stream) return;
+    try {
+      if (video && video.readyState >= 2 && video.videoWidth > 0) {
+        const det = await ensureDetector();
+        if (det) {
+          let source = video;
+          if (!isNative) {
+            if (!scanCanvas) scanCanvas = document.createElement("canvas");
+            const scale = Math.min(1, 960 / video.videoWidth);
+            scanCanvas.width = Math.round(video.videoWidth * scale);
+            scanCanvas.height = Math.round(video.videoHeight * scale);
+            const ctx = scanCanvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
+            source = scanCanvas;
+          }
+          const codes = await det.detect(source);
+          const match = (codes || []).find((c) => isValidAutoCode(c.rawValue));
+          if (match) {
+            done = true;
+            if (frameEl) frameEl.classList.add("pix-ok");
+            if (navigator.vibrate) {
+              try { navigator.vibrate(80); } catch (_) {}
+            }
+            setStatus("✅ Código lido! Buscando...");
+            stopCamera();
+            if (startBtn) {
+              startBtn.textContent = "🔄 Ler outro código";
+              startBtn.style.display = "inline-block";
+            }
+            setTriggerValue("scanned", { valor: match.rawValue.trim(), ts: Date.now() });
+            return;
+          }
+        }
+      }
+    } catch (_) {}
+    if (!destroyed && !done && stream) {
+      timerId = setTimeout(scanLoop, isNative ? 250 : 380);
+    }
+  }
+
+  async function startCamera() {
+    if (destroyed) return;
+    if (detailsEl && !detailsEl.open) return;
+    stopCamera();
+    done = false;
+    if (frameEl) frameEl.classList.remove("pix-ok");
+    if (startBtn) startBtn.style.display = "none";
+    setStatus(facingMode === "environment" ? "📡 Câmera traseira • Aponte o código" : "🤳 Câmera frontal ativa");
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus("Câmera indisponível neste navegador.");
+      return;
+    }
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+      if (destroyed) {
+        stopCamera();
+        return;
+      }
+      video.srcObject = stream;
+      await video.play().catch(() => {});
+
+      const track = stream.getVideoTracks()[0];
+      if (track && track.getCapabilities) {
+        const caps = track.getCapabilities();
+        if (caps && caps.torch && torchBtn) {
+          torchBtn.style.display = "inline-block";
+        }
+      }
+
+      const det = await ensureDetector();
+      if (!det) {
+        setStatus("📸 Aponte e toque em Ler Cupom / Etiqueta");
+      }
+      scanLoop();
+    } catch (err) {
+      setStatus("Toque abaixo para liberar a câmera");
+      if (startBtn) {
+        startBtn.textContent = "📷 Ativar Câmera Traseira";
+        startBtn.style.display = "inline-block";
+      }
+    }
+  }
+
+  if (snapBtn) {
+    snapBtn.onclick = () => {
+      if (!video || !video.videoWidth) {
+        startCamera();
+        return;
+      }
+      const c = document.createElement("canvas");
+      const maxW = 1400;
+      const scale = Math.min(1, maxW / video.videoWidth);
+      c.width = Math.round(video.videoWidth * scale);
+      c.height = Math.round(video.videoHeight * scale);
+      c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
+      const dataUrl = c.toDataURL("image/jpeg", 0.9);
+      done = true;
+      setStatus("🔍 Lendo imagem...");
+      stopCamera();
+      setTriggerValue("captured", { image_b64: dataUrl, ts: Date.now() });
+    };
+  }
+
+  if (flipBtn) {
+    flipBtn.onclick = () => {
+      facingMode = facingMode === "environment" ? "user" : "environment";
+      startCamera();
+    };
+  }
+
+  if (torchBtn) {
+    torchBtn.onclick = async () => {
+      const track = stream && stream.getVideoTracks ? stream.getVideoTracks()[0] : null;
+      if (!track || !track.applyConstraints) return;
+      torchOn = !torchOn;
+      try {
+        await track.applyConstraints({ advanced: [{ torch: torchOn }] });
+        torchBtn.textContent = torchOn ? "💡" : "🔦";
+      } catch (_) {}
+    };
+  }
+
+  if (startBtn) {
+    startBtn.onclick = () => startCamera();
+  }
+
+  function onToggle() {
+    if (!detailsEl) return;
+    if (detailsEl.open) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+  }
+
+  if (detailsEl) {
+    detailsEl.addEventListener("toggle", onToggle);
+    if (detailsEl.open) startCamera();
+  } else {
+    startCamera();
+  }
+
+  return () => {
+    destroyed = true;
+    if (detailsEl) detailsEl.removeEventListener("toggle", onToggle);
+    stopCamera();
+  };
+}
+"""
+
+_SCANNER_PIX_V2 = (
+    st.components.v2.component(
+        "listai_scanner_pix",
+        html=_SCANNER_HTML,
+        css=_SCANNER_CSS,
+        js=_SCANNER_JS,
+    )
+    if hasattr(getattr(st, "components", None), "v2")
+    else None
+)
+
+
+def _processar_leitura_automatica_pix(valor, api_key, versao):
+    txt = str(valor or "").strip()
+    if not txt:
+        return
+
+    if txt.lower().startswith(("http://", "https://")):
+        if not api_key:
+            st.warning("QR Code de nota lido! Configure a Chave Gemini em **👤 Perfil → Inteligência Artificial** para extrair os itens.")
+            return
+        with st.spinner("🧾 QR Code da nota lido! Buscando itens..."):
+            try:
+                res_qr = reconhecer_compra_por_texto_ou_link(txt, api_key)
+                if res_qr.get("itens"):
+                    st.session_state["itens_foto_lidos"] = res_qr
+                    st.rerun()
+                    return
+                st.warning("QR Code lido, mas o portal não retornou os itens. Use **📸 Ler Cupom / Etiqueta** para fotografar a nota.")
+            except Exception as err_qr:
+                st.warning(f"⚠️ Não foi possível abrir esse QR Code ({err_qr}). Use **📸 Ler Cupom / Etiqueta** para fotografar a nota.")
+        return
+
+    cod_limpo = re.sub(r"\D", "", txt)
+    if len(cod_limpo) in (8, 12, 13, 14):
+        with st.spinner(f"🏷️ Código {cod_limpo} lido! Identificando produto..."):
+            info_bc = consultar_produto_por_codigo_barras(cod_limpo, api_key or "")
+        if info_bc and info_bc.get("produto"):
+            _aplicar_produto_barcode_no_form(info_bc, versao)
+            return
+        st.warning(f"Código **{cod_limpo}** lido automaticamente, mas esse produto ainda não está na base gratuita. Digite o nome dele acima!")
+
+
 def renderizar_leitor_pix(api_key, merc_atual, versao):
-    """Renderiza o leitor estilo Pix (Câmera, Galeria, Código de Barras e NFC-e). Retorna (itens, supermercado) para notas com preço."""
+    """Renderiza o leitor estilo Pix (Câmera traseira automática, Galeria, Código de Barras e NFC-e)."""
     lidos_foto = st.session_state.get("itens_foto_lidos")
     with st.expander("📷 Leitor estilo Pix (Código de Barras, Nota ou NFC-e)", expanded=bool(lidos_foto)):
         st.markdown(
@@ -463,11 +884,32 @@ def renderizar_leitor_pix(api_key, merc_atual, versao):
             )
 
             if modo == "📷 Câmera":
-                st.caption("Aponte para o **código de barras** (com os números legíveis), etiqueta ou cupom fiscal:")
-                with st.container(key="leitor_pix_cam"):
-                    cam_foto = st.camera_input("Câmera do Leitor", key=f"cam_cupom_{versao}", label_visibility="collapsed")
-                if cam_foto is not None:
-                    _processar_imagem_pix(cam_foto.getvalue(), api_key, versao)
+                st.caption("Aponte a **câmera traseira** para ler código de barras/QR automaticamente, ou toque em **📸 Ler Cupom / Etiqueta**:")
+                if _SCANNER_PIX_V2 is not None:
+                    res_cam = _SCANNER_PIX_V2(
+                        key=f"scanner_pix_v2_{versao}",
+                        on_scanned_change=lambda: None,
+                        on_captured_change=lambda: None,
+                    )
+                    if scanned := getattr(res_cam, "scanned", None):
+                        ts = scanned.get("ts")
+                        if ts and ts != st.session_state.get("_pix_last_ts"):
+                            st.session_state["_pix_last_ts"] = ts
+                            _processar_leitura_automatica_pix(scanned.get("valor", ""), api_key, versao)
+                    if captured := getattr(res_cam, "captured", None):
+                        ts = captured.get("ts")
+                        if ts and ts != st.session_state.get("_pix_last_ts"):
+                            st.session_state["_pix_last_ts"] = ts
+                            b64 = str(captured.get("image_b64") or "")
+                            if "," in b64:
+                                b64 = b64.split(",", 1)[1]
+                            if b64:
+                                _processar_imagem_pix(base64.b64decode(b64), api_key, versao)
+                else:
+                    with st.container(key="leitor_pix_cam"):
+                        cam_foto = st.camera_input("Câmera do Leitor", key=f"cam_cupom_{versao}", label_visibility="collapsed")
+                    if cam_foto is not None:
+                        _processar_imagem_pix(cam_foto.getvalue(), api_key, versao)
 
             elif modo == "🖼️ Galeria":
                 with st.container(key="leitor_pix_gal"):
