@@ -111,8 +111,33 @@ from ia_leitor import (
 st.markdown(ESTILO_CSS, unsafe_allow_html=True)
 _st_fragment = getattr(st, "fragment", lambda f: f)
 
+st.info("ℹ️ **Versão Beta gratuita:** novos recursos poderão ter cobrança mensal após os primeiros meses de uso. Você será avisado antes.")
+def renderizar_tutorial_app(expandido=False):
+    with st.expander("❓ Como usar o Listaí (Tutorial rápido)", expanded=expandido):
+        st.markdown(
+            """
+* **🛒 Compra:** escolha o mercado, toque em **Iniciar Compra** e lance itens **digitando**, falando no **microfone 🎤** ou usando o **📷 Leitor estilo Pix** *(código de barras, etiqueta, cupom fiscal ou link NFC-e)*.
+* **📝 Lista & 👨‍👩‍👧‍👦 Família:** anote o que falta, divida a lista usando o código `CASA-XXXXXX` e descubra **onde sua lista sai mais barata hoje**.
+* **🏆 Preços & 🗺️ Mercados:** ative o **GPS** ou busque sua cidade para ver os mercados do **mais barato ao mais caro** e comparar ofertas.
+* **📊 Gráficos, 🧾 Histórico & 🎯 Limite:** controle seu orçamento mensal, veja onde gasta mais e exporte suas compras em CSV.
+* **👤 Perfil:** troque sua foto, salve lembrete/pergunta secreta para recuperar a senha, ajuste o GPS e a chave de IA.
+            """.strip()
+        )
 
-# --- Tela de Login / Cadastro / Recuperação ---
+# --- Tutorial & Tela de Login / Cadastro / Recuperação ---
+def renderizar_tutorial_app(expandido=False):
+    with st.expander("❓ Como usar o Listaí (Tutorial rápido)", expanded=expandido):
+        st.markdown(
+            """
+* **🛒 Compra:** escolha o mercado, toque em **Iniciar Compra** e lance itens **digitando**, falando no **microfone 🎤** ou usando o **📷 Leitor estilo Pix** *(código de barras, etiqueta, cupom fiscal ou link NFC-e)*.
+* **📝 Lista & 👨‍👩‍👧‍👦 Família:** anote o que falta, divida a lista usando o código `CASA-XXXXXX` e descubra **onde sua lista sai mais barata hoje**.
+* **🏆 Preços & 🗺️ Mercados:** ative o **GPS** ou busque sua cidade para ver os mercados do **mais barato ao mais caro** e comparar ofertas.
+* **📊 Gráficos, 🧾 Histórico & 🎯 Limite:** controle seu orçamento mensal, veja onde gasta mais e exporte suas compras em CSV.
+* **👤 Perfil:** troque sua foto, salve lembrete/pergunta secreta para recuperar a senha, ajuste o GPS e a chave de IA.
+            """.strip()
+        )
+
+
 def exibir_tela_login():
     st.session_state.setdefault("modo_login", "entrar")
     _, col_c, _ = st.columns([1, 1.8, 1])
@@ -122,6 +147,7 @@ def exibir_tela_login():
             '<span class="listai-pill">PREÇOS E COMPRAS</span></div><p>Sua lista inteligente e os melhores preços da região.</p></div>',
             unsafe_allow_html=True,
         )
+        st.info("ℹ️ **Versão Beta gratuita:** o app é gratuito nos primeiros meses e poderá ter cobrança futura (você será avisado antes).")
         with st.container(border=True):
             modo = st.session_state["modo_login"]
             if modo == "entrar":
@@ -281,11 +307,12 @@ def exibir_tela_login():
                     st.session_state["modo_login"] = "entrar"
                     st.rerun()
 
+        renderizar_tutorial_app()
+
 
 if not st.session_state.get("autenticado", False):
     exibir_tela_login()
     st.stop()
-
 
 # --- Componentes Compartilhados ---
 def avatar_html(nome, usuario, tamanho=48, solido=False):
@@ -920,6 +947,7 @@ def pagina_compra(ctx):
                         st.session_state["merc_para_selecionar"] = merc_ini_final
                     st.session_state.update({"compra_ativa": True, "compra_sessao_ids": []})
                     st.rerun()
+        renderizar_tutorial_app()
         return
 
     with st.container(border=True):
@@ -932,6 +960,9 @@ def pagina_compra(ctx):
             st.info(txt_v)
         if err_v := st.session_state.pop("aviso_voz_erro", None):
             st.warning(err_v)
+        if aviso_bc := st.session_state.pop("aviso_barcode", None):
+            st.success(
+                f"🏷️ **Código `{aviso_bc['codigo']}` identificado:** {aviso_bc['produto']} — digite o preço abaixo e toque em **✅ Adicionar**!")
 
         prod = st.text_input("Produto", value=st.session_state["valor_produto"], placeholder="Ex: Arroz 5kg, Sabão Omo, Café...", key=f"input_produto_{versao}")
         with st.container(key="row_qtd_preco"):
@@ -1396,6 +1427,8 @@ def pagina_perfil(ctx):
     gps_coords, gps_regiao, gps_mercados = ctx["gps_coords"], ctx["gps_regiao"], ctx["gps_mercados"]
 
     st.subheader("👤 Meu Perfil")
+    st.info(
+        "ℹ️ **Versão Beta gratuita:** uso liberado durante os testes iniciais; planos ou cobrança poderão ser aplicados após alguns meses.")
     reg_u = dict(obter_perfil_atual(usuario_atual))
     df_p, _ = obter_compras_com_datas(usuario_atual)
     sub_p = f"@{usuario_atual}" + (f" • Desde {reg_u['criado_em']}" if reg_u.get("criado_em") else "")
@@ -1591,7 +1624,7 @@ def pagina_perfil(ctx):
                             atualizar_campos_perfil(adm_u, senha_hash=gerar_hash_senha(adm_s))
                             st.session_state["msg_sucesso"] = f"Senha de **@{adm_u}** redefinida!"
                             st.rerun()
-
+    renderizar_tutorial_app()
     if st.button("🚪 Sair da conta", type="secondary", use_container_width=True, key="perfil_logout"):
         limpar_estado_usuario(incluir_auth=True)
         st.rerun()
